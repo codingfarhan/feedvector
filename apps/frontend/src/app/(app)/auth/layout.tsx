@@ -1,18 +1,14 @@
-import { getT } from '@gitroom/react/translation/get.translation.service.backend';
+import { getT } from "@gitroom/react/translation/get.translation.service.backend"
 
-export const dynamic = 'force-dynamic';
-import { ReactNode } from 'react';
-import Image from 'next/image';
-import loadDynamic from 'next/dynamic';
-import { TestimonialComponent } from '@gitroom/frontend/components/auth/testimonial.component';
-import { LogoTextComponent } from '@gitroom/frontend/components/ui/logo-text.component';
-const ReturnUrlComponent = loadDynamic(() => import('./return.url.component'));
-export default async function AuthLayout({
-  children,
-}: {
-  children: ReactNode;
-}) {
-  const t = await getT();
+export const dynamic = "force-dynamic"
+import { ReactNode } from "react"
+import Image from "next/image"
+import loadDynamic from "next/dynamic"
+import { TestimonialComponent } from "@gitroom/frontend/components/auth/testimonial.component"
+import { LogoTextComponent } from "@gitroom/frontend/components/ui/logo-text.component"
+const ReturnUrlComponent = loadDynamic(() => import("./return.url.component"))
+export default async function AuthLayout({ children }: { children: ReactNode }) {
+  const t = await getT()
 
   return (
     <div className="bg-[#0E0E0E] flex flex-1 p-[12px] gap-[12px] min-h-screen w-screen text-white">
@@ -26,13 +22,12 @@ export default async function AuthLayout({
       </div>
       <div className="text-[36px] flex-1 pt-[88px] hidden lg:flex flex-col items-center">
         <div className="text-center">
-          Over <span className="text-[42px] text-[#FC69FF]">20,000+</span>{' '}
-          Entrepreneurs use
+          Entrepreneurs Worldwide use
           <br />
-          FeedVector To Grow Their Social Presence
+          <span className="text-[42px] text-[#FC69FF]">FeedVector</span> To Grow Their Social Presence
         </div>
         <TestimonialComponent />
       </div>
     </div>
-  );
+  )
 }
