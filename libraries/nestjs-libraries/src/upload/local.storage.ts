@@ -51,16 +51,15 @@ export class LocalStorage implements IUploadProvider {
         .map(() => Math.round(Math.random() * 16).toString(16))
         .join('');
 
-      const filePath = `${dir}/${randomName}${extname(file.originalname)}`;
-      const publicPath = `${innerPath}/${randomName}${extname(
-        file.originalname
-      )}`;
+      const fileExtension = extname(file.originalname).toLowerCase();
+      const filePath = `${dir}/${randomName}${fileExtension}`;
+      const publicPath = `${innerPath}/${randomName}${fileExtension}`;
 
       // Logic to save the file to the filesystem goes here
       writeFileSync(filePath, file.buffer);
 
       return {
-        filename: `${randomName}${extname(file.originalname)}`,
+        filename: `${randomName}${fileExtension}`,
         path: process.env.FRONTEND_URL + '/uploads' + publicPath,
         mimetype: file.mimetype,
         originalname: file.originalname,

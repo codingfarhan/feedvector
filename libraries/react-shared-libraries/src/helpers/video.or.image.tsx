@@ -8,7 +8,8 @@ export const VideoOrImage: FC<{
   videoClassName?: string;
 }> = (props) => {
   const { src, autoplay, isContain, imageClassName, videoClassName } = props;
-  if (src?.indexOf('mp4') > -1) {
+  const isVideo = (src || '').toLowerCase().includes('.mp4');
+  if (isVideo) {
     return (
       <video
         src={src}

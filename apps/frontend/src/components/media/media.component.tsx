@@ -337,7 +337,7 @@ export const MediaBox: FC<{
         top: 10,
         children: (
           <div className="w-full h-full p-[50px]">
-            {media.path.indexOf('mp4') > -1 ? (
+            {(media.path || '').toLowerCase().includes('.mp4') ? (
               <VideoFrame
                 autoplay={true}
                 url={mediaDirectory.set(media.path)}
@@ -500,10 +500,11 @@ export const MediaBox: FC<{
             )}
             {data?.results
               ?.filter((f: any) => {
+                const isVideo = (f.path || '').toLowerCase().includes('.mp4');
                 if (type === 'video') {
-                  return f.path.indexOf('mp4') > -1;
+                  return isVideo;
                 } else if (type === 'image') {
-                  return f.path.indexOf('mp4') === -1;
+                  return !isVideo;
                 }
                 return true;
               })
@@ -555,7 +556,7 @@ export const MediaBox: FC<{
                           </svg>
                         </div>
                       </div>
-                      {media.path.indexOf('mp4') > -1 ? (
+                      {(media.path || '').toLowerCase().includes('.mp4') ? (
                         <VideoFrame url={mediaDirectory.set(media.path)} />
                       ) : (
                         <img
@@ -780,7 +781,7 @@ export const MultiMediaComponent: FC<{
                       >
                         <MediaSettingsIcon className="cursor-pointer relative z-[200]" />
                       </div>
-                      {media?.path?.indexOf('mp4') > -1 ? (
+                      {(media?.path || '').toLowerCase().includes('.mp4') ? (
                         <VideoFrame url={mediaDirectory.set(media?.path)} />
                       ) : (
                         <img
