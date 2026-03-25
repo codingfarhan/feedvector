@@ -1,10 +1,10 @@
-import * as Sentry from '@sentry/nestjs';
-import { nodeProfilingIntegration } from '@sentry/profiling-node';
-import { capitalize } from 'lodash';
+import * as Sentry from "@sentry/nestjs"
+import { nodeProfilingIntegration } from "@sentry/profiling-node"
+import { capitalize } from "lodash"
 
 export const initializeSentry = (appName: string, allowLogs = false) => {
   if (!process.env.NEXT_PUBLIC_SENTRY_DSN) {
-    return null;
+    return null
   }
 
   try {
@@ -12,21 +12,21 @@ export const initializeSentry = (appName: string, allowLogs = false) => {
       initialScope: {
         tags: {
           service: appName,
-          component: 'nestjs',
+          component: "nestjs",
         },
         contexts: {
           app: {
-            name: `Postiz ${capitalize(appName)}`,
+            name: `FeedVector ${capitalize(appName)}`,
           },
         },
       },
-      environment: process.env.NODE_ENV || 'development',
+      environment: process.env.NODE_ENV || "development",
       dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
-      spotlight: process.env.SENTRY_SPOTLIGHT === '1',
+      spotlight: process.env.SENTRY_SPOTLIGHT === "1",
       integrations: [
         // Add our Profiling integration
         nodeProfilingIntegration(),
-        Sentry.consoleLoggingIntegration({ levels: ['log', 'info', 'warn', 'error', 'debug', 'assert', 'trace'] }),
+        Sentry.consoleLoggingIntegration({ levels: ["log", "info", "warn", "error", "debug", "assert", "trace"] }),
         Sentry.openAIIntegration({
           recordInputs: true,
           recordOutputs: true,
@@ -36,11 +36,11 @@ export const initializeSentry = (appName: string, allowLogs = false) => {
       enableLogs: true,
 
       // Profiling
-      profileSessionSampleRate: process.env.NODE_ENV === 'development' ? 1.0 : 0.45,
-      profileLifecycle: 'trace',
-    });
+      profileSessionSampleRate: process.env.NODE_ENV === "development" ? 1.0 : 0.45,
+      profileLifecycle: "trace",
+    })
   } catch (err) {
-    console.log(err);
+    console.log(err)
   }
-  return true;
-};
+  return true
+}

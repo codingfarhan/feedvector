@@ -1,67 +1,64 @@
-import { Injectable } from '@nestjs/common';
-import { AgenciesRepository } from '@gitroom/nestjs-libraries/database/prisma/agencies/agencies.repository';
-import { User } from '@prisma/client';
-import { CreateAgencyDto } from '@gitroom/nestjs-libraries/dtos/agencies/create.agency.dto';
-import { NotificationService } from '@gitroom/nestjs-libraries/database/prisma/notifications/notification.service';
+import { Injectable } from "@nestjs/common"
+import { AgenciesRepository } from "@gitroom/nestjs-libraries/database/prisma/agencies/agencies.repository"
+import { User } from "@prisma/client"
+import { CreateAgencyDto } from "@gitroom/nestjs-libraries/dtos/agencies/create.agency.dto"
+import { NotificationService } from "@gitroom/nestjs-libraries/database/prisma/notifications/notification.service"
 
 @Injectable()
 export class AgenciesService {
-  constructor(
-    private _agenciesRepository: AgenciesRepository,
-    private _notificationService: NotificationService
-  ) {}
+  constructor(private _agenciesRepository: AgenciesRepository, private _notificationService: NotificationService) {}
   getAgencyByUser(user: User) {
-    return this._agenciesRepository.getAgencyByUser(user);
+    return this._agenciesRepository.getAgencyByUser(user)
   }
 
   getCount() {
-    return this._agenciesRepository.getCount();
+    return this._agenciesRepository.getCount()
   }
 
   getAllAgencies() {
-    return this._agenciesRepository.getAllAgencies();
+    return this._agenciesRepository.getAllAgencies()
   }
 
   getAllAgenciesSlug() {
-    return this._agenciesRepository.getAllAgenciesSlug();
+    return this._agenciesRepository.getAllAgenciesSlug()
   }
 
   getAgencyInformation(agency: string) {
-    return this._agenciesRepository.getAgencyInformation(agency);
+    return this._agenciesRepository.getAgencyInformation(agency)
   }
 
   async approveOrDecline(email: string, action: string, id: string) {
-    await this._agenciesRepository.approveOrDecline(action, id);
-    const agency = await this._agenciesRepository.getAgencyById(id);
+    await this._agenciesRepository.approveOrDecline(action, id)
+    const agency = await this._agenciesRepository.getAgencyById(id)
 
-    if (action === 'approve') {
+    if (action === "approve") {
       await this._notificationService.sendEmail(
         agency?.user?.email!,
-        'Your Agency has been approved and added to Postiz 🚀',
+        "Your Agency has been approved and added to FeedVector 🚀",
         `
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Your Agency has been approved and added to Postiz 🚀</title>
+    <title>Your Agency has been approved and added to FeedVector 🚀</title>
 </head>
 
 <body style="font-family: Arial, sans-serif; margin: 0; padding: 0;">
   Hi there, <br /><br />
-  Your agency ${agency?.name} has been added to Postiz!<br />
+  Your agency ${agency?.name} has been added to FeedVector!<br />
   You can <a href="https://postiz.com/agencies/${agency?.slug}">check it here</a><br />
-  It will appear on the main agency of Postiz in the next 24 hours.<br /><br />
+  It will appear on the main agency of FeedVector in the next 24 hours.<br /><br />
 </body>
-</html>`
-      );
+</html>`,
+      )
 
-      return;
+      return
     }
 
     await this._notificationService.sendEmail(
       agency?.user?.email!,
-      'Your Agency has been declined 😔',
+      "Your Agency has been declined 😔",
       `
 <html lang="en">
 
@@ -73,20 +70,20 @@ export class AgenciesService {
 
 <body style="font-family: Arial, sans-serif; margin: 0; padding: 0;">
   Hi there, <br /><br />
-  Your agency ${agency?.name} has been declined to Postiz!<br />
+  Your agency ${agency?.name} has been declined to FeedVector!<br />
   If you think we have made a mistake, please reply to this email and let us know
 </body>
-</html>`
-    );
+</html>`,
+    )
 
-    return;
+    return
   }
 
   async createAgency(user: User, body: CreateAgencyDto) {
-    const agency = await this._agenciesRepository.createAgency(user, body);
+    const agency = await this._agenciesRepository.createAgency(user, body)
     await this._notificationService.sendEmail(
-      'nevo@postiz.com',
-      'New agency created',
+      "nevo@postiz.com",
+      "New agency created",
       `
 <html lang="en">
 
@@ -101,11 +98,7 @@ export class AgenciesService {
         <tr>
             <td style="padding: 0 20px 20px 20px; text-align: center;">
                 <!-- Website -->
-                <a href="${
-                  body.website
-                }" style="text-decoration: none; color: #007bff;">${
-        body.website
-      }</a>
+                <a href="${body.website}" style="text-decoration: none; color: #007bff;">${body.website}</a>
             </td>
         </tr>
         <tr>
@@ -113,36 +106,12 @@ export class AgenciesService {
                 <!-- Social Media Links -->
                 <p style="margin: 10px 0; font-size: 16px;">
                     Social Medias:
-                    <a href="${
-                      body.facebook
-                    }" style="margin: 0 10px; text-decoration: none; color: #007bff;">${
-        body.facebook
-      }</a><br />
-                    <a href="${
-                      body.instagram
-                    }" style="margin: 0 10px; text-decoration: none; color: #007bff;">${
-        body.instagram
-      }</a><br />
-                    <a href="${
-                      body.twitter
-                    }" style="margin: 0 10px; text-decoration: none; color: #007bff;">${
-        body.twitter
-      }</a><br />
-                    <a href="${
-                      body.linkedIn
-                    }" style="margin: 0 10px; text-decoration: none; color: #007bff;">${
-        body.linkedIn
-      }</a><br />
-                    <a href="${
-                      body.youtube
-                    }" style="margin: 0 10px; text-decoration: none; color: #007bff;">${
-        body.youtube
-      }</a><br />
-                    <a href="${
-                      body.tiktok
-                    }" style="margin: 0 10px; text-decoration: none; color: #007bff;">${
-        body.tiktok
-      }</a>
+                    <a href="${body.facebook}" style="margin: 0 10px; text-decoration: none; color: #007bff;">${body.facebook}</a><br />
+                    <a href="${body.instagram}" style="margin: 0 10px; text-decoration: none; color: #007bff;">${body.instagram}</a><br />
+                    <a href="${body.twitter}" style="margin: 0 10px; text-decoration: none; color: #007bff;">${body.twitter}</a><br />
+                    <a href="${body.linkedIn}" style="margin: 0 10px; text-decoration: none; color: #007bff;">${body.linkedIn}</a><br />
+                    <a href="${body.youtube}" style="margin: 0 10px; text-decoration: none; color: #007bff;">${body.youtube}</a><br />
+                    <a href="${body.tiktok}" style="margin: 0 10px; text-decoration: none; color: #007bff;">${body.tiktok}</a>
                 </p>
             </td>
         </tr>
@@ -159,36 +128,28 @@ export class AgenciesService {
             <td style="padding: 20px;">
                 <!-- Short Description -->
                 <h2 style="text-align: center; color: #333;">Name</h2>
-                <p style="text-align: center; color: #555; font-size: 16px;">${
-                  body.name
-                }</p>
+                <p style="text-align: center; color: #555; font-size: 16px;">${body.name}</p>
             </td>
         </tr>
         <tr>
             <td style="padding: 20px;">
                 <!-- Short Description -->
                 <h2 style="text-align: center; color: #333;">Short Description</h2>
-                <p style="text-align: center; color: #555; font-size: 16px;">${
-                  body.shortDescription
-                }</p>
+                <p style="text-align: center; color: #555; font-size: 16px;">${body.shortDescription}</p>
             </td>
         </tr>
         <tr>
             <td style="padding: 20px;">
                 <!-- Description -->
                 <h2 style="text-align: center; color: #333;">Description</h2>
-                <p style="text-align: center; color: #555; font-size: 16px;">${
-                  body.description
-                }</p>
+                <p style="text-align: center; color: #555; font-size: 16px;">${body.description}</p>
             </td>
         </tr>
         <tr>
             <td style="padding: 20px;">
                 <!-- Niches -->
                 <h2 style="text-align: center; color: #333;">Niches</h2>
-                <p style="text-align: center; color: #555; font-size: 16px;">${body.niches.join(
-                  ','
-                )}</p>
+                <p style="text-align: center; color: #555; font-size: 16px;">${body.niches.join(",")}</p>
             </td>
         </tr>
         <tr>
@@ -210,8 +171,8 @@ export class AgenciesService {
 </body>
 
 </html>
-    `
-    );
-    return agency;
+    `,
+    )
+    return agency
   }
 }
