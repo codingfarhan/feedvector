@@ -22,6 +22,8 @@ export interface ContinueProviderProps {
   existingId: string[];
   initialData?: any[];
   isSaving?: boolean;
+  limitReached?: boolean;
+  limitMessage?: string;
 }
 
 export interface EmptyStateMessage {
@@ -59,7 +61,14 @@ export function withContinueProvider<TItem, TSelection>(
   } = config;
 
   return function ContinueProviderComponent(props: ContinueProviderProps) {
-    const { onSave, existingId, initialData, isSaving } = props;
+    const {
+      onSave,
+      existingId,
+      initialData,
+      isSaving,
+      limitReached,
+      limitMessage,
+    } = props;
     const call = useCustomProviderFunction();
     const t = useT();
     const [selection, setSelection] = useState<TSelection | null>(null);
@@ -86,16 +95,19 @@ export function withContinueProvider<TItem, TSelection>(
 
     const handleSelect = useCallback(
       (item: TItem) => () => {
+        if (limitReached) {
+          return;
+        }
         setSelection(getSelectionValue(item));
       },
       []
     );
 
     const handleSave = useCallback(async () => {
-      if (selection) {
+      if (selection && !limitReached) {
         await onSave(transformSaveData(selection));
       }
-    }, [onSave, selection]);
+    }, [onSave, selection, limitReached]);
 
     const filteredData = useMemo(() => {
       return (
@@ -126,13 +138,23 @@ export function withContinueProvider<TItem, TSelection>(
     return (
       <div className="flex flex-col gap-[20px]">
         <div>{t(titleKey, titleDefault)}</div>
+        {!!limitReached && (
+          <div className="text-[14px] text-red-400">
+            {limitMessage ||
+              t(
+                'trial_channel_limit_reached',
+                'Trial accounts can connect up to 2 channels. Upgrade to Pro to add more.'
+              )}
+          </div>
+        )}
         <div className="grid grid-cols-3 justify-items-center select-none cursor-pointer gap-[10px]">
           {filteredData.map((item) => (
             <div
               key={getItemId(item)}
               className={clsx(
                 'flex flex-col w-full text-center gap-[10px] border border-input p-[10px] hover:bg-seventh rounded-[8px]',
-                isSelected(item, selection) && 'bg-seventh border-primary'
+                isSelected(item, selection) && 'bg-seventh border-primary',
+                limitReached && 'opacity-50 pointer-events-none'
               )}
               onClick={handleSelect(item)}
             >
@@ -141,7 +163,11 @@ export function withContinueProvider<TItem, TSelection>(
           ))}
         </div>
         <div>
-          <Button disabled={!selection || isSaving} loading={isSaving} onClick={handleSave}>
+          <Button
+            disabled={!selection || isSaving || limitReached}
+            loading={isSaving}
+            onClick={handleSave}
+          >
             {t('save', 'Save')}
           </Button>
         </div>

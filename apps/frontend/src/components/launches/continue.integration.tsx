@@ -11,6 +11,8 @@ import { continueProviderList } from '@gitroom/frontend/components/new-launch/pr
 import { IntegrationContext } from '@gitroom/frontend/components/launches/helpers/use.integration';
 import { newDayjs } from '@gitroom/frontend/components/layout/set.timezone';
 import { useVariables } from '@gitroom/react/helpers/variable.context';
+import useSWR from 'swr';
+import { useUser } from '@gitroom/frontend/components/layout/user.context';
 
 interface TwoStepState {
   integrationId: string;
@@ -32,12 +34,32 @@ export const ContinueIntegration: FC<{
   const { push } = useRouter();
   const t = useT();
   const fetch = useFetch();
+  const user = useUser();
   const { extensionId, backendUrl } = useVariables();
   const [error, setError] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [twoStepState, setTwoStepState] = useState<TwoStepState | null>(null);
   const [successState, setSuccessState] = useState<SuccessState | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const isTrailing =
+    !!(user as any)?.isTrailing || !!(user as any)?.isTrialing;
+
+  const loadIntegrations = useCallback(async (path: string) => {
+    return (await (await fetch(path)).json()).integrations;
+  }, []);
+  const { data: integrations } = useSWR(
+    logged ? '/integrations/list' : null,
+    loadIntegrations,
+    {
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+      revalidateIfStale: false,
+      revalidateOnMount: true,
+      refreshWhenHidden: false,
+      refreshWhenOffline: false,
+      fallbackData: [],
+    }
+  );
 
   // Helper to handle navigation - redirects if logged or returnURL exists, otherwise shows inline
   const navigateOrShow = useCallback(
@@ -332,9 +354,10 @@ export const ContinueIntegration: FC<{
             >
               <Provider
                 onSave={onSave}
-                existingId={[]}
+                existingId={(integrations || []).map((p: any) => p.internalId)}
                 initialData={twoStepState.pages}
                 isSaving={isSaving}
+                limitReached={isTrailing && (integrations || []).length > 2}
               />
             </IntegrationContext.Provider>
           </div>

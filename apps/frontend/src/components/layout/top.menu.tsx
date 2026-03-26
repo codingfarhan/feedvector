@@ -205,6 +205,28 @@ export const useMenuItem = () => {
       requireBilling: true,
     },
     {
+      name: t('pricing', 'Pricing'),
+      icon: (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="20"
+          height="21"
+          viewBox="0 0 20 21"
+          fill="none"
+        >
+          <path
+            d="M5.83341 6.33366H14.1667M5.83341 10.5003H12.5M5.83341 14.667H10.8334M4.16675 18.8337H15.8334C16.7539 18.8337 17.5 18.0875 17.5 17.167V4.00033C17.5 3.07985 16.7539 2.33366 15.8334 2.33366H4.16675C3.24627 2.33366 2.50008 3.07985 2.50008 4.00033V17.167C2.50008 18.0875 3.24627 18.8337 4.16675 18.8337Z"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      ),
+      path: '/pricing',
+      requireBilling: true,
+    },
+    {
       name: t('billing', 'Billing'),
       icon: (
         <svg

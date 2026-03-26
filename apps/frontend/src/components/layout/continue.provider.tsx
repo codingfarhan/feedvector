@@ -8,6 +8,7 @@ import { useFetch } from '@gitroom/helpers/utils/custom.fetch';
 import { continueProviderList } from '@gitroom/frontend/components/new-launch/providers/continue-provider/list';
 import { newDayjs } from '@gitroom/frontend/components/layout/set.timezone';
 import { useModals } from '@gitroom/frontend/components/layout/new-modal';
+import { useUser } from '@gitroom/frontend/components/layout/user.context';
 export const Null: FC<{
   onSave: (data: any) => Promise<void>;
   existingId: string[];
@@ -16,6 +17,7 @@ export const ContinueProvider: FC = () => {
   const { mutate } = useSWRConfig();
   const fetch = useFetch();
   const searchParams = useSearchParams();
+  const user = useUser();
   const added = searchParams.get('added');
   const continueId = searchParams.get('continue');
   const router = useRouter();
@@ -58,6 +60,10 @@ export const ContinueProvider: FC = () => {
       added={added}
       continueId={continueId}
       integrations={integrations.map((p: any) => p.internalId)}
+      limitReached={
+        (!!(user as any)?.isTrailing || !!(user as any)?.isTrialing) &&
+        integrations.length > 2
+      }
       provider={Provider}
     />
   );
@@ -69,7 +75,15 @@ const ModalContent: FC<{
   provider: any;
   closeModal: () => void;
   integrations: string[];
-}> = ({ continueId, added, provider: Provider, closeModal, integrations }) => {
+  limitReached?: boolean;
+}> = ({
+  continueId,
+  added,
+  provider: Provider,
+  closeModal,
+  integrations,
+  limitReached,
+}) => {
   const fetch = useFetch();
 
   const onSave = useCallback(
@@ -109,7 +123,11 @@ const ModalContent: FC<{
         },
       }}
     >
-      <Provider onSave={onSave} existingId={integrations} />
+      <Provider
+        onSave={onSave}
+        existingId={integrations}
+        limitReached={limitReached}
+      />
     </IntegrationContext.Provider>
   );
 };
@@ -119,6 +137,7 @@ const ContinueModal: FC<{
   added: any;
   provider: any;
   integrations: string[];
+  limitReached?: boolean;
   refreshList: () => void;
 }> = (props) => {
   const modals = useModals();

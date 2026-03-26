@@ -12,18 +12,11 @@ export class AnalyticsController {
 
   @Get("/:integration")
   async getIntegration(@GetOrgFromRequest() org: Organization, @Param("integration") integration: string, @Query("date") date: string) {
-    if (org.isTrailing) {
-      throw new HttpException("Analytics not available during trial", 406)
-    }
     return this._integrationService.checkAnalytics(org, integration, date)
   }
 
   @Get("/post/:postId")
   async getPostAnalytics(@GetOrgFromRequest() org: Organization, @Param("postId") postId: string, @Query("date") date: string) {
-    if (org.isTrailing) {
-      throw new HttpException("Analytics not available during trial", 406)
-    }
-
     return this._postsService.checkPostAnalytics(org.id, postId, +date)
   }
 }

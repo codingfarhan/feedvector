@@ -1,10 +1,14 @@
-import { FC, useCallback, useMemo, useState } from 'react';
+import { FC, useCallback, useMemo } from 'react';
 import { Integration } from '@prisma/client';
 import useSWR from 'swr';
 import { useFetch } from '@gitroom/helpers/utils/custom.fetch';
 import { ChartSocial } from '@gitroom/frontend/components/analytics/chart-social';
 import { LoadingComponent } from '@gitroom/frontend/components/layout/loading';
 import { useT } from '@gitroom/react/translation/get.transation.service.client';
+import { useUser } from '@gitroom/frontend/components/layout/user.context';
+import clsx from 'clsx';
+import { Button } from '@gitroom/react/form/button';
+import { useRouter } from 'next/navigation';
 
 interface AnalyticsDataItem {
   label: string;
@@ -172,27 +176,74 @@ export const RenderAnalytics: FC<{
   date: number;
 }> = (props) => {
   const { integration, date } = props;
-  const [loading, setLoading] = useState(true);
   const fetch = useFetch();
+  const user = useUser();
+  const isTrailing =
+    !!(user as any)?.isTrailing || !!(user as any)?.isTrialing;
+  const t = useT();
+  const router = useRouter();
 
   const load = useCallback(async () => {
-    setLoading(true);
-    const load = (
-      await fetch(`/analytics/${integration.id}?date=${date}`)
-    ).json();
-    setLoading(false);
-    return load;
+    return (await fetch(`/analytics/${integration.id}?date=${date}`)).json();
   }, [integration, date]);
 
-  const { data } = useSWR(`/analytics-${integration?.id}-${date}`, load, {
-    refreshInterval: 0,
-    refreshWhenHidden: false,
-    revalidateOnFocus: false,
-    revalidateOnReconnect: false,
-    revalidateIfStale: false,
-    refreshWhenOffline: false,
-    revalidateOnMount: true,
-  });
+  const { data, isLoading } = useSWR(
+    isTrailing ? null : `/analytics-${integration?.id}-${date}`,
+    load,
+    {
+      refreshInterval: 0,
+      refreshWhenHidden: false,
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+      revalidateIfStale: false,
+      refreshWhenOffline: false,
+      revalidateOnMount: true,
+    }
+  );
+
+  const mockData: AnalyticsDataItem[] = useMemo(() => {
+    const points = Math.max(7, Math.min(date || 7, 30));
+    const buildSeries = (seed: number) =>
+      Array.from({ length: points }, (_, index) => {
+        const dayIndex = points - 1 - index;
+        const base = seed * 120;
+        const wave = Math.sin((index + seed) * 0.6) * (seed * 8);
+        const trend = index * seed * 4;
+        const total = Math.max(0, Math.round(base + wave + trend));
+        return {
+          total,
+          date: new Date(
+            Date.now() - dayIndex * 24 * 60 * 60 * 1000
+          ).toISOString(),
+        };
+      });
+
+    const engagementSeries = buildSeries(3).map((item) => ({
+      ...item,
+      total: Math.max(0, Number(((item.total % 40) + 3).toFixed(2))),
+    }));
+
+    return [
+      {
+        label: t('impressions', 'Impressions'),
+        data: buildSeries(7),
+        percentageChange: 12.4,
+      },
+      {
+        label: t('engagement_rate', 'Engagement Rate'),
+        data: engagementSeries,
+        average: true,
+        percentageChange: -1.6,
+      },
+      {
+        label: t('new_followers', 'New Followers'),
+        data: buildSeries(5),
+        percentageChange: 6.8,
+      },
+    ];
+  }, [date, t]);
+
+  const dataToRender = isTrailing ? mockData : data;
 
   const refreshChannel = useCallback(
     (
@@ -214,10 +265,8 @@ export const RenderAnalytics: FC<{
     []
   );
 
-  const t = useT();
-
   const totals = useMemo(() => {
-    return data?.map((p: AnalyticsDataItem) => {
+    return dataToRender?.map((p: AnalyticsDataItem) => {
       const value =
         (p?.data.reduce((acc: number, curr: { total: number }) => acc + curr.total, 0) || 0) /
         (p.average ? p.data.length : 1);
@@ -226,9 +275,9 @@ export const RenderAnalytics: FC<{
       }
       return new Intl.NumberFormat().format(Math.round(value));
     });
-  }, [data]);
+  }, [dataToRender]);
 
-  if (loading) {
+  if (!isTrailing && isLoading) {
     return (
       <div className="flex items-center justify-center py-[48px]">
         <LoadingComponent />
@@ -237,18 +286,45 @@ export const RenderAnalytics: FC<{
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-[16px]">
-      {data?.length === 0 && (
-        <EmptyState onRefresh={refreshChannel(integration as any)} />
+    <div className="relative">
+      <div
+        className={clsx(
+          'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-[16px]',
+          isTrailing && 'blur-sm pointer-events-none select-none'
+        )}
+      >
+        {!isTrailing && dataToRender?.length === 0 && (
+          <EmptyState onRefresh={refreshChannel(integration as any)} />
+        )}
+        {dataToRender?.map((item: AnalyticsDataItem, index: number) => (
+          <AnalyticsCard
+            key={`analytics-${index}`}
+            item={item}
+            total={totals?.[index]}
+            index={index}
+          />
+        ))}
+      </div>
+      {isTrailing && (
+        <div className="absolute inset-0 flex items-start justify-center pt-[64px]">
+          <div className="bg-newBgColorInner border border-newTableBorder rounded-[12px] px-[24px] py-[20px] text-center max-w-[420px] shadow-lg">
+            <div className="text-[20px] font-semibold mb-[6px]">
+              {t('upgrade_to_view_analytics', 'Upgrade to Pro to view analytics')}
+            </div>
+            <div className="text-[14px] text-newTableText mb-[16px]">
+              {t(
+                'trial_analytics_cta',
+                'Unlock full analytics, trends, and performance breakdowns.'
+              )}
+            </div>
+            <div className="flex justify-center">
+              <Button onClick={() => router.push('/pricing')}>
+                {t('upgrade_to_pro', 'Upgrade to Pro')}
+              </Button>
+            </div>
+          </div>
+        </div>
       )}
-      {data?.map((item: AnalyticsDataItem, index: number) => (
-        <AnalyticsCard
-          key={`analytics-${index}`}
-          item={item}
-          total={totals[index]}
-          index={index}
-        />
-      ))}
     </div>
   );
 };

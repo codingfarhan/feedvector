@@ -40,9 +40,6 @@ export class CopilotController {
   @Post("/agent")
   @CheckPolicies([AuthorizationActions.Create, Sections.AI])
   async agent(@Req() req: Request, @Res() res: Response, @GetOrgFromRequest() organization: Organization) {
-    if (organization.isTrailing) {
-      throw new HttpException("Analytics not available during trial", 406)
-    }
     if (process.env.OPENAI_API_KEY === undefined || process.env.OPENAI_API_KEY === "") {
       Logger.warn("OpenAI API key not set, chat functionality will not work")
       return
@@ -85,9 +82,6 @@ export class CopilotController {
   @Get("/:thread/list")
   @CheckPolicies([AuthorizationActions.Create, Sections.AI])
   async getMessagesList(@GetOrgFromRequest() organization: Organization, @Param("thread") threadId: string): Promise<any> {
-    if (organization.isTrailing) {
-      throw new HttpException("Analytics not available during trial", 406)
-    }
     const mastra = await this._mastraService.mastra()
     const memory = await mastra.getAgent("postiz").getMemory()
     try {
@@ -103,9 +97,6 @@ export class CopilotController {
   @Get("/list")
   @CheckPolicies([AuthorizationActions.Create, Sections.AI])
   async getList(@GetOrgFromRequest() organization: Organization) {
-    if (organization.isTrailing) {
-      throw new HttpException("Analytics not available during trial", 406)
-    }
     const mastra = await this._mastraService.mastra()
     // @ts-ignore
     const memory = await mastra.getAgent("postiz").getMemory()

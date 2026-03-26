@@ -25,6 +25,7 @@ import utc from 'dayjs/plugin/utc';
 import { AutopostRepository } from '@gitroom/nestjs-libraries/database/prisma/autopost/autopost.repository';
 import { RefreshIntegrationService } from '@gitroom/nestjs-libraries/integrations/refresh.integration.service';
 import { TemporalService } from 'nestjs-temporal-core';
+import { OrganizationService } from '@gitroom/nestjs-libraries/database/prisma/organizations/organization.service';
 
 dayjs.extend(utc);
 
@@ -36,6 +37,7 @@ export class IntegrationService {
     private _autopostsRepository: AutopostRepository,
     private _integrationManager: IntegrationManager,
     private _notificationService: NotificationService,
+    private _organizationService: OrganizationService,
     @Inject(forwardRef(() => RefreshIntegrationService))
     private _refreshIntegrationService: RefreshIntegrationService,
     private _temporalService: TemporalService
@@ -110,6 +112,24 @@ export class IntegrationService {
     timezone?: number,
     customInstanceDetails?: string
   ) {
+    const organization = await this._organizationService.getOrgById(org);
+    if (organization?.isTrailing) {
+      const integrations = await this._integrationRepository.getIntegrationsList(org);
+      const hasExisting = integrations.some(
+        (integration) =>
+          !integration.deletedAt && integration.internalId === internalId
+      );
+      const totalActive = integrations.filter((i) => !i.deletedAt).length;
+      if (!hasExisting && totalActive >= 2) {
+        throw new HttpException(
+          {
+            msg: 'Trial accounts can connect up to 2 channels. Upgrade to Pro to add more.',
+          },
+          HttpStatus.NOT_ACCEPTABLE
+        );
+      }
+    }
+
     const uploadedPicture = picture
       ? picture?.indexOf('imagedelivery.net') > -1
         ? picture

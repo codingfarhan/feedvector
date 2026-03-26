@@ -19,6 +19,8 @@ import { useT } from '@gitroom/react/translation/get.transation.service.client';
 import clsx from 'clsx';
 import copy from 'copy-to-clipboard';
 import { capitalize } from 'lodash';
+import { useUser } from '@gitroom/frontend/components/layout/user.context';
+import { useIntegrationList } from '@gitroom/frontend/components/launches/helpers/use.integration.list';
 const resolver = classValidatorResolver(ApiKeyDto);
 
 export const useAddProvider = (update?: () => void, invite?: boolean) => {
@@ -42,12 +44,37 @@ export const AddProviderButton: FC<{
   const add = useAddProvider(update);
   const invite = useAddProvider(update, true);
   const t = useT();
+  const user = useUser();
+  const toaster = useToaster();
+  const { data: integrations } = useIntegrationList();
+  const isTrailing =
+    !!(user as any)?.isTrailing || !!(user as any)?.isTrialing;
+  const limitReached = isTrailing && (integrations || []).length >= 2;
+
+  const limitMessage = t(
+    'free_plan_channel_limit',
+    'Free plan is limited to 2 channels. Upgrade to Pro to add more.'
+  );
+
+  const handleAddClick = useCallback(() => {
+    if (limitReached) {
+      toaster.show(limitMessage, 'warning');
+      return;
+    }
+    add();
+  }, [limitReached, toaster, limitMessage, add]);
 
   return (
     <div className="flex group-[.sidebar]:block gap-[8px]">
       <button
-        className="flex-1 group-[.sidebar]:w-[100%] group-[.sidebar]:flex-none text-btnText bg-btnSimple h-[44px] pt-[12px] pb-[14px] ps-[16px] pe-[20px] justify-center items-center flex rounded-[8px] gap-[8px]"
-        onClick={add}
+        className={clsx(
+          'flex-1 group-[.sidebar]:w-[100%] group-[.sidebar]:flex-none text-btnText bg-btnSimple h-[44px] pt-[12px] pb-[14px] ps-[16px] pe-[20px] justify-center items-center flex rounded-[8px] gap-[8px]',
+          limitReached && 'opacity-50 cursor-not-allowed'
+        )}
+        onClick={handleAddClick}
+        data-tooltip-id={limitReached ? 'tooltip' : undefined}
+        data-tooltip-content={limitReached ? limitMessage : undefined}
+        aria-disabled={limitReached}
       >
         <div>
           <svg
