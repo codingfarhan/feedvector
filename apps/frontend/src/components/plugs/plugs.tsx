@@ -22,7 +22,7 @@ export const Plugs = () => {
   const fetch = useFetch()
   const router = useRouter()
   const user = useUser()
-  const isTrailing = !!(user as any)?.isTrailing || !!(user as any)?.isTrialing
+  const onFreePlan = user.tier.current == "FREE"
   const [current, setCurrent] = useState(0)
   const [refresh, setRefresh] = useState(false)
   const toaster = useToaster()
@@ -102,7 +102,7 @@ export const Plugs = () => {
   }
   return (
     <div className="relative flex flex-1 gap-[1px]">
-      <div className={clsx("flex flex-1 gap-[1px]", isTrailing && "blur-sm pointer-events-none select-none")}>
+      <div className={clsx("flex flex-1 gap-[1px]", onFreePlan && "blur-sm pointer-events-none select-none")}>
         <div
           className={clsx(
             "bg-newBgColorInner p-[20px] flex flex-col gap-[15px] transition-all",
@@ -186,7 +186,7 @@ export const Plugs = () => {
           </PlugsContext.Provider>
         </div>
       </div>
-      {isTrailing && (
+      {onFreePlan && (
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="bg-newBgColorInner/90 border border-newTableBorder rounded-[12px] px-[24px] py-[20px] text-center max-w-[420px] shadow-lg">
             <div className="text-[20px] font-semibold mb-[6px]">{t("upgrade_to_use_plugs", "Upgrade to Pro to use Plugs")}</div>

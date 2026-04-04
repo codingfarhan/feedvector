@@ -21,6 +21,20 @@ export class SubscriptionService {
     );
   }
 
+  async getOrganizationIdBySubscriptionIdentifier(identifier: string) {
+    const result =
+      await this._subscriptionRepository.getSubscriptionByIdentifier(
+        identifier
+      );
+    return result?.organizationId;
+  }
+
+  async getOrganizationIdByPaymentId(paymentId: string) {
+    const org =
+      await this._subscriptionRepository.getOrganizationByCustomerId(paymentId);
+    return org?.id;
+  }
+
   useCredit<T>(organization: Organization, type = 'ai_images', func: () => Promise<T>) : Promise<T> {
     return this._subscriptionRepository.useCredit(organization, type, func);
   }
@@ -38,6 +52,16 @@ export class SubscriptionService {
     return this._subscriptionRepository.deleteSubscriptionByCustomerId(
       customerId
     );
+  }
+
+  deleteSubscriptionByOrganizationId(organizationId: string) {
+    return this._subscriptionRepository.deleteSubscriptionByOrganizationId(
+      organizationId
+    );
+  }
+
+  setCancelAt(organizationId: string, cancelAt: Date | null) {
+    return this._subscriptionRepository.setCancelAt(organizationId, cancelAt);
   }
 
   updateCustomerId(organizationId: string, customerId: string) {

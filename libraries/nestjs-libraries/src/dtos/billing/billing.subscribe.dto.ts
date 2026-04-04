@@ -1,11 +1,11 @@
 import { IsIn } from 'class-validator';
 
 export class BillingSubscribeDto {
-  @IsIn(['MONTHLY', 'YEARLY'])
-  period: 'MONTHLY' | 'YEARLY';
+  @IsIn(['MONTHLY'])
+  period: 'MONTHLY';
 
-  @IsIn(['STANDARD', 'PRO', 'TEAM', 'ULTIMATE'])
-  billing: 'STANDARD' | 'PRO' | 'TEAM' | 'ULTIMATE';
+  @IsIn(['PRO'])
+  billing: 'PRO';
 
   utm: string;
 

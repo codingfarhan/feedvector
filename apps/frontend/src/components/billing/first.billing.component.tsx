@@ -1,10 +1,8 @@
 'use client';
 
-import React, { FC, useCallback, useEffect, useMemo, useState } from 'react';
-import useSWR from 'swr';
+import React, { FC, useCallback, useMemo } from 'react';
 import { useFetch } from '@gitroom/helpers/utils/custom.fetch';
 import { useVariables } from '@gitroom/react/helpers/variable.context';
-import { loadStripe, Stripe } from '@stripe/stripe-js';
 import { OrganizationSelector } from '@gitroom/frontend/components/layout/organization.selector';
 import { LanguageComponent } from '@gitroom/frontend/components/layout/language.component';
 import { AttachToFeedbackIcon } from '@gitroom/frontend/components/new-layout/sentry.feedback.component';
@@ -14,7 +12,7 @@ import { LogoTextComponent } from '@gitroom/frontend/components/ui/logo-text.com
 import { pricing } from '@gitroom/nestjs-libraries/database/prisma/subscriptions/pricing';
 import { capitalize } from 'lodash';
 import clsx from 'clsx';
-import { LoadingComponent } from '@gitroom/frontend/components/layout/loading';
+import { Button } from '@gitroom/react/form/button';
 import { CheckIconComponent } from '@gitroom/frontend/components/ui/check.icon.component';
 import {
   FAQComponent,
@@ -26,6 +24,7 @@ import { useDubClickId } from '@gitroom/frontend/components/layout/dubAnalytics'
 import Image from 'next/image';
 import { useModals } from '@gitroom/frontend/components/layout/new-modal';
 import useCookie from 'react-use-cookie';
+import { openRazorpayCheckout } from '@gitroom/frontend/components/billing/razorpay.checkout';
 
 const ModeComponent = dynamic(
   () => import('@gitroom/frontend/components/layout/mode.component'),
@@ -34,48 +33,17 @@ const ModeComponent = dynamic(
   }
 );
 
-const EmbeddedBilling = dynamic(
-  () =>
-    import('@gitroom/frontend/components/billing/embedded.billing').then(
-      (mod) => mod.EmbeddedBilling
-    ),
-  {
-    ssr: false,
-  }
-);
-
 export const FirstBillingComponent = () => {
-  const { stripeClient } = useVariables();
+  const { razorpayKeyId } = useVariables();
   const user = useUser();
   const dub = useDubClickId();
-  const [stripe, setStripe] = useState<null | Promise<Stripe>>(null);
-  const [tier, setTier] = useState('STANDARD');
-  const [period, setPeriod] = useState('MONTHLY');
+  const tier = 'PRO';
+  const period: 'MONTHLY' = 'MONTHLY';
   const fetch = useFetch();
   const modals = useModals();
   const t = useT();
   const [datafast_visitor_id] = useCookie('datafast_visitor_id', '');
   const [datafast_session_id] = useCookie('datafast_session_id', '');
-
-  useEffect(() => {
-    setStripe(loadStripe(stripeClient));
-  }, []);
-
-  const loadCheckout = useCallback(async () => {
-    return (
-      await fetch('/billing/embedded', {
-        method: 'POST',
-        body: JSON.stringify({
-          billing: tier,
-          period: period,
-          ...(datafast_visitor_id && datafast_session_id
-            ? { datafast_visitor_id, datafast_session_id }
-            : {}),
-          ...(dub ? { dub } : {}),
-        }),
-      })
-    ).json();
-  }, [tier, period]);
 
   const showYouTube = () => {
     modals.openModal({
@@ -92,20 +60,59 @@ export const FirstBillingComponent = () => {
     });
   };
 
-  const { data, isLoading } = useSWR(
-    `/billing-${tier}-${period}`,
-    loadCheckout,
-    {
-      revalidateOnFocus: false,
-      revalidateOnReconnect: false,
-      revalidateIfStale: false,
-      refreshWhenOffline: false,
-      refreshWhenHidden: false,
+  const startCheckout = useCallback(async () => {
+    if (!razorpayKeyId) {
+      return;
     }
-  );
+    const response = await (
+      await fetch('/billing/subscribe', {
+        method: 'POST',
+        body: JSON.stringify({
+          billing: tier,
+          period: period,
+          ...(datafast_visitor_id && datafast_session_id
+            ? { datafast_visitor_id, datafast_session_id }
+            : {}),
+          ...(dub ? { dub } : {}),
+        }),
+      })
+    ).json();
+
+    if (!response?.subscriptionId || !response?.keyId) {
+      return;
+    }
+
+    await openRazorpayCheckout({
+      keyId: response.keyId,
+      subscriptionId: response.subscriptionId,
+      amount: response.amount,
+      currency: response.currency,
+      name: response.name,
+      description: response.description,
+      prefill: {
+        name: user?.name || '',
+        email: user?.email || '',
+      },
+      onSuccess: async (payload) => {
+        await fetch('/billing/verify', {
+          method: 'POST',
+          body: JSON.stringify(payload),
+        });
+        window.location.href = '/billing';
+      },
+    });
+  }, [
+    razorpayKeyId,
+    tier,
+    period,
+    datafast_visitor_id,
+    datafast_session_id,
+    dub,
+    user,
+  ]);
 
   const price = useMemo(
-    () => Object.entries(pricing).filter(([key, value]) => key !== 'FREE'),
+    () => Object.entries(pricing).filter(([key]) => key === 'PRO'),
     []
   );
 
@@ -197,16 +204,14 @@ export const FirstBillingComponent = () => {
           <div className="block tablet:hidden">
             <JoinOver />
           </div>
-          {!isLoading && data && stripe ? (
-            <EmbeddedBilling
-              stripe={stripe}
-              secret={data.client_secret}
-              showCoupon={period === 'MONTHLY'}
-              autoApplyCoupon={data.auto_apply_coupon}
-            />
-          ) : (
-            <LoadingComponent />
-          )}
+          <div className="flex flex-col gap-[16px]">
+            <div className="text-[18px] text-customColor18">
+              {t('billing_pro_monthly', 'Pro - $29/month')}
+            </div>
+            <Button onClick={startCheckout} disabled={!razorpayKeyId}>
+              {t('upgrade_to_pro', 'Upgrade to Pro')}
+            </Button>
+          </div>
         </div>
         <div className="flex flex-col ps-[40px] tablet:!ps-[0] border-l border-newColColor py-[40px] mobile:!pt-[24px] tablet:border-none tablet:pb-0">
           <div className="top-[20px] sticky">
@@ -217,31 +222,9 @@ export const FirstBillingComponent = () => {
               <div className="flex-1 text-[24px] font-[700]">
                 {t('billing_choose_plan', 'Choose a Plan')}
               </div>
-              <div className="h-[44px] px-[6px] mobile:px-0 flex items-center justify-center mobile:justify-start gap-[12px] border border-newColColor rounded-[12px] select-none">
-                <div
-                  className={clsx(
-                    'h-[32px] mobile:flex-1 rounded-[6px] text-[16px] px-[12px] flex justify-center items-center',
-                    period === 'MONTHLY'
-                      ? 'bg-boxFocused text-textItemFocused'
-                      : 'cursor-pointer'
-                  )}
-                  onClick={() => setPeriod('MONTHLY')}
-                >
+              <div className="h-[44px] px-[12px] mobile:px-0 flex items-center justify-center mobile:justify-start gap-[12px] border border-newColColor rounded-[12px] select-none">
+                <div className="h-[32px] mobile:flex-1 rounded-[6px] text-[16px] px-[12px] flex justify-center items-center bg-boxFocused text-textItemFocused">
                   {t('billing_monthly', 'Monthly')}
-                </div>
-                <div
-                  className={clsx(
-                    'gap-[10px] h-[32px] mobile:flex-1 rounded-[6px] text-[16px] px-[12px] flex justify-center items-center',
-                    period === 'YEARLY'
-                      ? 'bg-boxFocused text-textItemFocused'
-                      : 'cursor-pointer'
-                  )}
-                  onClick={() => setPeriod('YEARLY')}
-                >
-                  <div>{t('billing_yearly', 'Yearly')}</div>
-                  <div className="bg-[#AA0FA4] text-[white] px-[8px] rounded-[4px] mobile:hidden">
-                    {t('billing_20_percent_off', '20% Off')}
-                  </div>
                 </div>
               </div>
             </div>
@@ -249,13 +232,9 @@ export const FirstBillingComponent = () => {
               {price.map(
                 ([key, value]) => (
                   <div
-                    onClick={() => setTier(key)}
                     key={key}
                     className={clsx(
-                      'cursor-pointer select-none w-[266px] h-[138px] tablet:w-full tablet:h-[124px] p-[24px] tablet:p-[15px] rounded-[20px] flex flex-col',
-                      key === tier
-                        ? 'border-[1.5px] border-[#618DFF]'
-                        : 'border-[1.5px] border-newColColor'
+                      'select-none w-[266px] h-[138px] tablet:w-full tablet:h-[124px] p-[24px] tablet:p-[15px] rounded-[20px] flex flex-col border-[1.5px] border-[#618DFF]'
                     )}
                   >
                     <div className="text-[20px] mobile:text-[18px] font-[500]">
@@ -264,15 +243,9 @@ export const FirstBillingComponent = () => {
                     <div className="text-[24px] mobile:text-[18px] font-[400]">
                       <span className="text-[44px] mobile:text-[30px] font-[600]">
                         $
-                        {
-                          value[
-                            period === 'MONTHLY' ? 'month_price' : 'year_price'
-                          ]
-                        }
+                        {value.month_price}
                       </span>{' '}
-                      {period === 'MONTHLY'
-                        ? t('billing_per_month', '/ month')
-                        : t('billing_per_year', '/ year')}
+                      {t('billing_per_month', '/ month')}
                     </div>
                   </div>
                 ),

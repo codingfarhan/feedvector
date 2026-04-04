@@ -56,6 +56,18 @@ export class SubscriptionRepository {
     });
   }
 
+  getSubscriptionByIdentifier(identifier: string) {
+    return this._subscription.model.subscription.findFirst({
+      where: {
+        identifier,
+        deletedAt: null,
+      },
+      select: {
+        organizationId: true,
+      },
+    });
+  }
+
   updateConnectedStatus(account: string, accountCharges: boolean) {
     return this._user.model.user.updateMany({
       where: {
@@ -94,6 +106,26 @@ export class SubscriptionRepository {
         organization: {
           paymentId: customerId,
         },
+      },
+    });
+  }
+
+  deleteSubscriptionByOrganizationId(organizationId: string) {
+    return this._subscription.model.subscription.deleteMany({
+      where: {
+        organizationId,
+      },
+    });
+  }
+
+  setCancelAt(organizationId: string, cancelAt: Date | null) {
+    return this._subscription.model.subscription.updateMany({
+      where: {
+        organizationId,
+        deletedAt: null,
+      },
+      data: {
+        cancelAt,
       },
     });
   }

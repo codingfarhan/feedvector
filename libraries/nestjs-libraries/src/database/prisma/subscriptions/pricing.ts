@@ -76,8 +76,8 @@ export const pricing: PricingInterface = {
   },
   PRO: {
     current: 'PRO',
-    month_price: 49,
-    year_price: 470,
+    month_price: 29,
+    year_price: 348,
     channel: 30,
     posts_per_month: 1000000,
     image_generation_count: 300,

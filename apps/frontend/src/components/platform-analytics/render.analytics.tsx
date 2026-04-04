@@ -1,66 +1,50 @@
-import { FC, useCallback, useMemo } from 'react';
-import { Integration } from '@prisma/client';
-import useSWR from 'swr';
-import { useFetch } from '@gitroom/helpers/utils/custom.fetch';
-import { ChartSocial } from '@gitroom/frontend/components/analytics/chart-social';
-import { LoadingComponent } from '@gitroom/frontend/components/layout/loading';
-import { useT } from '@gitroom/react/translation/get.transation.service.client';
-import { useUser } from '@gitroom/frontend/components/layout/user.context';
-import clsx from 'clsx';
-import { Button } from '@gitroom/react/form/button';
-import { useRouter } from 'next/navigation';
+import { FC, useCallback, useMemo } from "react"
+import { Integration } from "@prisma/client"
+import useSWR from "swr"
+import { useFetch } from "@gitroom/helpers/utils/custom.fetch"
+import { ChartSocial } from "@gitroom/frontend/components/analytics/chart-social"
+import { LoadingComponent } from "@gitroom/frontend/components/layout/loading"
+import { useT } from "@gitroom/react/translation/get.transation.service.client"
+import { useUser } from "@gitroom/frontend/components/layout/user.context"
+import clsx from "clsx"
+import { Button } from "@gitroom/react/form/button"
+import { useRouter } from "next/navigation"
 
 interface AnalyticsDataItem {
-  label: string;
-  data: Array<{ total: number; date: string }>;
-  average?: boolean;
-  percentageChange?: number;
+  label: string
+  data: Array<{ total: number; date: string }>
+  average?: boolean
+  percentageChange?: number
 }
 
-const TrendIndicator: FC<{ value: number; average?: boolean }> = ({
-  value,
-  average,
-}) => {
-  if (value === 0) return null;
+const TrendIndicator: FC<{ value: number; average?: boolean }> = ({ value, average }) => {
+  if (value === 0) return null
 
-  const isPositive = value > 0;
-  const displayValue = Math.abs(value).toFixed(1);
+  const isPositive = value > 0
+  const displayValue = Math.abs(value).toFixed(1)
 
   return (
-    <div
-      className={`flex items-center gap-[4px] text-[13px] font-medium ${
-        isPositive ? 'text-[#32d583]' : 'text-[#f97066]'
-      }`}
-    >
-      <svg
-        width="12"
-        height="12"
-        viewBox="0 0 12 12"
-        fill="none"
-        className={isPositive ? '' : 'rotate-180'}
-      >
-        <path
-          d="M6 2.5L10 7.5H2L6 2.5Z"
-          fill="currentColor"
-        />
+    <div className={`flex items-center gap-[4px] text-[13px] font-medium ${isPositive ? "text-[#32d583]" : "text-[#f97066]"}`}>
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className={isPositive ? "" : "rotate-180"}>
+        <path d="M6 2.5L10 7.5H2L6 2.5Z" fill="currentColor" />
       </svg>
       <span>
         {displayValue}
-        {average ? 'pp' : '%'}
+        {average ? "pp" : "%"}
       </span>
     </div>
-  );
-};
+  )
+}
 
 const AnalyticsCard: FC<{
-  item: AnalyticsDataItem;
-  total: string | number;
-  index: number;
+  item: AnalyticsDataItem
+  total: string | number
+  index: number
 }> = ({ item, total, index }) => {
-  const colorVariants = ['purple', 'green', 'blue'] as const;
-  const color = colorVariants[index % colorVariants.length];
+  const colorVariants = ["purple", "green", "blue"] as const
+  const color = colorVariants[index % colorVariants.length]
 
-  const hasMultipleDataPoints = item.data.length > 1;
+  const hasMultipleDataPoints = item.data.length > 1
 
   return (
     <div className="group relative">
@@ -81,18 +65,14 @@ const AnalyticsCard: FC<{
             <div
               className={`
                 w-[8px] h-[8px] rounded-full
-                ${color === 'purple' ? 'bg-[#612bd3]' : ''}
-                ${color === 'green' ? 'bg-[#32d583]' : ''}
-                ${color === 'blue' ? 'bg-[#1d9bf0]' : ''}
+                ${color === "purple" ? "bg-[#612bd3]" : ""}
+                ${color === "green" ? "bg-[#32d583]" : ""}
+                ${color === "blue" ? "bg-[#1d9bf0]" : ""}
               `}
             />
-            <span className="text-[15px] font-medium text-newTableText">
-              {item.label}
-            </span>
+            <span className="text-[15px] font-medium text-newTableText">{item.label}</span>
           </div>
-          {item.percentageChange !== undefined && (
-            <TrendIndicator value={item.percentageChange} average={item.average} />
-          )}
+          {item.percentageChange !== undefined && <TrendIndicator value={item.percentageChange} average={item.average} />}
         </div>
 
         {/* Content */}
@@ -107,224 +87,171 @@ const AnalyticsCard: FC<{
 
             {/* Value */}
             <div className="px-[16px] pb-[14px]">
-              <div className="text-[36px] leading-[42px] font-semibold tracking-tight">
-                {total}
-              </div>
+              <div className="text-[36px] leading-[42px] font-semibold tracking-tight">{total}</div>
             </div>
           </>
         ) : (
           /* Single value display */
           <div className="flex-1 flex flex-col items-center justify-center py-[32px] px-[16px]">
-            <div className="text-[48px] leading-[56px] font-semibold tracking-tight">
-              {total}
-            </div>
+            <div className="text-[48px] leading-[56px] font-semibold tracking-tight">{total}</div>
           </div>
         )}
       </div>
     </div>
-  );
-};
+  )
+}
 
 const EmptyState: FC<{ onRefresh: () => void }> = ({ onRefresh }) => {
-  const t = useT();
+  const t = useT()
 
   return (
     <div className="col-span-full flex flex-col items-center justify-center py-[48px] px-[24px] bg-newTableHeader border border-newTableBorder rounded-[12px]">
       <div className="w-[48px] h-[48px] mb-[16px] rounded-full bg-[#612bd3]/10 flex items-center justify-center">
-        <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          className="text-[#612bd3]"
-        >
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-[#612bd3]">
           <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           <path d="M12 8v4l2 2" />
         </svg>
       </div>
       <p className="text-[15px] text-newTableText text-center mb-[12px]">
-        {t(
-          'this_channel_needs_to_be_refreshed',
-          'This channel needs to be refreshed to display analytics'
-        )}
+        {t("this_channel_needs_to_be_refreshed", "This channel needs to be refreshed to display analytics")}
       </p>
       <button
         onClick={onRefresh}
         className="inline-flex items-center gap-[6px] px-[16px] py-[8px] text-[14px] font-medium text-white bg-[#612bd3] hover:bg-[#5023b8] rounded-[8px] transition-colors"
       >
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-        >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M23 4v6h-6M1 20v-6h6" />
           <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" />
         </svg>
-        {t('refresh_channel', 'Refresh Channel')}
+        {t("refresh_channel", "Refresh Channel")}
       </button>
     </div>
-  );
-};
+  )
+}
 
 export const RenderAnalytics: FC<{
-  integration: Integration;
-  date: number;
+  integration: Integration
+  date: number
 }> = (props) => {
-  const { integration, date } = props;
-  const fetch = useFetch();
-  const user = useUser();
-  const isTrailing =
-    !!(user as any)?.isTrailing || !!(user as any)?.isTrialing;
-  const t = useT();
-  const router = useRouter();
+  const { integration, date } = props
+  const fetch = useFetch()
+  const user = useUser()
+  const onFreePlan = user.tier.current == "FREE"
+  const t = useT()
+  const router = useRouter()
 
   const load = useCallback(async () => {
-    return (await fetch(`/analytics/${integration.id}?date=${date}`)).json();
-  }, [integration, date]);
+    return (await fetch(`/analytics/${integration.id}?date=${date}`)).json()
+  }, [integration, date])
 
-  const { data, isLoading } = useSWR(
-    isTrailing ? null : `/analytics-${integration?.id}-${date}`,
-    load,
-    {
-      refreshInterval: 0,
-      refreshWhenHidden: false,
-      revalidateOnFocus: false,
-      revalidateOnReconnect: false,
-      revalidateIfStale: false,
-      refreshWhenOffline: false,
-      revalidateOnMount: true,
-    }
-  );
+  const { data, isLoading } = useSWR(onFreePlan ? null : `/analytics-${integration?.id}-${date}`, load, {
+    refreshInterval: 0,
+    refreshWhenHidden: false,
+    revalidateOnFocus: false,
+    revalidateOnReconnect: false,
+    revalidateIfStale: false,
+    refreshWhenOffline: false,
+    revalidateOnMount: true,
+  })
 
   const mockData: AnalyticsDataItem[] = useMemo(() => {
-    const points = Math.max(7, Math.min(date || 7, 30));
+    const points = Math.max(7, Math.min(date || 7, 30))
     const buildSeries = (seed: number) =>
       Array.from({ length: points }, (_, index) => {
-        const dayIndex = points - 1 - index;
-        const base = seed * 120;
-        const wave = Math.sin((index + seed) * 0.6) * (seed * 8);
-        const trend = index * seed * 4;
-        const total = Math.max(0, Math.round(base + wave + trend));
+        const dayIndex = points - 1 - index
+        const base = seed * 120
+        const wave = Math.sin((index + seed) * 0.6) * (seed * 8)
+        const trend = index * seed * 4
+        const total = Math.max(0, Math.round(base + wave + trend))
         return {
           total,
-          date: new Date(
-            Date.now() - dayIndex * 24 * 60 * 60 * 1000
-          ).toISOString(),
-        };
-      });
+          date: new Date(Date.now() - dayIndex * 24 * 60 * 60 * 1000).toISOString(),
+        }
+      })
 
     const engagementSeries = buildSeries(3).map((item) => ({
       ...item,
       total: Math.max(0, Number(((item.total % 40) + 3).toFixed(2))),
-    }));
+    }))
 
     return [
       {
-        label: t('impressions', 'Impressions'),
+        label: t("impressions", "Impressions"),
         data: buildSeries(7),
         percentageChange: 12.4,
       },
       {
-        label: t('engagement_rate', 'Engagement Rate'),
+        label: t("engagement_rate", "Engagement Rate"),
         data: engagementSeries,
         average: true,
         percentageChange: -1.6,
       },
       {
-        label: t('new_followers', 'New Followers'),
+        label: t("new_followers", "New Followers"),
         data: buildSeries(5),
         percentageChange: 6.8,
       },
-    ];
-  }, [date, t]);
+    ]
+  }, [date, t])
 
-  const dataToRender = isTrailing ? mockData : data;
+  const dataToRender = onFreePlan ? mockData : data
 
   const refreshChannel = useCallback(
     (
         integrationData: Integration & {
-          identifier: string;
-        }
+          identifier: string
+        },
       ) =>
       async () => {
         const { url } = await (
-          await fetch(
-            `/integrations/social/${integrationData.identifier}?refresh=${integrationData.internalId}`,
-            {
-              method: 'GET',
-            }
-          )
-        ).json();
-        window.location.href = url;
+          await fetch(`/integrations/social/${integrationData.identifier}?refresh=${integrationData.internalId}`, {
+            method: "GET",
+          })
+        ).json()
+        window.location.href = url
       },
-    []
-  );
+    [],
+  )
 
   const totals = useMemo(() => {
     return dataToRender?.map((p: AnalyticsDataItem) => {
-      const value =
-        (p?.data.reduce((acc: number, curr: { total: number }) => acc + curr.total, 0) || 0) /
-        (p.average ? p.data.length : 1);
+      const value = (p?.data.reduce((acc: number, curr: { total: number }) => acc + curr.total, 0) || 0) / (p.average ? p.data.length : 1)
       if (p.average) {
-        return value.toFixed(2) + '%';
+        return value.toFixed(2) + "%"
       }
-      return new Intl.NumberFormat().format(Math.round(value));
-    });
-  }, [dataToRender]);
+      return new Intl.NumberFormat().format(Math.round(value))
+    })
+  }, [dataToRender])
 
-  if (!isTrailing && isLoading) {
+  if (!onFreePlan && isLoading) {
     return (
       <div className="flex items-center justify-center py-[48px]">
         <LoadingComponent />
       </div>
-    );
+    )
   }
 
   return (
     <div className="relative">
-      <div
-        className={clsx(
-          'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-[16px]',
-          isTrailing && 'blur-sm pointer-events-none select-none'
-        )}
-      >
-        {!isTrailing && dataToRender?.length === 0 && (
-          <EmptyState onRefresh={refreshChannel(integration as any)} />
-        )}
+      <div className={clsx("grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-[16px]", onFreePlan && "blur-sm pointer-events-none select-none")}>
+        {!onFreePlan && dataToRender?.length === 0 && <EmptyState onRefresh={refreshChannel(integration as any)} />}
         {dataToRender?.map((item: AnalyticsDataItem, index: number) => (
-          <AnalyticsCard
-            key={`analytics-${index}`}
-            item={item}
-            total={totals?.[index]}
-            index={index}
-          />
+          <AnalyticsCard key={`analytics-${index}`} item={item} total={totals?.[index]} index={index} />
         ))}
       </div>
-      {isTrailing && (
+      {onFreePlan && (
         <div className="absolute inset-0 flex items-start justify-center pt-[64px]">
           <div className="bg-newBgColorInner border border-newTableBorder rounded-[12px] px-[24px] py-[20px] text-center max-w-[420px] shadow-lg">
-            <div className="text-[20px] font-semibold mb-[6px]">
-              {t('upgrade_to_view_analytics', 'Upgrade to Pro to view analytics')}
-            </div>
+            <div className="text-[20px] font-semibold mb-[6px]">{t("upgrade_to_view_analytics", "Upgrade to Pro to view analytics")}</div>
             <div className="text-[14px] text-newTableText mb-[16px]">
-              {t(
-                'trial_analytics_cta',
-                'Unlock full analytics, trends, and performance breakdowns.'
-              )}
+              {t("trial_analytics_cta", "Unlock full analytics, trends, and performance breakdowns.")}
             </div>
             <div className="flex justify-center">
-              <Button onClick={() => router.push('/pricing')}>
-                {t('upgrade_to_pro', 'Upgrade to Pro')}
-              </Button>
+              <Button onClick={() => router.push("/pricing")}>{t("upgrade_to_pro", "Upgrade to Pro")}</Button>
             </div>
           </div>
         </div>
       )}
     </div>
-  );
-};
+  )
+}

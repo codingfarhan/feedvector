@@ -1,12 +1,12 @@
-import { Mastra } from '@mastra/core/mastra';
-import { ConsoleLogger } from '@mastra/core/logger';
-import { pStore } from '@gitroom/nestjs-libraries/chat/mastra.store';
-import { Injectable } from '@nestjs/common';
-import { LoadToolsService } from '@gitroom/nestjs-libraries/chat/load.tools.service';
+import { Mastra } from "@mastra/core/mastra"
+import { ConsoleLogger } from "@mastra/core/logger"
+import { pStore } from "@gitroom/nestjs-libraries/chat/mastra.store"
+import { Injectable } from "@nestjs/common"
+import { LoadToolsService } from "@gitroom/nestjs-libraries/chat/load.tools.service"
 
 @Injectable()
 export class MastraService {
-  static mastra: Mastra;
+  static mastra: Mastra
   constructor(private _loadToolsService: LoadToolsService) {}
   async mastra() {
     MastraService.mastra =
@@ -14,13 +14,13 @@ export class MastraService {
       new Mastra({
         storage: pStore,
         agents: {
-          postiz: await this._loadToolsService.agent(),
+          feedvector: await this._loadToolsService.agent(),
         },
         logger: new ConsoleLogger({
-          level: 'info',
+          level: "info",
         }),
-      });
+      })
 
-    return MastraService.mastra;
+    return MastraService.mastra
   }
 }

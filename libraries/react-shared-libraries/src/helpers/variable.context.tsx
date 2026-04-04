@@ -3,6 +3,7 @@
 import { createContext, FC, ReactNode, useContext, useEffect } from 'react';
 interface VariableContextInterface {
   stripeClient: string;
+  razorpayKeyId: string;
   billingEnabled: boolean;
   isGeneral: boolean;
   genericOauth: boolean;
@@ -29,6 +30,7 @@ interface VariableContextInterface {
 }
 const VariableContext = createContext({
   stripeClient: '',
+  razorpayKeyId: '',
   billingEnabled: false,
   isGeneral: true,
   genericOauth: false,

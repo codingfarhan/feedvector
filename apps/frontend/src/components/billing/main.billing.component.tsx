@@ -1,6 +1,5 @@
 "use client"
 
-import { Slider } from "@gitroom/react/form/slider"
 import React, { FC, useCallback, useEffect, useMemo, useState } from "react"
 import { Button } from "@gitroom/react/form/button"
 import { useFetch } from "@gitroom/helpers/utils/custom.fetch"
@@ -29,6 +28,7 @@ import { FinishTrial } from "@gitroom/frontend/components/billing/finish.trial"
 import { newDayjs } from "@gitroom/frontend/components/layout/set.timezone"
 import { useDubClickId } from "@gitroom/frontend/components/layout/dubAnalytics"
 import { LogoutComponent } from "@gitroom/frontend/components/layout/logout.component"
+import { openRazorpayCheckout } from "@gitroom/frontend/components/billing/razorpay.checkout"
 
 export const Prorate: FC<{
   period: "MONTHLY" | "YEARLY"
@@ -200,7 +200,7 @@ export const MainBillingComponent: FC<{
   sub?: Subscription
 }> = (props) => {
   const { sub } = props
-  const { isGeneral } = useVariables()
+  const { isGeneral, discordUrl } = useVariables()
   const { mutate } = useSWRConfig()
   const fetch = useFetch()
   const toast = useToaster()
@@ -216,35 +216,25 @@ export const MainBillingComponent: FC<{
 
   const [subscription, setSubscription] = useState<Subscription | undefined>(sub)
   const [loading, setLoading] = useState<boolean>(false)
-  const [period, setPeriod] = useState<"MONTHLY" | "YEARLY">(subscription?.period || "MONTHLY")
-  const [monthlyOrYearly, setMonthlyOrYearly] = useState<"on" | "off">(period === "MONTHLY" ? "off" : "on")
+  const period: "MONTHLY" = "MONTHLY"
   const [initialChannels, setInitialChannels] = useState(sub?.totalChannels || 1)
   useEffect(() => {
     if (initialChannels !== sub?.totalChannels) {
       setInitialChannels(sub?.totalChannels || 1)
     }
-    if (period !== sub?.period) {
-      setPeriod(sub?.period || "MONTHLY")
-      setMonthlyOrYearly((sub?.period || "MONTHLY") === "MONTHLY" ? "off" : "on")
-    }
     setSubscription(sub)
   }, [sub])
   const updatePayment = useCallback(async () => {
-    const { portal } = await (await fetch("/billing/portal")).json()
-    window.location.href = portal
-  }, [])
+    if (discordUrl) {
+      window.open(discordUrl)
+    }
+  }, [discordUrl])
   const currentPackage = useMemo(() => {
     if (!subscription) {
       return "FREE"
     }
-    if (period === "YEARLY" && monthlyOrYearly === "off") {
-      return ""
-    }
-    if (period === "MONTHLY" && monthlyOrYearly === "on") {
-      return ""
-    }
     return subscription?.subscriptionTier
-  }, [subscription, initialChannels, monthlyOrYearly, period])
+  }, [subscription, initialChannels])
   const moveToCheckout = useCallback(
     (billing: "STANDARD" | "PRO" | "FREE", reactivate = false) =>
       async () => {
@@ -341,50 +331,66 @@ export const MainBillingComponent: FC<{
           return
         }
         setLoading(true)
-        const { url, portal } = await (
+        const {
+          subscriptionId,
+          keyId,
+          amount,
+          currency,
+          name: planName,
+          description,
+        } = await (
           await fetch("/billing/subscribe", {
             method: "POST",
             body: JSON.stringify({
-              period: monthlyOrYearly === "on" ? "YEARLY" : "MONTHLY",
+              period: "MONTHLY",
               utm,
               billing,
               ...(dub ? { dub } : {}),
             }),
           })
         ).json()
-        if (url) {
+        if (subscriptionId && keyId) {
           await track(TrackEnum.InitiateCheckout, {
-            value: pricing[billing][monthlyOrYearly === "on" ? "year_price" : "month_price"],
+            value: pricing[billing].month_price,
           })
-          window.location.href = url
-          return
-        }
-        if (portal) {
-          if (await deleteDialog("We could not charge your credit card, please update your payment method", "Update", "Payment Method Required")) {
-            window.open(portal)
-          }
-        } else {
-          setPeriod(monthlyOrYearly === "on" ? "YEARLY" : "MONTHLY")
-          setSubscription((subs) => ({
-            ...subs!,
-            subscriptionTier: billing,
-            cancelAt: null,
-          }))
-          mutate(
-            "/user/self",
-            {
-              ...user,
-              tier: billing,
+          await openRazorpayCheckout({
+            keyId,
+            subscriptionId,
+            amount,
+            currency,
+            name: planName,
+            description,
+            prefill: {
+              name: user?.name || "",
+              email: user?.email || "",
             },
-            {
-              revalidate: false,
+            onSuccess: async (payload) => {
+              await fetch("/billing/verify", {
+                method: "POST",
+                body: JSON.stringify(payload),
+              })
+              setSubscription((subs) => ({
+                ...subs!,
+                subscriptionTier: billing,
+                cancelAt: null,
+              }))
+              mutate(
+                "/user/self",
+                {
+                  ...user,
+                  tier: billing,
+                },
+                {
+                  revalidate: false,
+                },
+              )
+              toast.show("Subscription updated successfully")
             },
-          )
-          toast.show("Subscription updated successfully")
+          })
         }
         setLoading(false)
       },
-    [monthlyOrYearly, subscription, user, utm],
+    [subscription, user, utm],
   )
   if (user?.isLifetime) {
     router.replace("/")
@@ -394,19 +400,12 @@ export const MainBillingComponent: FC<{
     <div className="flex flex-col gap-[16px]">
       <div className="flex flex-row">
         <div className="flex-1 text-[20px]">{t("plans", "Plans")}</div>
-        <div className="flex items-center gap-[16px]">
-          <div>{t("monthly", "MONTHLY")}</div>
-          <div>
-            <Slider value={monthlyOrYearly} onChange={setMonthlyOrYearly} />
-          </div>
-          <div>{t("yearly", "YEARLY")}</div>
-        </div>
       </div>
 
       {finishTrial && <FinishTrial close={() => setFinishTrial(false)} />}
       <div className="flex gap-[16px] [@media(max-width:1024px)]:flex-col [@media(max-width:1024px)]:text-center">
         {Object.entries(pricing)
-          .filter((f) => !isGeneral || f[0] !== "FREE")
+          .filter((f) => ["FREE", "PRO"].includes(f[0]))
           .map(([name, values]) => (
             <div
               key={name}
@@ -414,8 +413,8 @@ export const MainBillingComponent: FC<{
             >
               <div className="text-[18px]">{name}</div>
               <div className="text-[38px] flex gap-[2px] items-center">
-                <div>${monthlyOrYearly === "on" ? values.year_price : values.month_price}</div>
-                <div className={`text-[14px] text-customColor18`}>{monthlyOrYearly === "on" ? "/year" : "/month"}</div>
+                <div>${values.month_price}</div>
+                <div className={`text-[14px] text-customColor18`}>/month</div>
               </div>
               <div className="text-[14px] flex gap-[10px]">
                 {currentPackage === name.toUpperCase() && subscription?.cancelAt ? (
@@ -440,23 +439,21 @@ export const MainBillingComponent: FC<{
                         ? `Downgrade on ${dayjs.utc(subscription?.cancelAt).local().format("D MMM, YYYY")}`
                         : "Cancel subscription"
                       : // @ts-ignore
-                      (user?.tier === "FREE" || user?.tier?.current === "FREE") && user.allowTrial
-                      ? t("start_7_days_free_trial", "Start 7 days free trial")
-                      : "Purchase"}
+                        "Purchase"}
                   </Button>
                 )}
                 {subscription && currentPackage !== name.toUpperCase() && name !== "FREE" && !!name && (
-                  <Prorate period={monthlyOrYearly === "on" ? "YEARLY" : "MONTHLY"} pack={name.toUpperCase() as "STANDARD" | "PRO"} />
+                  <Prorate period={period} pack={name.toUpperCase() as "STANDARD" | "PRO"} />
                 )}
               </div>
               <Features pack={name.toUpperCase() as "FREE" | "STANDARD" | "PRO"} />
             </div>
           ))}
       </div>
-      {!subscription?.id && <PurchaseCrypto />}
+      {/* {!subscription?.id && <PurchaseCrypto />} */}
       {!!subscription?.id && (
         <div className="flex justify-center mt-[20px] gap-[10px]">
-          <Button onClick={updatePayment}>{t("update_payment_method_invoices_history", "Update Payment Method / Invoices History")}</Button>
+          <Button onClick={updatePayment}>{t("contact_support_for_billing", "Contact Support for Billing")}</Button>
           {isGeneral && !subscription?.cancelAt && (
             <Button className="bg-red-500" loading={loading} onClick={moveToCheckout("FREE")}>
               {t("cancel_subscription_1", "Cancel subscription")}

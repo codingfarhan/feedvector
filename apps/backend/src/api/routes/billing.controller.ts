@@ -1,22 +1,20 @@
-import { Body, Controller, Get, Param, Post, Req } from '@nestjs/common';
+import { Body, Controller, Get, HttpException, Param, Post } from '@nestjs/common';
 import { SubscriptionService } from '@gitroom/nestjs-libraries/database/prisma/subscriptions/subscription.service';
-import { StripeService } from '@gitroom/nestjs-libraries/services/stripe.service';
+import { RazorpayService } from '@gitroom/nestjs-libraries/services/razorpay.service';
 import { GetOrgFromRequest } from '@gitroom/nestjs-libraries/user/org.from.request';
 import { Organization, User } from '@prisma/client';
 import { BillingSubscribeDto } from '@gitroom/nestjs-libraries/dtos/billing/billing.subscribe.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { GetUserFromRequest } from '@gitroom/nestjs-libraries/user/user.from.request';
 import { NotificationService } from '@gitroom/nestjs-libraries/database/prisma/notifications/notification.service';
-import { Request } from 'express';
 import { Nowpayments } from '@gitroom/nestjs-libraries/crypto/nowpayments';
-import { AuthService } from '@gitroom/helpers/auth/auth.service';
 
 @ApiTags('Billing')
 @Controller('/billing')
 export class BillingController {
   constructor(
     private _subscriptionService: SubscriptionService,
-    private _stripeService: StripeService,
+    private _razorpayService: RazorpayService,
     private _notificationService: NotificationService,
     private _nowpayments: Nowpayments
   ) {}
@@ -27,28 +25,26 @@ export class BillingController {
     @Param('id') body: string
   ) {
     return {
-      status: await this._stripeService.checkSubscription(org.id, body),
+      status: await this._subscriptionService.checkSubscription(org.id, body),
     };
   }
 
   @Get('/check-discount')
   async checkDiscount(@GetOrgFromRequest() org: Organization) {
     return {
-      offerCoupon: !(await this._stripeService.checkDiscount(org.paymentId))
-        ? false
-        : AuthService.signJWT({ discount: true }),
+      offerCoupon: false,
     };
   }
 
   @Post('/apply-discount')
   async applyDiscount(@GetOrgFromRequest() org: Organization) {
-    await this._stripeService.applyDiscount(org.paymentId);
+    return;
   }
 
   @Post('/finish-trial')
   async finishTrial(@GetOrgFromRequest() org: Organization) {
     try {
-      await this._stripeService.finishTrial(org.paymentId);
+      return;
     } catch (err) {}
     return {
       finish: true,
@@ -66,45 +62,57 @@ export class BillingController {
   embedded(
     @GetOrgFromRequest() org: Organization,
     @GetUserFromRequest() user: User,
-    @Body() body: BillingSubscribeDto,
-    @Req() req: Request
+    @Body() body: BillingSubscribeDto
   ) {
-    const uniqueId = req?.cookies?.track;
-    return this._stripeService.embedded(
-      uniqueId,
-      org.id,
-      user.id,
-      body,
-      org.allowTrial
-    );
+    return this.subscribe(org, user, body);
   }
 
   @Post('/subscribe')
-  subscribe(
+  async subscribe(
     @GetOrgFromRequest() org: Organization,
     @GetUserFromRequest() user: User,
-    @Body() body: BillingSubscribeDto,
-    @Req() req: Request
+    @Body() body: BillingSubscribeDto
   ) {
-    const uniqueId = req?.cookies?.track;
-    return this._stripeService.subscribe(
-      uniqueId,
+    if (body.billing !== 'PRO' || body.period !== 'MONTHLY') {
+      throw new HttpException('Only PRO monthly plan is supported', 400);
+    }
+    const subscription = await this._razorpayService.createProMonthlySubscription(
       org.id,
-      user.id,
-      body,
-      org.allowTrial
+      user.id
     );
+    return {
+      subscriptionId: subscription.subscriptionId,
+      keyId: this._razorpayService.getCheckoutKeyId(),
+      amount: subscription.amount,
+      currency: subscription.currency,
+      name: 'FeedVector',
+      description: 'Pro Plan - $29/month',
+    };
   }
 
-  @Get('/portal')
-  async modifyPayment(@GetOrgFromRequest() org: Organization) {
-    const customer = await this._stripeService.getCustomerByOrganizationId(
-      org.id
+  @Post('/verify')
+  async verifyPayment(
+    @GetOrgFromRequest() org: Organization,
+    @Body()
+    body: {
+      paymentId: string;
+      subscriptionId: string;
+      signature: string;
+    }
+  ) {
+    const isValid = this._razorpayService.verifyCheckoutSignature(
+      body.paymentId,
+      body.subscriptionId,
+      body.signature
     );
-    const { url } = await this._stripeService.createBillingPortalLink(customer);
-    return {
-      portal: url,
-    };
+    if (!isValid) {
+      throw new HttpException('Invalid payment signature', 400);
+    }
+    await this._razorpayService.activateSubscription(
+      org.id,
+      body.subscriptionId
+    );
+    return { ok: true };
   }
 
   @Get('/')
@@ -125,7 +133,18 @@ export class BillingController {
       user.email
     );
 
-    return this._stripeService.setToCancel(org.id);
+    const subscription =
+      await this._subscriptionService.getSubscriptionByOrganizationId(org.id);
+    if (!subscription?.identifier) {
+      return { cancel_at: undefined };
+    }
+    const { cancelAt } = await this._razorpayService.cancelSubscription(
+      org.id,
+      subscription.identifier
+    );
+    return {
+      cancel_at: cancelAt || undefined,
+    };
   }
 
   @Post('/prorate')
@@ -133,7 +152,7 @@ export class BillingController {
     @GetOrgFromRequest() org: Organization,
     @Body() body: BillingSubscribeDto
   ) {
-    return this._stripeService.prorate(org.id, body);
+    return { price: 0 };
   }
 
   @Post('/lifetime')
@@ -141,7 +160,7 @@ export class BillingController {
     @GetOrgFromRequest() org: Organization,
     @Body() body: { code: string }
   ) {
-    return this._stripeService.lifetimeDeal(org.id, body.code);
+    throw new HttpException('Lifetime deals are not supported with Razorpay', 400);
   }
 
   @Post('/add-subscription')
