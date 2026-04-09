@@ -65,6 +65,14 @@ export class OrganizationService {
     return this._organizationRepository.updateApiKey(orgId);
   }
 
+  updateTrialStatus(orgId: string, isTrailing: boolean, allowTrial: boolean) {
+    return this._organizationRepository.updateTrialStatus(
+      orgId,
+      isTrailing,
+      allowTrial
+    );
+  }
+
   getTeam(orgId: string) {
     return this._organizationRepository.getTeam(orgId);
   }

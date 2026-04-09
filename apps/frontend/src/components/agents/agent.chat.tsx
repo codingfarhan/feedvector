@@ -27,8 +27,10 @@ export const AgentChat: FC = () => {
   const user = useUser()
   const router = useRouter()
   const onFreePlan = user?.tier.current == "FREE"
+  const blockForTrial = !!user?.trialActive
+  const shouldBlock = onFreePlan || blockForTrial
 
-  if (onFreePlan) {
+  if (shouldBlock) {
     return (
       <div className="trz agent bg-newBgColorInner flex flex-col gap-[15px] transition-all flex-1 items-center relative">
         <div className="absolute left-0 w-full h-full pb-[20px]">
@@ -57,7 +59,7 @@ export const AgentChat: FC = () => {
               {t("trial_agent_cta", "Create posts, schedule content, and automate workflows with your AI assistant.")}
             </div>
             <div className="flex justify-center">
-              <Button onClick={() => router.push("/pricing")}>{t("upgrade_to_pro", "Upgrade to Pro")}</Button>
+              <Button onClick={() => router.push("/billing")}>{t("upgrade_to_pro", "Upgrade to Pro")}</Button>
             </div>
           </div>
         </div>

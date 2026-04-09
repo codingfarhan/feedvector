@@ -83,7 +83,7 @@ export class CopilotController {
   @CheckPolicies([AuthorizationActions.Create, Sections.AI])
   async getMessagesList(@GetOrgFromRequest() organization: Organization, @Param("thread") threadId: string): Promise<any> {
     const mastra = await this._mastraService.mastra()
-    const memory = await mastra.getAgent("postiz").getMemory()
+    const memory = await mastra.getAgent("feedvector").getMemory()
     try {
       return await memory.query({
         resourceId: organization.id,
@@ -99,7 +99,7 @@ export class CopilotController {
   async getList(@GetOrgFromRequest() organization: Organization) {
     const mastra = await this._mastraService.mastra()
     // @ts-ignore
-    const memory = await mastra.getAgent("postiz").getMemory()
+    const memory = await mastra.getAgent("feedvector").getMemory()
     const list = await memory.getThreadsByResourceIdPaginated({
       resourceId: organization.id,
       perPage: 100000,

@@ -18,6 +18,8 @@ export const UserContext = createContext<
       impersonate: boolean;
       allowTrial: boolean;
       isTrailing: boolean;
+      trialEndsAt?: string | null;
+      trialActive?: boolean;
       streakSince: string | null;
     })
 >(undefined);

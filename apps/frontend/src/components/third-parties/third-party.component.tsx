@@ -83,7 +83,7 @@ export const ThirdPartyComponent = () => {
   const fetch = useFetch()
   const user = useUser()
   const router = useRouter()
-  const onFreePlan = user.tier.current == "FREE"
+  const onFreePlan = user.tier.current == "FREE" && !user.trialActive
 
   const integrations = useCallback(async () => {
     return (await fetch("/third-party")).json()
@@ -175,7 +175,7 @@ export const ThirdPartyComponent = () => {
               {t("trial_integrations_cta", "Connect services, manage permissions, and unlock integrations.")}
             </div>
             <div className="flex justify-center">
-              <Button onClick={() => router.push("/pricing")}>{t("upgrade_to_pro", "Upgrade to Pro")}</Button>
+              <Button onClick={() => router.push("/billing")}>{t("upgrade_to_pro", "Upgrade to Pro")}</Button>
             </div>
           </div>
         </div>

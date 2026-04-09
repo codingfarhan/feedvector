@@ -1,6 +1,6 @@
 "use client"
 
-import React, { ReactNode, useCallback } from "react"
+import React, { ReactNode, useCallback, useState } from "react"
 import { Logo } from "@gitroom/frontend/components/new-layout/logo"
 import { Plus_Jakarta_Sans } from "next/font/google"
 const ModeComponent = dynamic(() => import("@gitroom/frontend/components/layout/mode.component"), {
@@ -37,6 +37,7 @@ import { StreakComponent } from "@gitroom/frontend/components/layout/streak.comp
 import { PreConditionComponent } from "@gitroom/frontend/components/layout/pre-condition.component"
 import { AttachToFeedbackIcon } from "@gitroom/frontend/components/new-layout/sentry.feedback.component"
 import { FirstBillingComponent } from "@gitroom/frontend/components/billing/first.billing.component"
+import { LogoutComponent } from "@gitroom/frontend/components/layout/logout.component"
 
 const jakartaSans = Plus_Jakarta_Sans({
   weight: ["600", "500", "700"],
@@ -62,9 +63,16 @@ export const LayoutComponent = ({ children }: { children: ReactNode }) => {
     refreshWhenHidden: false,
   })
 
+  const [dismissTrialBanner, setDismissTrialBanner] = useState(false)
+
   if (!user) return null
 
-  const onFreePlan = user.tier.current == "FREE"
+  const userTier = typeof user.tier === "string" ? user.tier : user.tier?.current
+  const onFreePlan = userTier == "FREE"
+  const trialEndsAt = user.trialEndsAt ? new Date(user.trialEndsAt) : null
+  const trialDaysLeft = trialEndsAt ? Math.max(0, Math.ceil((trialEndsAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24))) : 0
+  const showTrialBanner = !dismissTrialBanner && !!user.trialActive && trialDaysLeft > 0 && userTier === "FREE"
+  const showTrialExpiredPaywall = userTier === "FREE" && !!user.trialEndsAt && !user.trialActive
 
   const appContent = (
     <MantineWrapper>
@@ -80,43 +88,68 @@ export const LayoutComponent = ({ children }: { children: ReactNode }) => {
         <ContinueProvider />
         <div className={clsx("flex flex-col min-h-screen min-w-screen text-newTextColor p-[12px]", jakartaSans.className)}>
           <div>{user?.admin ? <Impersonate /> : <div />}</div>
-          {/* {user.tier === 'FREE' && isGeneral && billingEnabled ? ( */}
-          {/* <FirstBillingComponent /> */}
-          {/* ) : ( */}
-          <div className="flex-1 flex gap-[8px]">
-            <Support />
-            <div className="flex flex-col bg-newBgColorInner w-[80px] rounded-[12px]">
-              <div className={clsx("fixed h-full w-[64px] start-[17px] flex flex-1 top-0", user?.admin && "pt-[60px] max-h-[1000px]:w-[500px]")}>
-                <div className="flex flex-col h-full gap-[32px] flex-1 py-[12px]">
-                  <Logo />
-                  <TopMenu />
-                </div>
+          {showTrialBanner && (
+            <div className="fixed top-[12px] left-1/2 -translate-x-1/2 z-[20] w-fit max-w-[calc(100vw-24px)] px-[16px] py-[10px] rounded-[10px] bg-newBgColorInner border border-newTableBorder text-[14px] inline-flex items-center gap-[10px] text-center shadow-[0_6px_20px_rgba(0,0,0,0.2)]">
+              <div>
+                {trialDaysLeft} day{trialDaysLeft === 1 ? "" : "s"} left in your free trial.
               </div>
+              <a className="underline font-[600] hover:text-newTextColor" href="/billing">
+                Upgrade now
+              </a>
+              <button
+                type="button"
+                className="ml-[6px] text-[16px] leading-[16px] text-textItemBlur hover:text-newTextColor"
+                onClick={() => setDismissTrialBanner(true)}
+                aria-label="Close trial banner"
+              >
+                ×
+              </button>
             </div>
-            <div className="flex-1 bg-newBgLineColor rounded-[12px] overflow-hidden flex flex-col gap-[1px] blurMe">
-              <div className="flex bg-newBgColorInner h-[80px] px-[20px] items-center">
-                <div className="text-[24px] font-[600] flex flex-1">
-                  <Title />
-                </div>
-                <div className="flex gap-[20px] text-textItemBlur">
-                  <StreakComponent />
-                  <div className="w-[1px] h-[20px] bg-blockSeparator" />
-                  <OrganizationSelector />
-                  <div className="hover:text-newTextColor">
-                    <ModeComponent />
+          )}
+          {showTrialExpiredPaywall && isGeneral && billingEnabled ? (
+            <FirstBillingComponent />
+          ) : (
+            <div className="flex-1 flex gap-[8px]">
+              <Support />
+              <div className="flex flex-col bg-newBgColorInner w-[80px] rounded-[12px]">
+                <div
+                className={clsx(
+                  "fixed h-full w-[64px] start-[17px] flex flex-1 top-0",
+                  user?.admin && "pt-[60px] max-h-[1000px]:w-[500px]",
+                )}
+              >
+                  <div className="flex flex-col h-full gap-[32px] flex-1 py-[12px]">
+                    <Logo />
+                    <TopMenu />
                   </div>
-                  <div className="w-[1px] h-[20px] bg-blockSeparator" />
-                  <LanguageComponent />
-                  {/* <ChromeExtensionComponent /> */}
-                  <div className="w-[1px] h-[20px] bg-blockSeparator" />
-                  <AttachToFeedbackIcon />
-                  <NotificationComponent />
                 </div>
               </div>
-              <div className="flex flex-1 gap-[1px]">{children}</div>
+              <div className="flex-1 bg-newBgLineColor rounded-[12px] overflow-hidden flex flex-col gap-[1px] blurMe">
+                <div className="flex bg-newBgColorInner h-[80px] px-[20px] items-center">
+                  <div className="text-[24px] font-[600] flex flex-1">
+                    <Title />
+                  </div>
+                  <div className="flex gap-[20px] text-textItemBlur">
+                    <StreakComponent />
+                    <div className="w-[1px] h-[20px] bg-blockSeparator" />
+                    <OrganizationSelector />
+                    <div className="hover:text-newTextColor">
+                      <ModeComponent />
+                    </div>
+                    <div className="w-[1px] h-[20px] bg-blockSeparator" />
+                    <LanguageComponent />
+                    {/* <ChromeExtensionComponent /> */}
+                    <div className="w-[1px] h-[20px] bg-blockSeparator" />
+                    <AttachToFeedbackIcon />
+                    <NotificationComponent />
+                    <div className="w-[1px] h-[20px] bg-blockSeparator" />
+                    <LogoutComponent compact className="text-[13px]" />
+                  </div>
+                </div>
+                <div className="flex flex-1 gap-[1px]">{children}</div>
+              </div>
             </div>
-          </div>
-          {/* )} */}
+          )}
         </div>
       </CheckPayment>
     </MantineWrapper>
@@ -124,13 +157,9 @@ export const LayoutComponent = ({ children }: { children: ReactNode }) => {
 
   return (
     <ContextWrapper user={user}>
-      {onFreePlan ? (
-        appContent
-      ) : (
-        <CopilotKit credentials="include" runtimeUrl={backendUrl + "/copilot/chat"} showDevConsole={false}>
-          {appContent}
-        </CopilotKit>
-      )}
+      <CopilotKit credentials="include" runtimeUrl={backendUrl + "/copilot/chat"} showDevConsole={false}>
+        {appContent}
+      </CopilotKit>
     </ContextWrapper>
   )
 }

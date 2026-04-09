@@ -52,6 +52,14 @@ export class UsersController {
 
     const impersonate = req.cookies.impersonate || req.headers.impersonate;
     // @ts-ignore
+    const trialEndsAt = organization?.createdAt
+      ? new Date(organization.createdAt.getTime() + 7 * 24 * 60 * 60 * 1000)
+      : null;
+    const trialActive =
+      !!organization?.isTrailing &&
+      !!trialEndsAt &&
+      trialEndsAt.getTime() > Date.now();
+
     return {
       ...user,
       orgId: organization.id,
@@ -67,6 +75,8 @@ export class UsersController {
       impersonate: !!impersonate,
       isTrailing: !!organization?.isTrailing,
       allowTrial: organization?.allowTrial,
+      trialEndsAt,
+      trialActive,
       streakSince: organization?.streakSince || null,
       // @ts-ignore
       publicApi: organization?.users[0]?.role === 'SUPERADMIN' || organization?.users[0]?.role === 'ADMIN' ? organization?.apiKey : '',

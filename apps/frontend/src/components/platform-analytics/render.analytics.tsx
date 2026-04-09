@@ -136,7 +136,7 @@ export const RenderAnalytics: FC<{
   const { integration, date } = props
   const fetch = useFetch()
   const user = useUser()
-  const onFreePlan = user.tier.current == "FREE"
+  const onFreePlan = user.tier.current == "FREE" && !user.trialActive
   const t = useT()
   const router = useRouter()
 
@@ -247,7 +247,7 @@ export const RenderAnalytics: FC<{
               {t("trial_analytics_cta", "Unlock full analytics, trends, and performance breakdowns.")}
             </div>
             <div className="flex justify-center">
-              <Button onClick={() => router.push("/pricing")}>{t("upgrade_to_pro", "Upgrade to Pro")}</Button>
+              <Button onClick={() => router.push("/billing")}>{t("upgrade_to_pro", "Upgrade to Pro")}</Button>
             </div>
           </div>
         </div>

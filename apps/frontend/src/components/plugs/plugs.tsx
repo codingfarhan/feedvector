@@ -22,7 +22,7 @@ export const Plugs = () => {
   const fetch = useFetch()
   const router = useRouter()
   const user = useUser()
-  const onFreePlan = user.tier.current == "FREE"
+  const onFreePlan = user.tier.current == "FREE" && !user.trialActive
   const [current, setCurrent] = useState(0)
   const [refresh, setRefresh] = useState(false)
   const toaster = useToaster()
@@ -192,7 +192,7 @@ export const Plugs = () => {
             <div className="text-[20px] font-semibold mb-[6px]">{t("upgrade_to_use_plugs", "Upgrade to Pro to use Plugs")}</div>
             <div className="text-[14px] text-newTableText mb-[16px]">{t("trial_plugs_cta", "Unlock automated workflows with Plugs.")}</div>
             <div className="flex justify-center">
-              <Button onClick={() => router.push("/pricing")}>{t("upgrade_to_pro", "Upgrade to Pro")}</Button>
+              <Button onClick={() => router.push("/billing")}>{t("upgrade_to_pro", "Upgrade to Pro")}</Button>
             </div>
           </div>
         </div>

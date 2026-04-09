@@ -258,8 +258,8 @@ export class OrganizationRepository {
       data: {
         name: body.company,
         apiKey: AuthService.fixedEncryption(makeId(20)),
-        allowTrial: false,
-        isTrailing: false,
+        allowTrial: true,
+        isTrailing: true,
         users: {
           create: {
             role: Role.SUPERADMIN,
@@ -287,6 +287,22 @@ export class OrganizationRepository {
             user: true,
           },
         },
+      },
+    });
+  }
+
+  updateTrialStatus(
+    orgId: string,
+    isTrailing: boolean,
+    allowTrial: boolean
+  ) {
+    return this._organization.model.organization.update({
+      where: {
+        id: orgId,
+      },
+      data: {
+        isTrailing,
+        allowTrial,
       },
     });
   }

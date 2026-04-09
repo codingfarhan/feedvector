@@ -83,10 +83,10 @@ export const Features: FC<{
   const features = useMemo(() => {
     const currentPricing = pricing[pack]
     const channelsOr = currentPricing.channel
+    const postsPerMonth = currentPricing.posts_per_month
     const list = []
-    // list.push(`${channelsOr} ${channelsOr === 1 ? "channel" : "channels"}`)
-    list.push(`${pack == "FREE" ? 2 : "Unlimited"} Channels`)
-    list.push(`Unlimited posts per month`)
+    list.push(`${channelsOr} ${channelsOr === 1 ? "channel" : "channels"}`)
+    list.push(`${postsPerMonth == 1000000 ? "Unlimited" : postsPerMonth} posts per month`)
     // if (currentPricing.team_members) {
     // }
     if (pack == "PRO") {
@@ -96,19 +96,16 @@ export const Features: FC<{
       list.push(`Unlimited team members`)
     }
     if (currentPricing?.ai) {
-      // list.push(`AI auto-complete`)
+      list.push(`AI auto-complete`)
       list.push(`AI copilots`)
-      // list.push(`AI Autocomplete`)
     }
     list.push(`Advanced Picture Editor`)
-    // if (currentPricing?.image_generator) {
-    //   list.push(
-    //     `${currentPricing?.image_generation_count} AI Images per month`
-    //   );
-    // }
-    // if (currentPricing?.generate_videos) {
-    //   list.push(`${currentPricing?.generate_videos} AI Videos per month`);
-    // }
+    if (currentPricing?.image_generator) {
+      list.push(`${currentPricing?.image_generation_count} AI Images per month`)
+    }
+    if (currentPricing?.generate_videos) {
+      list.push(`${currentPricing?.generate_videos} AI Videos per month`)
+    }
     return list
   }, [pack])
   return (
