@@ -197,7 +197,7 @@ export const MainBillingComponent: FC<{
   sub?: Subscription
 }> = (props) => {
   const { sub } = props
-  const { isGeneral, discordUrl } = useVariables()
+  const { isGeneral } = useVariables()
   const { mutate } = useSWRConfig()
   const fetch = useFetch()
   const toast = useToaster()
@@ -221,11 +221,6 @@ export const MainBillingComponent: FC<{
     }
     setSubscription(sub)
   }, [sub])
-  const updatePayment = useCallback(async () => {
-    if (discordUrl) {
-      window.open(discordUrl)
-    }
-  }, [discordUrl])
   const currentPackage = useMemo(() => {
     if (!subscription) {
       return "FREE"
@@ -450,7 +445,12 @@ export const MainBillingComponent: FC<{
       {/* {!subscription?.id && <PurchaseCrypto />} */}
       {!!subscription?.id && (
         <div className="flex justify-center mt-[20px] gap-[10px]">
-          <Button onClick={updatePayment}>{t("contact_support_for_billing", "Contact Support for Billing")}</Button>
+          <div className="text-[14px] text-textItemBlur flex items-center">
+            For any questions reach us at{" "}
+            <a className="underline hover:text-newTextColor" href="mailto:contact@feedvector.com">
+              contact@feedvector.com
+            </a>
+          </div>
           {isGeneral && !subscription?.cancelAt && (
             <Button className="bg-red-500" loading={loading} onClick={moveToCheckout("FREE")}>
               {t("cancel_subscription_1", "Cancel subscription")}
