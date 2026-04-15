@@ -339,6 +339,19 @@ export const AddProviderComponent: FC<{
   const router = useRouter()
   const fetch = useFetch()
   const modal = useModals()
+
+  const comingSoon = useMemo(() => {
+    const missing: string[] = []
+
+    const hasInstagram = social.some((i) => i.identifier === "instagram" || i.identifier === "instagram-standalone")
+    const hasTiktok = social.some((i) => i.identifier === "tiktok")
+
+    if (!hasInstagram) missing.push("Instagram")
+    if (!hasTiktok) missing.push("Tiktok")
+
+    return missing
+  }, [social])
+
   const getSocialLink = useCallback(
     (
         invite: boolean,
@@ -556,6 +569,12 @@ export const AddProviderComponent: FC<{
             ))}
         </div>
       </div>
+
+      {comingSoon.length > 0 && (
+        <div className="text-center text-[12px] text-textColor opacity-60">
+          {t("coming_soon", "Coming Soon:")} {comingSoon.join(" and ")}
+        </div>
+      )}
     </div>
   )
 }

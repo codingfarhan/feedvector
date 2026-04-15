@@ -47,7 +47,7 @@ export const LogoutComponent = ({
       {compact ? (
         <svg
           aria-hidden="true"
-          className="h-[24px] w-[24px]"
+          className="h-[26px] w-[26px]"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
