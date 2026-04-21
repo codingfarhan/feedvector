@@ -343,10 +343,8 @@ export const AddProviderComponent: FC<{
   const comingSoon = useMemo(() => {
     const missing: string[] = []
 
-    const hasInstagram = social.some((i) => i.identifier === "instagram" || i.identifier === "instagram-standalone")
     const hasTiktok = social.some((i) => i.identifier === "tiktok")
 
-    if (!hasInstagram) missing.push("Instagram")
     if (!hasTiktok) missing.push("Tiktok")
 
     return missing
