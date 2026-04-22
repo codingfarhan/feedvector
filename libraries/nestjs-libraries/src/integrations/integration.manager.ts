@@ -42,7 +42,7 @@ export const socialIntegrationList: Array<SocialAbstract & SocialProvider> = [
   new LinkedinPageProvider(),
   // new RedditProvider(),
   new InstagramProvider(),
-  new InstagramStandaloneProvider(),
+  // new InstagramStandaloneProvider(),
   new FacebookProvider(),
   // new ThreadsProvider(),
   new YoutubeProvider(),
