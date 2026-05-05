@@ -137,32 +137,26 @@ export function RegisterAfter({ token, provider }: { token: string; provider: st
           <div>
             <h1 className="text-[40px] font-[500] -tracking-[0.8px] text-start cursor-pointer mb-4">{t("sign_up", "Sign Up")}</h1>
           </div>
-          {/* <div className="text-[14px] mt-[32px] mb-[12px]">{t("continue_with", "Continue With")}</div> */}
+          {!isAfterProvider && <div className="text-[14px] mt-[32px] mb-[12px]">{t("continue_with", "Continue With")}</div>}
           <div className="flex flex-col">
-            {/* {!isAfterProvider &&
+            {!isAfterProvider &&
               (!isGeneral ? (
                 <GithubProvider />
               ) : (
                 <div className="gap-[8px] flex">
-                  {genericOauth && isGeneral ? (
-                    <OauthProvider />
-                  ) : (
-                    <GoogleProvider />
-                  )}
-                  {!!neynarClientId && <FarcasterProvider />}
-                  {billingEnabled && <WalletProvider />}
+                  {genericOauth && isGeneral ? <OauthProvider /> : <GoogleProvider />}
+                  {/* {!!neynarClientId && <FarcasterProvider />}
+                  {billingEnabled && <WalletProvider />} */}
                 </div>
-              ))} */}
-            {/* {!isAfterProvider && (
+              ))}
+            {!isAfterProvider && (
               <div className="h-[20px] mb-[24px] mt-[24px] relative">
                 <div className="absolute w-full h-[1px] bg-fifth top-[50%] -translate-y-[50%]" />
-                <div
-                  className={`absolute z-[1] justify-center items-center w-full start-0 -top-[4px] flex`}
-                >
-                  <div className="px-[16px]">{t('or', 'or')}</div>
+                <div className={`absolute z-[1] justify-center items-center w-full start-0 -top-[4px] flex`}>
+                  <div className="px-[16px]">{t("or", "or")}</div>
                 </div>
               </div>
-            )} */}
+            )}
             <div className="flex flex-col gap-[12px]">
               <div className="text-textColor">
                 {!isAfterProvider && (
