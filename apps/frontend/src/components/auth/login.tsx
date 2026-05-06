@@ -16,6 +16,7 @@ import { FarcasterProvider } from "@gitroom/frontend/components/auth/providers/f
 import WalletProvider from "@gitroom/frontend/components/auth/providers/wallet.provider"
 import { useT } from "@gitroom/react/translation/get.transation.service.client"
 import { useRouter } from "next/navigation"
+import { useFireEvents } from "@gitroom/helpers/utils/use.fire.events"
 type Inputs = {
   email: string
   password: string
@@ -25,6 +26,7 @@ type Inputs = {
 export function Login() {
   const t = useT()
   const router = useRouter()
+  const fireEvents = useFireEvents()
   const [loading, setLoading] = useState(false)
   const [notActivated, setNotActivated] = useState(false)
   const { isGeneral, neynarClientId, billingEnabled, genericOauth } = useVariables()
@@ -50,11 +52,13 @@ export function Login() {
       }),
     })
     if (login.status === 200) {
+      fireEvents("login_success", { provider: "LOCAL" })
       router.push("/")
       return
     }
     if (login.status === 400) {
       const errorMessage = await login.text()
+      fireEvents("login_failed", { provider: "LOCAL", reason: errorMessage })
       if (errorMessage === "User is not activated") {
         setNotActivated(true)
       } else {

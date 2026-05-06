@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useModals } from '@gitroom/frontend/components/layout/new-modal';
 import { useT } from '@gitroom/react/translation/get.transation.service.client';
 import { OnboardingModal } from '@gitroom/frontend/components/onboarding/onboarding.modal';
+import { useFireEvents } from '@gitroom/helpers/utils/use.fire.events';
 
 export const Onboarding: FC = () => {
   const query = useSearchParams();
@@ -12,11 +13,13 @@ export const Onboarding: FC = () => {
   const router = useRouter();
   const modalOpen = useRef(false);
   const t = useT();
+  const fireEvents = useFireEvents();
 
   const handleClose = useCallback(() => {
+    fireEvents('onboarding_closed');
     modal.closeAll();
     router.push('/launches');
-  }, [modal, router]);
+  }, [fireEvents, modal, router]);
 
   useEffect(() => {
     const onboarding = query.get('onboarding');
@@ -31,6 +34,7 @@ export const Onboarding: FC = () => {
       return;
     }
     modalOpen.current = true;
+    fireEvents('onboarding_opened');
     modal.openModal({
       // title: t('onboarding', 'Welcome to FeedVector'),
       withCloseButton: true,

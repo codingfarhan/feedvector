@@ -111,6 +111,7 @@ export function RegisterAfter({ token, provider }: { token: string; provider: st
         setLoading(false)
         if (response.status === 200) {
           fireEvents("register")
+          fireEvents("signup_completed", { provider })
           return track(TrackEnum.CompleteRegistration).then(() => {
             if (response.headers.get("activate") === "true") {
               router.push("/auth/activate")

@@ -2,16 +2,19 @@ import { FC, useCallback, useState } from 'react';
 import { useFetch } from '@gitroom/helpers/utils/custom.fetch';
 import { Button } from '@gitroom/react/form/button';
 import { useT } from '@gitroom/react/translation/get.transation.service.client';
+import { useFireEvents } from '@gitroom/helpers/utils/use.fire.events';
 export const PurchaseCrypto: FC = () => {
   const fetch = useFetch();
   const t = useT();
+  const fireEvents = useFireEvents();
 
   const [loading, setLoading] = useState(false);
   const load = useCallback(async () => {
+    fireEvents('billing_purchase_clicked', { method: 'crypto', plan: 'LIFETIME' });
     setLoading(true);
     const data = await (await fetch('/billing/crypto')).json();
     window.location.href = data.invoice_url;
-  }, []);
+  }, [fetch, fireEvents]);
   return (
     <div className="flex-1 bg-sixth items-center border border-customColor6 rounded-[4px] p-[24px] gap-[16px] flex [@media(max-width:1024px)]:items-center">
       <div>

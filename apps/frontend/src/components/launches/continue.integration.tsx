@@ -13,6 +13,7 @@ import { newDayjs } from "@gitroom/frontend/components/layout/set.timezone"
 import { useVariables } from "@gitroom/react/helpers/variable.context"
 import useSWR from "swr"
 import { useUser } from "@gitroom/frontend/components/layout/user.context"
+import { useFireEvents } from "@gitroom/helpers/utils/use.fire.events"
 
 interface TwoStepState {
   integrationId: string
@@ -34,6 +35,7 @@ export const ContinueIntegration: FC<{
   const { push } = useRouter()
   const t = useT()
   const fetch = useFetch()
+  const fireEvents = useFireEvents()
   const user = useUser()
   const { extensionId, backendUrl } = useVariables()
   const [error, setError] = useState(false)
@@ -117,12 +119,22 @@ export const ContinueIntegration: FC<{
 
       if (data.status === HttpStatusCode.PreconditionFailed) {
         const { returnURL } = await data.json().catch(() => ({}))
+        fireEvents("integration_connect_failed", {
+          platform: provider,
+          status: data.status,
+          reason: "precondition_failed",
+        })
         navigateOrShow(`/launches?precondition=true`, returnURL, "Precondition failed")
         return
       }
 
       if (data.status === HttpStatusCode.NotAcceptable) {
         const { msg, returnURL } = await data.json()
+        fireEvents("integration_connect_failed", {
+          platform: provider,
+          status: data.status,
+          reason: msg || "not_acceptable",
+        })
         navigateOrShow(`/launches?msg=${msg}`, returnURL, msg)
         return
       }
@@ -131,6 +143,11 @@ export const ContinueIntegration: FC<{
         const errorData = await data.json().catch(() => ({}))
         setErrorMessage(errorData.message || errorData.msg || "Could not add provider")
         setError(true)
+        fireEvents("integration_connect_failed", {
+          platform: provider,
+          status: data.status,
+          reason: errorData.message || errorData.msg || "unknown_error",
+        })
         return
       }
 
@@ -167,6 +184,12 @@ export const ContinueIntegration: FC<{
         return
       }
 
+      fireEvents("integration_connected", {
+        platform: provider,
+        onboarding,
+        status: data.status,
+        inBetweenSteps: !!inBetweenSteps,
+      })
       navigateOrShow(`/launches?added=${provider}&msg=Channel Updated${onboarding ? "&onboarding=true" : ""}`, returnURL, "Channel Updated")
     })()
   }, [])
@@ -190,9 +213,20 @@ export const ContinueIntegration: FC<{
           const errorData = await response.json().catch(() => ({}))
           setErrorMessage(errorData.message || "Failed to save channel configuration")
           setError(true)
+          fireEvents("integration_connect_failed", {
+            platform: provider,
+            status: response.status,
+            reason: errorData.message || "two_step_save_failed",
+          })
           return
         }
 
+        fireEvents("integration_connected", {
+          platform: provider,
+          onboarding: twoStepState.onboarding,
+          status: response.status,
+          inBetweenSteps: true,
+        })
         navigateOrShow(
           `/launches?added=${provider}&msg=Channel Added${twoStepState.onboarding ? "&onboarding=true" : ""}`,
           twoStepState.returnURL,
@@ -202,7 +236,7 @@ export const ContinueIntegration: FC<{
         setIsSaving(false)
       }
     },
-    [twoStepState, fetch, modifiedParams, provider, navigateOrShow],
+    [twoStepState, fetch, modifiedParams, provider, navigateOrShow, fireEvents],
   )
 
   const Provider = useMemo(() => {

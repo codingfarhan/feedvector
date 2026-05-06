@@ -21,6 +21,7 @@ import copy from "copy-to-clipboard"
 import { capitalize } from "lodash"
 import { useUser } from "@gitroom/frontend/components/layout/user.context"
 import { useIntegrationList } from "@gitroom/frontend/components/launches/helpers/use.integration.list"
+import { useFireEvents } from "@gitroom/helpers/utils/use.fire.events"
 const resolver = classValidatorResolver(ApiKeyDto)
 
 export const useAddProvider = (update?: () => void, invite?: boolean) => {
@@ -339,6 +340,7 @@ export const AddProviderComponent: FC<{
   const router = useRouter()
   const fetch = useFetch()
   const modal = useModals()
+  const fireEvents = useFireEvents()
 
   const comingSoon = useMemo(() => {
     const missing: string[] = []
@@ -524,7 +526,23 @@ export const AddProviderComponent: FC<{
             .map((item) => (
               <div
                 key={item.identifier}
-                onClick={getSocialLink(props.invite, item.identifier, item.isExternal, item.isWeb3, item.isChromeExtension, item.customFields)}
+                onClick={() => {
+                  fireEvents("integration_connect_clicked", {
+                    platform: item.identifier,
+                    onboarding: !!onboarding,
+                    isExternal: !!item.isExternal,
+                    isWeb3: !!item.isWeb3,
+                    isChromeExtension: !!item.isChromeExtension,
+                  })
+                  return getSocialLink(
+                    props.invite,
+                    item.identifier,
+                    item.isExternal,
+                    item.isWeb3,
+                    item.isChromeExtension,
+                    item.customFields,
+                  )()
+                }}
                 {...(!!item.toolTip
                   ? {
                       "data-tooltip-id": "tooltip",

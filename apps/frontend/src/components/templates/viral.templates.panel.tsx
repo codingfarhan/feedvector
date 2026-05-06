@@ -1,11 +1,12 @@
 'use client';
 
 import clsx from 'clsx';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useToaster } from '@gitroom/react/toaster/toaster';
 import { useT } from '@gitroom/react/translation/get.transation.service.client';
 import { useUser } from '@gitroom/frontend/components/layout/user.context';
 import { useRouter } from 'next/navigation';
+import { useFireEvents } from '@gitroom/helpers/utils/use.fire.events';
 import { Button } from '@gitroom/react/form/button';
 import {
   categoriesByPlatform,
@@ -240,6 +241,7 @@ export const ViralTemplatesPanel = () => {
   const toaster = useToaster();
   const user = useUser();
   const router = useRouter();
+  const fireEvents = useFireEvents();
 
   const [platform, setPlatform] = useState<Platform>('linkedin');
   const [category, setCategory] = useState<string>('All');
@@ -332,12 +334,25 @@ export const ViralTemplatesPanel = () => {
       try {
         await navigator.clipboard.writeText(tpl.template);
         toaster.show(t('template_copied', 'Template copied to clipboard'), 'success');
+        fireEvents('template_used', {
+          template_set: 'viral',
+          template_id: tpl.id,
+          platform: tpl.platform,
+          category: tpl.category,
+          style: tpl.style,
+          goal: tpl.goal,
+          action: 'copy',
+        });
       } catch {
         toaster.show(t('template_copy_failed', 'Could not copy template'), 'warning');
       }
     },
-    [toaster, t]
+    [toaster, t, fireEvents]
   );
+
+  useEffect(() => {
+    fireEvents('template_opened', { template_set: 'viral' });
+  }, [fireEvents]);
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">

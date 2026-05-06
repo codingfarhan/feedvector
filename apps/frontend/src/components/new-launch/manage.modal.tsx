@@ -44,6 +44,7 @@ import { useHasScroll } from '@gitroom/frontend/components/ui/is.scroll.hook';
 import { useShortlinkPreference } from '@gitroom/frontend/components/settings/shortlink-preference.component';
 import dayjs from 'dayjs';
 import { Button } from '@gitroom/react/form/button';
+import { useFireEvents } from '@gitroom/helpers/utils/use.fire.events';
 
 function countCharacters(text: string, type: string): number {
   if (type !== 'x') {
@@ -55,7 +56,9 @@ function countCharacters(text: string, type: string): number {
 export const ManageModal: FC<AddEditModalProps> = (props) => {
   const t = useT();
   const fetch = useFetch();
+  const fireEvents = useFireEvents();
   const ref = useRef(null);
+  const openedEventSent = useRef(false);
   const existingData = useExistingData();
   const [loading, setLoading] = useState(false);
   const toaster = useToaster();
@@ -64,6 +67,15 @@ export const ManageModal: FC<AddEditModalProps> = (props) => {
   const { data: shortlinkPreferenceData } = useShortlinkPreference();
 
   const { addEditSets, mutate, customClose, dummy } = props;
+
+  useEffect(() => {
+    if (openedEventSent.current) return;
+    openedEventSent.current = true;
+    fireEvents('post_editor_opened', {
+      is_edit: !!existingData?.integration,
+      dummy: !!dummy,
+    });
+  }, [dummy, existingData?.integration, fireEvents]);
 
   const {
     selectedIntegrations,
@@ -200,6 +212,32 @@ export const ManageModal: FC<AddEditModalProps> = (props) => {
 
   const schedule = useCallback(
     (type: 'draft' | 'now' | 'schedule' | 'update') => async () => {
+      if (type === 'now') {
+        fireEvents('post_publish_now_clicked', {
+          integrations_count: selectedIntegrations.length,
+          is_new_post: !existingData?.integration,
+        });
+      } else if (type === 'schedule') {
+        fireEvents(
+          !existingData?.integration
+            ? 'post_add_to_calendar_clicked'
+            : 'post_schedule_clicked',
+          {
+            integrations_count: selectedIntegrations.length,
+            is_new_post: !existingData?.integration,
+          }
+        );
+      } else if (type === 'draft') {
+        fireEvents('post_save_draft_clicked', {
+          integrations_count: selectedIntegrations.length,
+          is_new_post: !existingData?.integration,
+        });
+      } else if (type === 'update') {
+        fireEvents('post_update_clicked', {
+          integrations_count: selectedIntegrations.length,
+        });
+      }
+
       if (
         (type === 'now' || type === 'schedule') &&
         (existingData?.posts?.[0]?.state === 'PUBLISHED' ||
@@ -413,12 +451,38 @@ export const ManageModal: FC<AddEditModalProps> = (props) => {
       }
 
       if (!dummy) {
-        addEditSets
-          ? addEditSets(data)
-          : await fetch('/posts', {
-              method: 'POST',
-              body: JSON.stringify(data),
-            });
+        const requestType = type;
+        let response: Response | null = null;
+
+        if (addEditSets) {
+          addEditSets(data);
+        } else {
+          response = await fetch('/posts', {
+            method: 'POST',
+            body: JSON.stringify(data),
+          });
+        }
+
+        if (response) {
+          if (requestType === 'now') {
+            fireEvents(
+              response.ok ? 'post_publish_succeeded' : 'post_publish_failed',
+              {
+                integrations_count: selectedIntegrations.length,
+                status: response.status,
+              }
+            );
+          }
+          if (requestType === 'schedule') {
+            fireEvents(
+              response.ok ? 'post_scheduled_succeeded' : 'post_scheduled_failed',
+              {
+                integrations_count: selectedIntegrations.length,
+                status: response.status,
+              }
+            );
+          }
+        }
 
         if (!addEditSets) {
           mutate();
@@ -439,7 +503,19 @@ export const ManageModal: FC<AddEditModalProps> = (props) => {
         }
       }
     },
-    [ref, repeater, tags, date, addEditSets, dummy, shortlinkPreferenceData]
+    [
+      ref,
+      repeater,
+      tags,
+      date,
+      addEditSets,
+      dummy,
+      shortlinkPreferenceData,
+      fireEvents,
+      selectedIntegrations.length,
+      existingData?.integration,
+      existingData?.posts,
+    ]
   );
 
   return (

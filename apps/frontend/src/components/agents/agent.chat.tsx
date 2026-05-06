@@ -18,6 +18,7 @@ import { ExistingDataContextProvider } from "@gitroom/frontend/components/launch
 import { useT } from "@gitroom/react/translation/get.transation.service.client"
 import { useUser } from "@gitroom/frontend/components/layout/user.context"
 import { Button } from "@gitroom/react/form/button"
+import { useFireEvents } from "@gitroom/helpers/utils/use.fire.events"
 
 export const AgentChat: FC = () => {
   const { backendUrl } = useVariables()
@@ -78,6 +79,7 @@ export const AgentChat: FC = () => {
         integrations: properties,
       }}
     >
+      <OpenEvent id={params.id} />
       <Hooks />
       <LoadMessages id={params.id} />
       <div
@@ -115,6 +117,14 @@ You can also use me as an MCP Server, check Settings >> Public API
       </div>
     </CopilotKit>
   )
+}
+
+const OpenEvent: FC<{ id: string }> = ({ id }) => {
+  const fireEvents = useFireEvents()
+  useEffect(() => {
+    fireEvents("agent_chat_opened", { threadId: id })
+  }, [fireEvents, id])
+  return null
 }
 
 const LoadMessages: FC<{ id: string }> = ({ id }) => {
@@ -168,6 +178,8 @@ const NewInput: FC<InputProps> = (props) => {
   const [media, setMedia] = useState([] as { path: string; id: string }[])
   const [value, setValue] = useState("")
   const { properties } = useContext(PropertiesContext)
+  const params = useParams<{ id: string }>()
+  const fireEvents = useFireEvents()
   return (
     <>
       <MediaPortal value={value} media={media} setMedia={(e) => setMedia(e.target.value)} />
@@ -175,6 +187,12 @@ const NewInput: FC<InputProps> = (props) => {
         {...props}
         onChange={setValue}
         onSend={(text) => {
+          fireEvents("agent_message_sent", {
+            threadId: params.id,
+            chars: text.length,
+            has_media: media.length > 0,
+            integrations_count: properties.length,
+          })
           const send = props.onSend(
             text +
               (media.length > 0

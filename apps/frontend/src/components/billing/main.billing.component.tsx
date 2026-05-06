@@ -207,6 +207,7 @@ export const MainBillingComponent: FC<{
   const router = useRouter()
   const utm = useUtmUrl()
   const track = useTrack()
+  const fireEvents = useFireEvents()
   const t = useT()
   const queryParams = useSearchParams()
   const [finishTrial, setFinishTrial] = useState(!!queryParams.get("finishTrial"))
@@ -231,6 +232,9 @@ export const MainBillingComponent: FC<{
     (billing: "STANDARD" | "PRO" | "FREE", reactivate = false) =>
       async () => {
         if (reactivate) {
+          fireEvents("billing_reactivate_clicked", {
+            from_plan: subscription?.subscriptionTier,
+          })
           setLoading(true)
           const { cancel_at } = await (
             await fetch("/billing/cancel", {
@@ -258,6 +262,9 @@ export const MainBillingComponent: FC<{
           messages.push(`Your team members will be removed from your organization`)
         }
         if (billing === "FREE") {
+          fireEvents("billing_cancel_clicked", {
+            from_plan: subscription?.subscriptionTier,
+          })
           if (
             subscription?.cancelAt ||
             (await deleteDialog(
@@ -319,6 +326,12 @@ export const MainBillingComponent: FC<{
           }
           return
         }
+
+        fireEvents("billing_purchase_clicked", {
+          plan: billing,
+          period,
+          from_plan: subscription?.subscriptionTier,
+        })
         if (messages.length && !(await deleteDialog(messages.join(", "), "Yes, continue"))) {
           return
         }
@@ -382,7 +395,7 @@ export const MainBillingComponent: FC<{
         }
         setLoading(false)
       },
-    [subscription, user, utm],
+    [subscription, user, utm, fireEvents],
   )
   if (user?.isLifetime) {
     router.replace("/")

@@ -26,6 +26,7 @@ import { Slider } from '@gitroom/react/form/slider';
 import { useToaster } from '@gitroom/react/toaster/toaster';
 import { useT } from '@gitroom/react/translation/get.transation.service.client';
 import { ModalWrapperComponent } from '@gitroom/frontend/components/new-launch/modal.wrapper.component';
+import { useFireEvents } from '@gitroom/helpers/utils/use.fire.events';
 export function convertBackRegex(s: string) {
   const matches = s.match(/\/(.*)\/([a-z]*)/);
   const pattern = matches?.[1] || '';
@@ -84,6 +85,7 @@ export const PlugPop: FC<{
   const { closeAll } = useModals();
   const fetch = useFetch();
   const toaster = useToaster();
+  const fireEvents = useFireEvents();
   const values = useMemo(() => {
     if (!data?.data) {
       return {};
@@ -114,20 +116,25 @@ export const PlugPop: FC<{
     values,
     mode: 'all',
   });
-  const submit: SubmitHandler<any> = useCallback(async (data) => {
+  const submit: SubmitHandler<any> = useCallback(async (formData) => {
     await fetch(`/integrations/${settings.providerId}/plugs`, {
       method: 'POST',
       body: JSON.stringify({
         func: plug.methodName,
-        fields: Object.keys(data).map((key) => ({
+        fields: Object.keys(formData).map((key) => ({
           name: key,
-          value: data[key],
+          value: formData[key],
         })),
       }),
     });
+    fireEvents(data ? 'plug_updated' : 'plug_created', {
+      plug: plug.methodName,
+      provider: settings.identifier,
+      providerId: settings.providerId,
+    });
     toaster.show('Plug updated', 'success');
     closeAll();
-  }, []);
+  }, [fetch, settings.providerId, settings.identifier, plug.methodName, toaster, closeAll, fireEvents, data]);
 
   const t = useT();
 
@@ -179,8 +186,14 @@ export const PlugItem: FC<{
     setActivated(!!data?.activated);
   }, [data?.activated]);
   const fetch = useFetch();
+  const fireEvents = useFireEvents();
   const changeActivated = useCallback(
     async (status: 'on' | 'off') => {
+      fireEvents('plug_run_clicked', {
+        plug: plug.methodName,
+        status,
+        integrationId: data?.integrationId,
+      });
       await fetch(`/integrations/plugs/${data?.id}/activate`, {
         body: JSON.stringify({
           status: status === 'on',
@@ -192,11 +205,18 @@ export const PlugItem: FC<{
       });
       setActivated(status === 'on');
     },
-    [activated]
+    [fetch, fireEvents, plug.methodName, data?.id, data?.integrationId]
   );
   return (
     <div
-      onClick={() => addPlug(data)}
+      onClick={() => {
+        fireEvents('plug_config_opened', {
+          plug: plug.methodName,
+          hasExisting: !!data,
+          integrationId: data?.integrationId,
+        });
+        return addPlug(data);
+      }}
       key={plug.title}
       className="w-full h-[300px] rounded-[8px] bg-newTableHeader hover:bg-newTableBorder"
     >
