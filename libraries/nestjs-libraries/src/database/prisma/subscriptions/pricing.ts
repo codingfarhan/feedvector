@@ -33,7 +33,7 @@ export const pricing: PricingInterface = {
     ai: true,
     import_from_channels: true,
     image_generator: true,
-    public_api: false,
+    public_api: true,
     webhooks: 0,
     autoPost: true,
     generate_videos: 1,

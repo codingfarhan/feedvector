@@ -12,6 +12,7 @@ import {
   Sections,
   SubscriptionException,
 } from '@gitroom/backend/services/auth/permissions/permission.exception.class';
+import { pricing } from '@gitroom/nestjs-libraries/database/prisma/subscriptions/pricing';
 
 @Injectable()
 export class MediaService {
@@ -37,6 +38,25 @@ export class MediaService {
     org: Organization,
     generatePromptFirst?: boolean
   ) {
+    const tier = await this._subscriptionService.getMcpEffectiveTier(org.id);
+    const periodStart = await this._subscriptionService.getCurrentBillingPeriodStart(
+      org.id,
+      // @ts-ignore
+      org.createdAt
+    );
+    const used = await this._subscriptionService.getMonthlyUsageFrom(
+      org.id,
+      periodStart,
+      'ai_images'
+    );
+    const limit = pricing[tier].image_generation_count;
+    if (used >= limit) {
+      throw new SubscriptionException({
+        action: AuthorizationActions.Create,
+        section: Sections.IMAGES_PER_MONTH,
+      });
+    }
+
     const generating = await this._subscriptionService.useCredit(
       org,
       'ai_images',
@@ -82,12 +102,19 @@ export class MediaService {
   }
 
   async generateVideo(org: Organization, body: VideoDto) {
-    const totalCredits = await this._subscriptionService.checkCredits(
-      org,
+    const tier = await this._subscriptionService.getMcpEffectiveTier(org.id);
+    const periodStart = await this._subscriptionService.getCurrentBillingPeriodStart(
+      org.id,
+      // @ts-ignore
+      org.createdAt
+    );
+    const used = await this._subscriptionService.getMonthlyUsageFrom(
+      org.id,
+      periodStart,
       'ai_videos'
     );
-
-    if (totalCredits.credits <= 0) {
+    const limit = pricing[tier].generate_videos;
+    if (used >= limit) {
       throw new SubscriptionException({
         action: AuthorizationActions.Create,
         section: Sections.VIDEOS_PER_MONTH,

@@ -210,6 +210,41 @@ export class SubscriptionService {
     };
   }
 
+  async getMcpEffectiveTier(organizationId: string): Promise<'FREE' | 'PRO'> {
+    const subscription = await this.getSubscription(organizationId);
+    return subscription?.subscriptionTier === 'PRO' ? 'PRO' : 'FREE';
+  }
+
+  async getCurrentBillingPeriodStart(
+    organizationId: string,
+    fallbackCreatedAt?: Date
+  ) {
+    const subscription = await this.getSubscription(organizationId);
+    const anchor = subscription?.createdAt || fallbackCreatedAt || new Date();
+    let date = dayjs(anchor);
+    while (date.isBefore(dayjs())) {
+      date = date.add(1, 'month');
+    }
+    return date.subtract(1, 'month');
+  }
+
+  async getMonthlyUsageFrom(
+    organizationId: string,
+    from: dayjs.Dayjs,
+    type: 'ai_images' | 'ai_videos'
+  ) {
+    return this._subscriptionRepository.getCreditsFrom(organizationId, from, type);
+  }
+
+  async getMonthlyLimitForTier(
+    tier: 'FREE' | 'PRO',
+    type: 'ai_images' | 'ai_videos'
+  ) {
+    return type === 'ai_images'
+      ? pricing[tier].image_generation_count
+      : pricing[tier].generate_videos;
+  }
+
   async lifeTime(orgId: string, identifier: string, subscription: any) {
     return this.createOrUpdateSubscription(
       false,

@@ -12,6 +12,9 @@ import { Integration } from '@prisma/client';
 import { checkAuth } from '@gitroom/nestjs-libraries/chat/auth.context';
 import { stripHtmlValidation } from '@gitroom/helpers/utils/strip.html.validation';
 import { weightedLength } from '@gitroom/helpers/utils/count.length';
+import { SubscriptionService } from '@gitroom/nestjs-libraries/database/prisma/subscriptions/subscription.service';
+import { pricing } from '@gitroom/nestjs-libraries/database/prisma/subscriptions/pricing';
+import { SubscriptionException, AuthorizationActions, Sections } from '@gitroom/backend/services/auth/permissions/permission.exception.class';
 
 function countCharacters(text: string, type: string): number {
   if (type !== 'x') {
@@ -24,7 +27,8 @@ function countCharacters(text: string, type: string): number {
 export class IntegrationSchedulePostTool implements AgentToolInterface {
   constructor(
     private _postsService: PostsService,
-    private _integrationService: IntegrationService
+    private _integrationService: IntegrationService,
+    private _subscriptionService: SubscriptionService
   ) {}
   name = 'integrationSchedulePostTool';
 
@@ -117,10 +121,34 @@ If the tools return errors, you would need to rerun it with the right parameters
       execute: async (args, options) => {
         const { context, runtimeContext } = args;
         checkAuth(args, options);
-        const organizationId = JSON.parse(
-          // @ts-ignore
-          runtimeContext.get('organization') as string
-        ).id;
+        // @ts-ignore
+        const org = JSON.parse(runtimeContext.get('organization') as string);
+        const organizationId = org.id;
+
+        const effectiveTier =
+          (await this._subscriptionService.getMcpEffectiveTier(organizationId)) ||
+          'FREE';
+        const periodStart =
+          await this._subscriptionService.getCurrentBillingPeriodStart(
+            organizationId,
+            org.createdAt ? new Date(org.createdAt) : undefined
+          );
+        const currentCount = await this._postsService.countPostsFromDay(
+          organizationId,
+          periodStart.toDate()
+        );
+        const requestedCount = (context.socialPost || []).reduce(
+          (acc, p) =>
+            acc + (p.type === 'draft' ? 0 : (p.postsAndComments?.length || 0)),
+          0
+        );
+        const limit = pricing[effectiveTier].posts_per_month;
+        if (currentCount + requestedCount > limit) {
+          throw new SubscriptionException({
+            action: AuthorizationActions.Create,
+            section: Sections.POSTS_PER_MONTH,
+          });
+        }
         const finalOutput = [];
 
         const integrations = {} as Record<string, Integration>;

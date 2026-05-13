@@ -17,12 +17,14 @@ export const PublicComponent = () => {
   const fetch = useFetch();
   const decision = useDecisionModal();
   const { mutate } = useSWRConfig();
-  const [reveal, setReveal] = useState(false);
+  // NOTE: Intentionally disabled. We don't show the raw public API key anymore.
+  // const [reveal, setReveal] = useState(false);
   const [reveal2, setReveal2] = useState(false);
-  const copyToClipboard = useCallback(() => {
-    toaster.show('API Key copied to clipboard', 'success');
-    copy(user?.publicApi!);
-  }, [user]);
+  // NOTE: Intentionally disabled. We don't allow copying the raw public API key.
+  // const copyToClipboard = useCallback(() => {
+  //   toaster.show('API Key copied to clipboard', 'success');
+  //   copy(user?.publicApi!);
+  // }, [user]);
   const copyToClipboard2 = useCallback(() => {
     toaster.show('MCP copied to clipboard', 'success');
     copy(`${backendUrl}/mcp/` + user?.publicApi);
@@ -39,7 +41,7 @@ export const PublicComponent = () => {
     if (!approved) return;
     await fetch('/user/api-key/rotate', { method: 'POST' });
     await mutate('/user/self');
-    setReveal(false);
+    // setReveal(false);
     setReveal2(false);
     toaster.show('API Key rotated successfully', 'success');
   }, [decision, fetch, mutate, toaster]);
@@ -51,6 +53,7 @@ export const PublicComponent = () => {
   }
   return (
     <div className="flex flex-col gap-[20px]">
+      {/* NOTE: Public API key UI is intentionally disabled. We only show MCP connection details.
       <div className="flex flex-col">
         <h3 className="text-[20px]">{t('public_api', 'Public API')}</h3>
         <div className="text-customColor18 mt-[4px]">
@@ -109,6 +112,7 @@ export const PublicComponent = () => {
           </div>
         </div>
       </div>
+      */}
 
       <div className="flex flex-col">
         <h3 className="text-[20px]">{t('mcp', 'MCP')}</h3>
@@ -117,6 +121,15 @@ export const PublicComponent = () => {
             'connect_your_mcp_client_to_postiz_to_schedule_your_posts_faster',
             'Connect FeedVector MCP server to your client (Http streaming) to schedule your posts faster.'
           )}
+          <br />
+          <a
+            className="underline hover:font-bold hover:underline"
+            href="https://feedvector.com/mcp"
+            target="_blank"
+            rel="noreferrer"
+          >
+            {t('mcp_docs', 'Read the docs (includes Claude Code setup).')}
+          </a>
         </div>
         <div className="my-[16px] mt-[16px] bg-sixth border-fifth items-center border rounded-[4px] p-[24px] flex gap-[24px]">
           <div className="flex items-center">
@@ -142,6 +155,11 @@ export const PublicComponent = () => {
               </Button>
             )}
           </div>
+        </div>
+        <div>
+          <Button onClick={rotateKey}>
+            {t('rotate_key', 'Rotate Key')}
+          </Button>
         </div>
       </div>
 

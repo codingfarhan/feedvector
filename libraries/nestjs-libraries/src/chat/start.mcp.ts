@@ -5,6 +5,7 @@ import { MCPServer } from "@mastra/mcp"
 import { randomUUID } from "crypto"
 import { OrganizationService } from "@gitroom/nestjs-libraries/database/prisma/organizations/organization.service"
 import { runWithContext } from "./async.storage"
+import dayjs from "dayjs"
 export const startMcp = async (app: INestApplication) => {
   const mastraService = app.get(MastraService, { strict: false })
   const organizationService = app.get(OrganizationService, { strict: false })
@@ -52,6 +53,17 @@ export const startMcp = async (app: INestApplication) => {
       return
     }
 
+    // Hard-stop MCP access after 7-day trial unless user is on the paid PRO plan.
+    // We intentionally do not rely on org.isTrailing being flipped elsewhere.
+    // @ts-ignore
+    const isPaidPro = req.auth?.subscription?.subscriptionTier === "PRO"
+    // @ts-ignore
+    const trialEndsAt = dayjs(req.auth.createdAt).add(7, "day")
+    if (!isPaidPro && dayjs().isAfter(trialEndsAt)) {
+      res.status(403).send("Trial expired. Upgrade to Pro to continue using MCP.")
+      return
+    }
+
     const url = new URL("/mcp", process.env.NEXT_PUBLIC_BACKEND_URL)
 
     // @ts-ignore
@@ -87,6 +99,16 @@ export const startMcp = async (app: INestApplication) => {
     // @ts-ignore
     if (!req.auth) {
       res.status(400).send("Invalid API Key")
+      return
+    }
+
+    // Hard-stop MCP access after 7-day trial unless user is on the paid PRO plan.
+    // @ts-ignore
+    const isPaidPro = req.auth?.subscription?.subscriptionTier === "PRO"
+    // @ts-ignore
+    const trialEndsAt = dayjs(req.auth.createdAt).add(7, "day")
+    if (!isPaidPro && dayjs().isAfter(trialEndsAt)) {
+      res.status(403).send("Trial expired. Upgrade to Pro to continue using MCP.")
       return
     }
 
