@@ -9,6 +9,7 @@ import { Integrations } from '@gitroom/frontend/components/launches/calendar.con
 import { useShallow } from 'zustand/react/shallow';
 import { useExistingData } from '@gitroom/frontend/components/launches/helpers/use.existing.data';
 import { newDayjs } from '@gitroom/frontend/components/layout/set.timezone';
+import Link from 'next/link';
 
 export interface AddEditModalProps {
   dummy?: boolean;
@@ -53,7 +54,25 @@ export const AddEditModal: FC<AddEditModalProps> = (props) => {
   }, []);
 
   if (!integrations.length) {
-    return null;
+    return (
+      <div className="h-full w-full flex items-center justify-center p-[24px]">
+        <div className="max-w-[520px] w-full bg-sixth border border-fifth rounded-[8px] p-[24px] text-textColor">
+          <div className="text-[18px] font-semibold">No channels connected</div>
+          <div className="text-customColor18 mt-[8px]">
+            Connect at least one channel to open the payload wizard.
+          </div>
+          <div className="mt-[16px] flex gap-[12px]">
+            <Link
+              href="/integrations"
+              className="underline hover:font-bold hover:underline"
+              target="_blank"
+            >
+              Go to Integrations
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return <AddEditModalInner {...props} />;
