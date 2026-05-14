@@ -137,11 +137,7 @@ export const PublicComponent = () => {
             )}
           </div>
           <div>
-            {!reveal2 ? (
-              <Button onClick={() => setReveal2(true)}>{t("reveal", "Reveal")}</Button>
-            ) : (
-              <Button onClick={copyToClipboard2}>{t("copy_key", "Copy Key")}</Button>
-            )}
+            {!reveal2 ? <Button onClick={() => setReveal2(true)}>{t("reveal", "Reveal")}</Button> : <Button onClick={copyToClipboard2}>Copy</Button>}
           </div>
         </div>
         <div>
