@@ -514,7 +514,14 @@ export const AddProviderComponent: FC<{
   return (
     <div className="w-full flex flex-col gap-[20px] rounded-[4px] relative]">
       <div className="flex flex-col">
-        <div className={clsx("grid grid-cols-5 gap-[10px] justify-items-center justify-center", onboarding ? "grid-cols-9" : "grid-cols-5")}>
+        <div
+          className={clsx(
+            'grid gap-[10px] justify-items-center justify-center',
+            onboarding
+              ? 'grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-9'
+              : 'grid-cols-3 sm:grid-cols-4 md:grid-cols-5'
+          )}
+        >
           {social
             .filter((item) => {
               if (!props.invite) {
@@ -550,15 +557,18 @@ export const AddProviderComponent: FC<{
                     }
                   : {})}
                 className={
-                  "w-full h-[100px] text-[14px] p-[10px] rounded-[8px] bg-newTableHeader text-textColor relative justify-center items-center flex flex-col gap-[10px] cursor-pointer"
+                  "w-full min-h-[86px] sm:min-h-[100px] text-[12px] sm:text-[14px] p-3 sm:p-[10px] rounded-[8px] bg-newTableHeader text-textColor relative justify-center items-center flex flex-col gap-2 sm:gap-[10px] cursor-pointer"
                 }
               >
                 <div>
                   {item.identifier === "youtube" ? (
-                    <img src={`/icons/platforms/youtube.svg`} />
+                    <img className="w-8 h-8 sm:w-[32px] sm:h-[32px]" src={`/icons/platforms/youtube.svg`} />
                   ) : (
                     <img
-                      className={clsx("w-[32px] h-[32px]", item.identifier !== "google_my_business" && "rounded-full")}
+                      className={clsx(
+                        "w-8 h-8 sm:w-[32px] sm:h-[32px]",
+                        item.identifier !== "google_my_business" && "rounded-full",
+                      )}
                       src={`/icons/platforms/${item.identifier}.png`}
                     />
                   )}

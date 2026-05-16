@@ -18,11 +18,11 @@ export const OnboardingModal: FC<OnboardingModalProps> = ({ onClose }) => {
   const modals = useModals()
 
   return (
-    <div className="w-full min-h-full flex-1 p-[40px] flex relative">
+    <div className="w-full min-h-full flex-1 p-4 sm:p-6 md:p-10 flex relative justify-center">
       <style>{`#support-discord {display: none}`}</style>
-      <div className="flex flex-1 bg-newBgColorInner rounded-[20px] flex-col relative">
+      <div className="flex w-full max-w-[980px] bg-newBgColorInner rounded-[20px] flex-col relative max-h-[calc(100dvh-2rem)] sm:max-h-[calc(100dvh-3rem)] overflow-hidden">
         <button
-          className="outline-none absolute end-[20px] top-[20px] mantine-UnstyledButton-root mantine-ActionIcon-root hover:bg-tableBorder cursor-pointer mantine-Modal-close mantine-1dcetaa"
+          className="outline-none absolute end-3 top-3 sm:end-5 sm:top-5 mantine-UnstyledButton-root mantine-ActionIcon-root hover:bg-tableBorder cursor-pointer mantine-Modal-close mantine-1dcetaa z-10"
           type="button"
           onClick={modals.closeAll}
         >
@@ -35,8 +35,8 @@ export const OnboardingModal: FC<OnboardingModalProps> = ({ onClose }) => {
             ></path>
           </svg>
         </button>
-        <div className="flex-1 flex p-[40px]">
-          <div className="flex flex-col gap-[24px] flex-1">
+        <div className="flex-1 flex overflow-y-auto p-4 sm:p-8 md:p-10">
+          <div className="flex flex-col gap-[24px] flex-1 min-w-0">
             <OnboardingStep1 onFinish={onClose} />
           </div>
         </div>
@@ -76,7 +76,7 @@ const OnboardingStep1: FC<{ onFinish: () => void }> = ({ onFinish }) => {
 
   return (
     <div className="flex flex-col gap-[24px]">
-      <div className="flex gap-[4px] flex-col text-center">
+      <div className="flex gap-[4px] flex-col text-center px-2 sm:px-0 mt-2 sm:mt-0">
         <div className="text-[24px] font-semibold">
           {/* {t('connect_your_channels', 'Connect Your Channels')} */}
           Welcome to FeedVector 🥳
@@ -92,7 +92,7 @@ const OnboardingStep1: FC<{ onFinish: () => void }> = ({ onFinish }) => {
           <div className="text-[14px] font-medium mb-[12px]">
             {t("connected_channels", "Connected Channels")} ({sortedIntegrations.length})
           </div>
-          <div className="flex flex-wrap gap-[12px]">
+          <div className="flex flex-wrap gap-[12px] max-h-[35dvh] sm:max-h-none overflow-y-auto pr-1">
             {sortedIntegrations.map((integration: any) => (
               <div key={integration.id} className="flex items-center gap-[8px] bg-customColor47/30 rounded-[8px] px-[12px] py-[8px]">
                 <div className="relative w-[28px] h-[28px]">
@@ -124,7 +124,7 @@ const OnboardingStep1: FC<{ onFinish: () => void }> = ({ onFinish }) => {
           disabled={sortedIntegrations.length === 0}
           onClick={onFinish}
           className={clsx(
-            "group flex items-center gap-[12px] bg-gradient-to-r from-[#622aff] to-[#8b5cf6] text-white font-semibold px-[32px] py-[14px] rounded-[12px] text-[16px] transition-all shadow-lg shadow-purple-500/25",
+            "group flex items-center justify-center gap-[12px] bg-gradient-to-r from-[#622aff] to-[#8b5cf6] text-white font-semibold px-[24px] sm:px-[32px] py-[14px] rounded-[12px] text-[16px] transition-all shadow-lg shadow-purple-500/25 w-full sm:w-auto",
             sortedIntegrations.length === 0 ? "opacity-50 cursor-not-allowed" : "hover:from-[#7c3aff] hover:to-[#9d6eff] hover:shadow-purple-500/40",
           )}
         >
