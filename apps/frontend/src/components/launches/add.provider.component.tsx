@@ -32,6 +32,8 @@ export const useAddProvider = (update?: () => void, invite?: boolean) => {
     modal.openModal({
       title: "Add Channel",
       withCloseButton: true,
+      size: "min(920px, calc(100vw - 24px))",
+      height: "min(820px, calc(100dvh - 120px))",
       children: <AddProviderComponent invite={!!invite} update={update} {...data} />,
     })
   }, [])
@@ -512,7 +514,7 @@ export const AddProviderComponent: FC<{
   const t = useT()
 
   return (
-    <div className="w-full flex flex-col gap-[20px] rounded-[4px] relative]">
+    <div className="w-full flex flex-col gap-[20px] rounded-[4px] relative] overflow-x-hidden">
       <div className="flex flex-col">
         <div
           className={clsx(

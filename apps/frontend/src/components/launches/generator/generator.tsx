@@ -308,11 +308,12 @@ export const GeneratorComponent = () => {
     }
     modal.openModal({
       title: t('generate_posts', 'Generate Posts'),
-      withCloseButton: false,
+      withCloseButton: true,
       classNames: {
         modal: 'bg-transparent text-textColor',
       },
-      size: 'xl',
+      size: 'min(980px, calc(100vw - 24px))',
+      height: 'min(860px, calc(100dvh - 120px))',
       children: (
         <CalendarWeekProvider {...all}>
           <GeneratorPopup />
