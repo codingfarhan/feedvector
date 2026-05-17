@@ -367,7 +367,7 @@ export const ViralTemplatesPanel = () => {
           )}
         </div>
 
-        <div className="mt-[14px]">
+        <div className="mt-[18px] mb-[16px]">
           <PlatformToggle
             value={platform}
             onChange={(p) => {
@@ -380,7 +380,7 @@ export const ViralTemplatesPanel = () => {
         </div>
 
         {platform === 'linkedin' && (
-          <div className="mt-[10px] flex flex-wrap items-center gap-[8px]">
+          <div className="flex flex-wrap items-center gap-[8px]">
             {categories.map((c) => (
               <Chip
                 key={c}
@@ -394,7 +394,7 @@ export const ViralTemplatesPanel = () => {
 
         {platform === 'x' && (
           <>
-            <div className="mt-[10px] flex flex-wrap items-center gap-[8px]">
+            <div className="flex flex-wrap items-center gap-[8px]">
               <div className="text-[12px] font-[700] text-textItemBlur me-[4px]">
                 {t('style', 'Style')}:
               </div>
@@ -427,7 +427,7 @@ export const ViralTemplatesPanel = () => {
 
       <div className="flex-1 p-[20px] overflow-auto bg-newBgLineColor scrollbar scrollbar-thumb-fifth scrollbar-track-newBgColor">
         {shouldLimitTemplates && (
-          <div className="mb-[12px] rounded-[12px] border border-newTableBorder bg-newBgColorInner p-[14px] flex gap-[12px] items-center">
+          <div className="mb-[12px] rounded-[12px] border border-newTableBorder bg-newBgColorInner p-[14px] flex flex-col sm:flex-row gap-[12px] sm:items-center">
             <div className="flex-1">
               <div className="text-[14px] font-[700] text-newTextColor">
                 {t('templates_limited_title', 'Templates Limited on Free Plan')}
@@ -439,8 +439,8 @@ export const ViralTemplatesPanel = () => {
                 )}
               </div>
             </div>
-            <div className="shrink-0">
-              <Button onClick={() => router.push('/billing')}>
+            <div className="shrink-0 w-full sm:w-auto">
+              <Button className="w-full sm:w-auto" onClick={() => router.push('/billing')}>
                 {t('upgrade_to_pro', 'Upgrade to Pro')}
               </Button>
             </div>

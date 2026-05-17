@@ -237,7 +237,7 @@ const usePostActions = (onMutate?: () => void) => {
   return { editPost, deletePost, openStatistics, openMissingRelease };
 };
 
-export const DayView = () => {
+export const DayView = ({ enableDnd }: { enableDnd: boolean }) => {
   const calendar = useCalendar();
   const { integrations, posts, startDate } = calendar;
 
@@ -309,6 +309,7 @@ export const DayView = () => {
                     .startOf('day')
                     .add(option[0].time, 'minute')
                     .local()}
+                  enableDnd={enableDnd}
                 />
               </CalendarContext.Provider>
             </div>
@@ -318,7 +319,7 @@ export const DayView = () => {
     </div>
   );
 };
-export const WeekView = () => {
+export const WeekView = ({ enableDnd }: { enableDnd: boolean }) => {
   const { startDate, endDate } = useCalendar();
   const t = useT();
 
@@ -343,7 +344,7 @@ export const WeekView = () => {
   return (
     <div className="flex flex-col text-textColor flex-1">
       <div className="flex-1 relative">
-        <div className="grid [grid-template-columns:136px_repeat(7,_minmax(0,_1fr))] gap-[4px] rounded-[10px] absolute h-full start-0 top-0 w-full overflow-auto scrollbar scrollbar-thumb-fifth scrollbar-track-newBgColor">
+        <div className="grid [grid-template-columns:136px_repeat(7,_minmax(120px,_1fr))] sm:[grid-template-columns:136px_repeat(7,_minmax(0,_1fr))] gap-[4px] rounded-[10px] absolute h-full start-0 top-0 w-full overflow-auto scrollbar scrollbar-thumb-fifth scrollbar-track-newBgColor">
           <div className="z-10 bg-newTableHeader flex justify-center items-center flex-col h-[62px] rounded-[8px] sticky top-0"></div>
           {localizedDays.map((day, index) => (
             <div
@@ -379,6 +380,7 @@ export const WeekView = () => {
                   <div className="relative">
                     <CalendarColumn
                       getDate={day.date.hour(hour).startOf('hour')}
+                      enableDnd={enableDnd}
                     />
                   </div>
                 </Fragment>
@@ -390,7 +392,7 @@ export const WeekView = () => {
     </div>
   );
 };
-export const MonthView = () => {
+export const MonthView = ({ enableDnd }: { enableDnd: boolean }) => {
   const { startDate } = useCalendar();
   const t = useT();
 
@@ -402,7 +404,7 @@ export const MonthView = () => {
     const days = [];
     // Starting from Monday (1) to Sunday (7)
     for (let i = 1; i <= 7; i++) {
-      days.push(newDayjs().day(i).format('dddd'));
+      days.push(newDayjs().day(i).format('ddd'));
     }
     return days;
   }, [i18next.resolvedLanguage]);
@@ -459,6 +461,7 @@ export const MonthView = () => {
               <CalendarColumn
                 getDate={newDayjs(date.day).endOf('day')}
                 randomHour={true}
+                enableDnd={enableDnd}
               />
             </div>
           ))}
@@ -467,7 +470,7 @@ export const MonthView = () => {
     </div>
   );
 };
-export const ListView = () => {
+export const ListView = ({ enableDnd }: { enableDnd: boolean }) => {
   const t = useT();
   const { integrations, loading, listPosts } = useCalendar();
 
@@ -517,6 +520,7 @@ export const ListView = () => {
               {datePosts.map((post) => (
                 <CalendarItem
                   key={post.id}
+                  enableDnd={enableDnd}
                   display="day"
                   isBeforeNow={false}
                   date={newDayjs(post.publishDate)}
@@ -539,18 +543,18 @@ export const ListView = () => {
   );
 };
 
-export const Calendar = () => {
+export const Calendar = ({ enableDnd = true }: { enableDnd?: boolean }) => {
   const { display } = useCalendar();
   return (
     <>
       {display === 'list' ? (
-        <ListView />
+        <ListView enableDnd={enableDnd} />
       ) : display === 'day' ? (
-        <DayView />
+        <DayView enableDnd={enableDnd} />
       ) : display === 'week' ? (
-        <WeekView />
+        <WeekView enableDnd={enableDnd} />
       ) : (
-        <MonthView />
+        <MonthView enableDnd={enableDnd} />
       )}
     </>
   );
@@ -558,10 +562,11 @@ export const Calendar = () => {
 export const CalendarColumn: FC<{
   getDate: dayjs.Dayjs;
   randomHour?: boolean;
+  enableDnd: boolean;
 }> = memo((props) => {
   const t = useT();
 
-  const { getDate, randomHour } = props;
+  const { getDate, randomHour, enableDnd } = props;
   const [num, setNum] = useState(0);
   const user = useUser();
   const {
@@ -632,7 +637,9 @@ export const CalendarColumn: FC<{
   }, []);
   const [{ canDrop }, drop] = useDrop(() => ({
     accept: 'post',
+    canDrop: () => enableDnd && !isBeforeNow,
     drop: async (item: any) => {
+      if (!enableDnd) return;
       if (isBeforeNow) return;
 
       // Find the post to check its state
@@ -715,9 +722,10 @@ export const CalendarColumn: FC<{
       }
     },
     collect: (monitor) => ({
-      canDrop: isBeforeNow ? false : !!monitor.canDrop() && !!monitor.isOver(),
+      canDrop:
+        enableDnd && !isBeforeNow ? !!monitor.canDrop() && !!monitor.isOver() : false,
     }),
-  }), [posts]);
+  }), [posts, enableDnd, isBeforeNow]);
 
   const addModal = useCallback(async () => {
     const set: any = !sets.length
@@ -809,12 +817,12 @@ export const CalendarColumn: FC<{
       {display === 'month' && (
         <div className={clsx('pt-[6px] text-[14px]')}>{getDate.date()}</div>
       )}
-      <div
-        className={clsx(
-          'relative flex flex-col flex-1 text-white rounded-[8px] min-h-[70px]',
-          canDrop && 'border border-[#612BD3]'
-        )}
-      >
+        <div
+          className={clsx(
+            'relative flex flex-col flex-1 text-white rounded-[8px] min-h-[70px]',
+            enableDnd && canDrop && 'border border-[#612BD3]'
+          )}
+        >
         <div
           className={clsx(
             'flex-col text-[12px] pointer w-full flex scrollbar scrollbar-thumb-tableBorder scrollbar-track-secondary',
@@ -836,6 +844,7 @@ export const CalendarColumn: FC<{
             >
               <div className="relative w-full flex flex-col items-center p-[2.5px]">
                 <CalendarItem
+                  enableDnd={enableDnd}
                   display={display as 'day' | 'week' | 'month'}
                   isBeforeNow={isBeforeNow}
                   date={getDate}
@@ -944,7 +953,9 @@ export const CalendarColumn: FC<{
     </div>
   );
 });
+
 const CalendarItem: FC<{
+  enableDnd: boolean;
   date: dayjs.Dayjs;
   isBeforeNow: boolean;
   editPost: () => void;
@@ -965,6 +976,7 @@ const CalendarItem: FC<{
 }> = memo((props) => {
   const t = useT();
   const {
+    enableDnd,
     editPost,
     statistics,
     duplicatePost,
@@ -984,6 +996,7 @@ const CalendarItem: FC<{
   const [{ opacity }, dragRef] = useDrag(
     () => ({
       type: 'post',
+      canDrag: enableDnd,
       item: {
         id: post.id,
         interval: !!post.intervalInDays,

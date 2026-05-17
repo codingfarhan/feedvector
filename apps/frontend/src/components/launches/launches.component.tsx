@@ -26,6 +26,9 @@ import { useT } from "@gitroom/react/translation/get.transation.service.client"
 import { useIntegrationList } from "@gitroom/frontend/components/launches/helpers/use.integration.list"
 import useCookie from "react-use-cookie"
 import { Onboarding } from "@gitroom/frontend/components/onboarding/onboarding"
+import { MobileCreateActionsFab, MobileCreatePostHeaderButton } from "@gitroom/frontend/components/launches/mobile-create-post"
+import { useModals } from "@gitroom/frontend/components/layout/new-modal"
+import { MobileChannelsDrawer } from "@gitroom/frontend/components/launches/mobile-channels-drawer"
 
 export const SVGLine = () => {
   return (
@@ -282,6 +285,7 @@ export const LaunchesComponent = () => {
   const user = useUser()
   const { billingEnabled } = useVariables()
   const router = useRouter()
+  const modals = useModals()
   const search = useSearchParams()
   const toast = useToaster()
   const fireEvents = useFireEvents()
@@ -289,7 +293,20 @@ export const LaunchesComponent = () => {
   const [reload, setReload] = useState(false)
   const [collapseMenu, setCollapseMenu] = useCookie("collapseMenu", "0")
   const [mode] = useCookie("mode", "light")
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window === "undefined") return false
+    return window.matchMedia("(max-width: 639px)").matches
+  })
   const { isLoading, data: integrations, mutate } = useIntegrationList()
+
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    const media = window.matchMedia("(max-width: 639px)")
+    const onChange = () => setIsMobile(media.matches)
+    onChange()
+    media.addEventListener?.("change", onChange)
+    return () => media.removeEventListener?.("change", onChange)
+  }, [])
 
   const totalNonDisabledChannels = useMemo(() => {
     return integrations?.filter((integration: any) => !integration.disabled)?.length || 0
@@ -402,69 +419,101 @@ export const LaunchesComponent = () => {
     )
   }
 
-  // @ts-ignore
-  return (
-    <DNDProvider>
+  const content = (
+    <>
       <Onboarding />
       <CalendarWeekProvider integrations={sortedIntegrations}>
-        <div className={clsx("flex relative flex-col", collapseMenu === "1" ? "group sidebar w-[100px]" : "w-[260px]")}>
-          <div
-            className={clsx(
-              "bg-newBgColorInner p-[20px] flex flex-col gap-[15px] transition-all absolute start-0 top-0 w-full h-full overflow-x-hidden overflow-y-auto scrollbar scrollbar-thumb-fifth scrollbar-track-newBgColor",
-            )}
-          >
-            <div className="flex items-center">
-              <h2 className="group-[.sidebar]:hidden flex-1 text-[20px] font-[500]">{t("channels")}</h2>
-              <div
-                onClick={() => setCollapseMenu(collapseMenu === "1" ? "0" : "1")}
-                className="group-[.sidebar]:rotate-[180deg] group-[.sidebar]:mx-auto text-btnText bg-btnSimple rounded-[6px] w-[24px] h-[24px] flex items-center justify-center cursor-pointer select-none"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="7" height="13" viewBox="0 0 7 13" fill="none">
-                  <path d="M6 11.5L1 6.5L6 1.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </div>
-            </div>
-            <div className="flex flex-col gap-[8px] group-[.sidebar]:mx-auto group-[.sidebar]:w-[44px]">
-              <AddProviderButton update={() => update(true)} />
-              <div className="flex gap-[8px] group-[.sidebar]:flex-col">
-                {sortedIntegrations?.length > 0 && <NewPost />}
-                {sortedIntegrations?.length > 0 && user?.tier?.ai && billingEnabled && <GeneratorComponent />}
-              </div>
-            </div>
-            <div className="gap-[32px] flex flex-col select-none flex-1">
-              {sortedIntegrations.length === 0 && collapseMenu === "0" && (
-                <div className="flex-1 max-h-[500px] justify-center items-center flex">
-                  <div className="flex flex-col gap-[12px] text-center">
-                    <img src={mode === "dark" ? "/no-channels.svg" : "/no-channels-colors.svg"} alt="No channels" className="mx-auto min-w-[100%]" />
-                    <div className="font-[600] text-[20px]">{t("no_channels", "No channels yet")}</div>
-                    <div className="text-[14px]">{t("connect_your_accounts")}</div>
-                  </div>
-                </div>
+        {!isMobile && (
+          <div className={clsx("flex relative flex-col", collapseMenu === "1" ? "group sidebar w-[100px]" : "w-[260px]")}>
+            <div
+              className={clsx(
+                "bg-newBgColorInner p-[20px] flex flex-col gap-[15px] transition-all absolute start-0 top-0 w-full h-full overflow-x-hidden overflow-y-auto scrollbar scrollbar-thumb-fifth scrollbar-track-newBgColor",
               )}
-              {menuIntegrations.map((menu) => (
-                <MenuGroupComponent
-                  collapsed={collapseMenu === "1"}
-                  changeItemGroup={changeItemGroup}
-                  key={menu.name}
-                  group={menu}
-                  mutate={mutate}
-                  continueIntegration={continueIntegration}
-                  update={update}
-                  refreshChannel={refreshChannel}
-                  totalNonDisabledChannels={totalNonDisabledChannels}
-                />
-              ))}
+            >
+              <div className="flex items-center">
+                <h2 className="group-[.sidebar]:hidden flex-1 text-[20px] font-[500]">{t("channels")}</h2>
+                <div
+                  onClick={() => setCollapseMenu(collapseMenu === "1" ? "0" : "1")}
+                  className="group-[.sidebar]:rotate-[180deg] group-[.sidebar]:mx-auto text-btnText bg-btnSimple rounded-[6px] w-[24px] h-[24px] flex items-center justify-center cursor-pointer select-none"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="7" height="13" viewBox="0 0 7 13" fill="none">
+                    <path d="M6 11.5L1 6.5L6 1.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </div>
+              </div>
+              <div className="flex flex-col gap-[8px] group-[.sidebar]:mx-auto group-[.sidebar]:w-[44px]">
+                <AddProviderButton update={() => update(true)} />
+                <div className="flex gap-[8px] group-[.sidebar]:flex-col">
+                  {sortedIntegrations?.length > 0 && <NewPost />}
+                  {sortedIntegrations?.length > 0 && user?.tier?.ai && billingEnabled && <GeneratorComponent />}
+                </div>
+              </div>
+              <div className="gap-[32px] flex flex-col select-none flex-1">
+                {sortedIntegrations.length === 0 && collapseMenu === "0" && (
+                  <div className="flex-1 max-h-[500px] justify-center items-center flex">
+                    <div className="flex flex-col gap-[12px] text-center">
+                      <img src={mode === "dark" ? "/no-channels.svg" : "/no-channels-colors.svg"} alt="No channels" className="mx-auto min-w-[100%]" />
+                      <div className="font-[600] text-[20px]">{t("no_channels", "No channels yet")}</div>
+                      <div className="text-[14px]">{t("connect_your_accounts")}</div>
+                    </div>
+                  </div>
+                )}
+                {menuIntegrations.map((menu) => (
+                  <MenuGroupComponent
+                    collapsed={collapseMenu === "1"}
+                    changeItemGroup={changeItemGroup}
+                    key={menu.name}
+                    group={menu}
+                    mutate={mutate}
+                    continueIntegration={continueIntegration}
+                    update={update}
+                    refreshChannel={refreshChannel}
+                    totalNonDisabledChannels={totalNonDisabledChannels}
+                  />
+                ))}
+              </div>
+              <div className="mt-[5px] text-center">{process.env.NEXT_PUBLIC_VERSION ? process.env.NEXT_PUBLIC_VERSION : ""}</div>
             </div>
-            <div className="mt-[5px] text-center">{process.env.NEXT_PUBLIC_VERSION ? process.env.NEXT_PUBLIC_VERSION : ""}</div>
           </div>
-        </div>
+        )}
         <div className="bg-newBgColorInner flex-1 flex-col flex p-[20px] gap-[12px]">
+          <div className="sm:hidden flex justify-between items-center gap-[12px]">
+            <button
+              type="button"
+              onClick={() => {
+                modals.openModal({
+                  removeLayout: true,
+                  fullScreen: true,
+                  closeOnEscape: true,
+                  children: (close) => (
+                    <MobileChannelsDrawer
+                      onClose={close}
+                      menuIntegrations={menuIntegrations}
+                      totalNonDisabledChannels={totalNonDisabledChannels}
+                      mutate={mutate}
+                      continueIntegration={continueIntegration}
+                      update={update}
+                      refreshChannel={refreshChannel}
+                      changeItemGroup={changeItemGroup}
+                    />
+                  ),
+                })
+              }}
+              className="h-[40px] px-[14px] rounded-[12px] bg-newTableHeader hover:bg-boxHover text-newTextColor text-[14px] font-[700] inline-flex items-center gap-[8px]"
+            >
+              {t("channels", "Channels")} ({sortedIntegrations.length})
+            </button>
+            {sortedIntegrations?.length > 0 && <MobileCreatePostHeaderButton />}
+          </div>
           <Filters />
           <div className="flex-1 flex">
-            <Calendar />
+            <Calendar enableDnd={!isMobile} />
           </div>
+          {sortedIntegrations?.length > 0 && <MobileCreateActionsFab />}
         </div>
       </CalendarWeekProvider>
-    </DNDProvider>
+    </>
   )
+
+  return <DNDProvider>{content}</DNDProvider>
 }
