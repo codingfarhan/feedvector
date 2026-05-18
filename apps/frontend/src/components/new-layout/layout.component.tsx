@@ -47,6 +47,67 @@ const jakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
 })
 
+const MobileOrganizationDropdown = ({ currentOrgId }: { currentOrgId?: string }) => {
+  const fetch = useFetch()
+
+  const load = useCallback(async () => {
+    return await (await fetch("/user/organizations")).json()
+  }, [fetch])
+
+  const { data: orgs, isLoading } = useSWR("organizations", load, {
+    revalidateIfStale: false,
+    revalidateOnFocus: false,
+    refreshWhenOffline: false,
+    refreshWhenHidden: false,
+    revalidateOnReconnect: false,
+  })
+
+  const changeOrg = useCallback(
+    async (orgId: string) => {
+      if (!orgId || orgId === currentOrgId) return
+      await fetch("/user/change-org", {
+        method: "POST",
+        body: JSON.stringify({ id: orgId }),
+      })
+      window.location.reload()
+    },
+    [currentOrgId, fetch],
+  )
+
+  if (isLoading || !orgs) {
+    return (
+      <div className="w-full h-[44px] px-[12px] rounded-[12px] bg-newTableHeader border border-newTableBorder text-textItemBlur flex items-center">
+        Loading...
+      </div>
+    )
+  }
+
+  if (orgs.length <= 1) {
+    const onlyOrg = orgs[0]
+    return (
+      <div className="w-full h-[44px] px-[12px] rounded-[12px] bg-newTableHeader border border-newTableBorder text-newTextColor flex items-center">
+        {onlyOrg?.name || "Organization"}
+      </div>
+    )
+  }
+
+  return (
+    <div className="w-full">
+      <select
+        value={currentOrgId || ""}
+        onChange={(e) => changeOrg(e.target.value)}
+        className="w-full h-[44px] px-[12px] rounded-[12px] bg-newTableHeader border border-newTableBorder text-newTextColor outline-none"
+      >
+        {orgs.map((org: { id: string; name: string }) => (
+          <option key={org.id} value={org.id}>
+            {org.name}
+          </option>
+        ))}
+      </select>
+    </div>
+  )
+}
+
 export const LayoutComponent = ({ children }: { children: ReactNode }) => {
   const fetch = useFetch()
 
@@ -260,7 +321,7 @@ export const LayoutComponent = ({ children }: { children: ReactNode }) => {
               <div className="pb-[14px]">
                 <div className="text-[12px] uppercase tracking-wide text-textItemBlur mb-[10px]">Organization</div>
                 <div className="flex items-center gap-[12px]">
-                  <OrganizationSelector asOpenSelect />
+                  <MobileOrganizationDropdown currentOrgId={user?.orgId} />
                 </div>
               </div>
 

@@ -403,7 +403,7 @@ export const MediaBox: FC<{
       <div className="flex flex-col flex-1">
         <div
           className={clsx(
-            'flex',
+            'flex flex-col sm:flex-row gap-[12px] sm:items-center',
             !isLoading && !data?.results?.length && 'hidden'
           )}
         >
@@ -427,7 +427,9 @@ export const MediaBox: FC<{
             className="hidden"
             multiple={true}
           />
-          {!isLoading && !!data?.results?.length && btn}
+          {!isLoading && !!data?.results?.length && (
+            <div className="shrink-0 w-full sm:w-auto">{btn}</div>
+          )}
         </div>
         <div className="w-full pointer-events-none relative mt-[5px] mb-[5px]">
           <div className="w-full h-[46px] overflow-hidden absolute left-0 bg-newBgColorInner uppyChange">
@@ -461,6 +463,14 @@ export const MediaBox: FC<{
                 'flex justify-center items-center gap-[20px] flex-col'
             )}
           >
+            {/* Responsive media grid */}
+            <div
+              className={clsx(
+                'w-full',
+                (isLoading || !!data?.results?.length) &&
+                  'grid grid-cols-2 min-[420px]:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-[8px]'
+              )}
+            >
             {!isLoading && !data?.results?.length && (
               <>
                 <NoMediaIcon />
@@ -489,7 +499,7 @@ export const MediaBox: FC<{
                 {[...new Array(16)].map((_, i) => (
                   <div
                     className={clsx(
-                      'px-[3px] py-[3px] float-left rounded-[6px] cursor-pointer w8-max aspect-square'
+                      'rounded-[6px] cursor-pointer aspect-square w-full'
                     )}
                     key={i}
                   >
@@ -511,7 +521,7 @@ export const MediaBox: FC<{
               .map((media: any) => (
                 <div
                   className={clsx(
-                    'group px-[3px] py-[3px] float-left rounded-[6px] w8-max aspect-square',
+                    'group rounded-[6px] w-full aspect-square',
                     !standalone && 'cursor-pointer'
                   )}
                   key={media.id}
@@ -535,7 +545,11 @@ export const MediaBox: FC<{
                         onClick={deleteImage(media)}
                       />
                     )}
-                    <div className="absolute bottom-[10px] end-[10px] z-[100]">{media.originalName}</div>
+                    <div className="absolute bottom-[8px] start-[8px] end-[8px] z-[100]">
+                      <div className="px-[8px] py-[4px] rounded-[8px] bg-black/45 text-white text-[11px] leading-[14px] truncate">
+                        {media.originalName}
+                      </div>
+                    </div>
                     <div className="w-full h-full rounded-[6px] overflow-hidden relative">
                       <div className="absolute z-[20] left-[50%] top-[50%] -translate-x-[50%] -translate-y-[50%]">
                         <div
@@ -571,6 +585,7 @@ export const MediaBox: FC<{
                   </div>
                 </div>
               ))}
+            </div>
           </div>
         </div>
         {(data?.pages || 0) > 1 && (

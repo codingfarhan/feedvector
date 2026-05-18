@@ -89,12 +89,12 @@ export const ChangeLanguageComponent = () => {
   }, []);
 
   return (
-    <div className="relative">
-      <div className="grid grid-cols-4 gap-2">
+    <div className="relative max-w-full">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-[10px] max-w-full">
         {availableLanguages.map((language) => (
           <div
             className={clsx(
-              'flex items-center flex-col bg-newTableHeader hover:bg-newTableBorder p-[20px] cursor-pointer gap-2',
+              'flex items-center flex-col bg-newTableHeader hover:bg-newTableBorder p-[12px] sm:p-[20px] cursor-pointer gap-[8px] rounded-[12px] border border-transparent max-w-full',
               language === currentLanguage ? 'border border-textColor' : ''
             )}
             key={language}
@@ -109,7 +109,10 @@ export const ChangeLanguageComponent = () => {
               }}
               title={language}
             />
-            <Text weight={language === currentLanguage ? 'bold' : 'normal'}>
+            <Text
+              weight={language === currentLanguage ? 'bold' : 'normal'}
+              className="text-[12px] sm:text-[14px] max-w-full truncate text-center"
+            >
               {getLanguageName(language)}
             </Text>
           </div>
@@ -126,7 +129,16 @@ export const LanguageComponent = () => {
     modal.openModal({
       title: t('change_language', 'Change Language'),
       withCloseButton: true,
-      children: <ChangeLanguageComponent />,
+      size: 'calc(100vw - 24px)',
+      classNames: {
+        modal:
+          'w-full max-w-[600px] text-textColor max-h-[calc(100dvh-120px)] overflow-y-auto',
+      },
+      children: (
+        <div className="p-[14px] sm:p-[20px]">
+          <ChangeLanguageComponent />
+        </div>
+      ),
     });
   };
   return (
