@@ -118,9 +118,8 @@ export const LayoutComponent = ({ children }: { children: ReactNode }) => {
   const onFreePlan = userTier == "FREE"
   const trialEndsAt = user.trialEndsAt ? new Date(user.trialEndsAt) : null
   const trialDaysLeft = trialEndsAt ? Math.max(0, Math.ceil((trialEndsAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24))) : 0
-  const showTrialBanner = !dismissTrialBanner && !!user.trialActive && trialDaysLeft > 0 && userTier === "FREE"
-  const showTrialExpiredPaywall = false
-  // userTier === "FREE" && !!user.trialEndsAt && !user.trialActive
+  const showTrialBanner = !dismissTrialBanner && !!user.trialActive && trialDaysLeft > 0 && onFreePlan
+  const showTrialExpiredPaywall = userTier === "FREE" && !!user.trialEndsAt && !user.trialActive
 
   const appContent = (
     <MantineWrapper>
@@ -137,16 +136,16 @@ export const LayoutComponent = ({ children }: { children: ReactNode }) => {
         <div className={clsx("flex flex-col min-h-screen min-w-screen text-newTextColor p-[12px]", jakartaSans.className)}>
           <div>{user?.admin ? <Impersonate /> : <div />}</div>
           {showTrialBanner && (
-            <div className="fixed top-[12px] left-1/2 -translate-x-1/2 z-[20] w-fit max-w-[calc(100vw-24px)] px-[16px] py-[10px] rounded-[10px] bg-newBgColorInner border border-newTableBorder text-[14px] inline-flex items-center gap-[10px] text-center shadow-[0_6px_20px_rgba(0,0,0,0.2)]">
-              <div>
+            <div className="fixed top-[calc(env(safe-area-inset-top)+12px)] left-1/2 -translate-x-1/2 z-[20] w-[calc(100vw-24px)] sm:w-fit max-w-[calc(100vw-24px)] px-[14px] sm:px-[16px] py-[10px] rounded-[10px] bg-newBgColorInner border border-newTableBorder text-[13px] sm:text-[14px] flex flex-col sm:flex-row items-start sm:items-center gap-[8px] sm:gap-[10px] text-left sm:text-center shadow-[0_6px_20px_rgba(0,0,0,0.2)] relative pr-[44px] sm:pr-[16px]">
+              <div className="leading-[18px] sm:leading-normal">
                 {trialDaysLeft} day{trialDaysLeft === 1 ? "" : "s"} left in your free trial.
               </div>
-              <a className="underline font-[600] hover:text-newTextColor" href="/billing">
+              <a className="underline font-[600] hover:text-newTextColor block sm:inline" href="/billing">
                 Upgrade now
               </a>
               <button
                 type="button"
-                className="ml-[6px] text-[16px] leading-[16px] text-textItemBlur hover:text-newTextColor"
+                className="absolute top-[8px] right-[10px] sm:static sm:ml-[6px] text-[18px] leading-[18px] text-textItemBlur hover:text-newTextColor"
                 onClick={() => setDismissTrialBanner(true)}
                 aria-label="Close trial banner"
               >

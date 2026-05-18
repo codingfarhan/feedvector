@@ -22,6 +22,13 @@ import { Integration } from '@prisma/client';
 import Link from 'next/link';
 import { useParams, usePathname, useRouter } from 'next/navigation';
 import { useT } from '@gitroom/react/translation/get.transation.service.client';
+import { useModals } from '@gitroom/frontend/components/layout/new-modal';
+import {
+  MobileAgentsTopBar,
+  MobileDrawerShell,
+  MobileAgentChannelsPicker,
+  MobileAgentChatsList,
+} from '@gitroom/frontend/components/agents/mobile.agent.drawers';
 
 export const MediaPortal: FC<{
   media: { path: string; id: string }[];
@@ -199,12 +206,68 @@ export const AgentList: FC<{ onChange: (arr: any[]) => void }> = ({
 export const PropertiesContext = createContext({ properties: [] });
 export const Agent: FC<{ children: ReactNode }> = ({ children }) => {
   const [properties, setProperties] = useState([]);
+  const modals = useModals();
+  const pathname = usePathname();
+  const t = useT();
+
+  const openChannels = useCallback(() => {
+    modals.openModal({
+      removeLayout: true,
+      fullScreen: true,
+      closeOnEscape: true,
+      children: (close) => (
+        <MobileDrawerShell
+          title={t('select_channels', 'Select Channels')}
+          subtitle={t(
+            'select_channels_desc',
+            'Pick the channels you want the agent to use'
+          )}
+          onClose={close}
+        >
+          <MobileAgentChannelsPicker
+            selected={properties}
+            onChange={setProperties}
+          />
+        </MobileDrawerShell>
+      ),
+    });
+  }, [modals, properties, t]);
+
+  const openChats = useCallback(() => {
+    modals.openModal({
+      removeLayout: true,
+      fullScreen: true,
+      closeOnEscape: true,
+      children: (close) => (
+        <MobileDrawerShell
+          title={t('chats', 'Chats')}
+          subtitle={t('chats_desc', 'Your previous conversations')}
+          onClose={close}
+        >
+          <MobileAgentChatsList onNavigate={close} />
+        </MobileDrawerShell>
+      ),
+    });
+  }, [modals, t]);
 
   return (
     <PropertiesContext.Provider value={{ properties }}>
-      <AgentList onChange={setProperties} />
-      <div className="bg-newBgColorInner flex flex-1">{children}</div>
-      <Threads />
+      <div className="flex flex-1 min-w-0">
+        <div className="hidden sm:block">
+          <AgentList onChange={setProperties} />
+        </div>
+        <div className="bg-newBgColorInner flex flex-1 min-w-0 flex-col">
+          <MobileAgentsTopBar
+            title={pathname.startsWith('/agents/new') ? t('new_chat', 'New chat') : t('your_assistant', 'Your Assistant')}
+            onOpenChannels={openChannels}
+            onOpenChats={openChats}
+          />
+          <div className="flex flex-1 min-w-0">{children}</div>
+        </div>
+        <div className="hidden sm:block">
+          <Threads />
+        </div>
+      </div>
     </PropertiesContext.Provider>
   );
 };

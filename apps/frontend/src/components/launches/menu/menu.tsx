@@ -75,8 +75,22 @@ export const Menu: FC<{
   useLayoutEffect(() => {
     if (show && menuRef.current) {
       const menuRect = menuRef.current.getBoundingClientRect();
+      const viewportWidth = window.innerWidth;
       const viewportHeight = window.innerHeight;
       const padding = 10;
+
+      // Check if menu overflows right/left of viewport
+      if (menuRect.right > viewportWidth - padding) {
+        const newX = Math.max(padding, viewportWidth - menuRect.width - padding);
+        if (Math.abs(show.x - newX) > 1) {
+          setShow((prev) => (prev ? { ...prev, x: newX } : false));
+        }
+      } else if (menuRect.left < padding) {
+        const newX = padding;
+        if (Math.abs(show.x - newX) > 1) {
+          setShow((prev) => (prev ? { ...prev, x: newX } : false));
+        }
+      }
 
       // Check if menu overflows bottom of viewport
       if (menuRect.bottom > viewportHeight - padding) {
@@ -356,7 +370,7 @@ export const Menu: FC<{
           ref={menuRef}
           onClick={(e) => e.stopPropagation()}
           style={{ left: show.x, top: show.y }}
-          className={`fixed p-[12px] bg-newBgColorInner shadow-menu flex flex-col gap-[16px] z-[100] rounded-[8px] border border-tableBorder text-nowrap`}
+          className={`fixed max-w-[calc(100vw-20px)] p-[12px] bg-newBgColorInner shadow-menu flex flex-col gap-[16px] z-[100] rounded-[8px] border border-tableBorder text-nowrap`}
         >
           {canDisable && !findIntegration?.refreshNeeded && (
             <div

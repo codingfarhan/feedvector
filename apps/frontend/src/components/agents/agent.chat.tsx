@@ -171,7 +171,10 @@ const Message: FC<UserMessageProps> = (props) => {
       })
   }, [props.message?.content])
   return (
-    <div className="copilotKitMessage copilotKitUserMessage min-w-[300px]" dangerouslySetInnerHTML={{ __html: convertContentToImagesAndVideo }} />
+    <div
+      className="copilotKitMessage copilotKitUserMessage max-w-full break-words"
+      dangerouslySetInnerHTML={{ __html: convertContentToImagesAndVideo }}
+    />
   )
 }
 const NewInput: FC<InputProps> = (props) => {

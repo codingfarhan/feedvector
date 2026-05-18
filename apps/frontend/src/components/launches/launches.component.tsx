@@ -29,6 +29,7 @@ import { Onboarding } from "@gitroom/frontend/components/onboarding/onboarding"
 import { MobileCreateActionsFab, MobileCreatePostHeaderButton } from "@gitroom/frontend/components/launches/mobile-create-post"
 import { useModals } from "@gitroom/frontend/components/layout/new-modal"
 import { MobileChannelsDrawer } from "@gitroom/frontend/components/launches/mobile-channels-drawer"
+import { useAddProvider } from "@gitroom/frontend/components/launches/add.provider.component"
 
 export const SVGLine = () => {
   return (
@@ -361,6 +362,7 @@ export const LaunchesComponent = () => {
       setReload(false)
     }
   }, [])
+  const openAddChannel = useAddProvider(() => update(true))
   const continueIntegration = useCallback(
     (integration: any) => async () => {
       router.push(`/launches?added=${integration.identifier}&continue=${integration.id}`)
@@ -481,6 +483,10 @@ export const LaunchesComponent = () => {
             <button
               type="button"
               onClick={() => {
+                if (sortedIntegrations.length === 0) {
+                  openAddChannel()
+                  return
+                }
                 modals.openModal({
                   removeLayout: true,
                   fullScreen: true,
@@ -501,7 +507,9 @@ export const LaunchesComponent = () => {
               }}
               className="h-[40px] px-[14px] rounded-[12px] bg-newTableHeader hover:bg-boxHover text-newTextColor text-[14px] font-[700] inline-flex items-center gap-[8px]"
             >
-              {t("channels", "Channels")} ({sortedIntegrations.length})
+              {sortedIntegrations.length === 0
+                ? t("connect_social_account", "Connect social account")
+                : `${t("manage_channels", "Manage channels")} (${sortedIntegrations.length})`}
             </button>
             {sortedIntegrations?.length > 0 && <MobileCreatePostHeaderButton />}
           </div>
@@ -509,7 +517,7 @@ export const LaunchesComponent = () => {
           <div className="flex-1 flex">
             <Calendar enableDnd={!isMobile} />
           </div>
-          {sortedIntegrations?.length > 0 && <MobileCreateActionsFab />}
+          <MobileCreateActionsFab channelsCount={sortedIntegrations.length} />
         </div>
       </CalendarWeekProvider>
     </>
