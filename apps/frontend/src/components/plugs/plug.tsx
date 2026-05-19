@@ -218,7 +218,7 @@ export const PlugItem: FC<{
         return addPlug(data);
       }}
       key={plug.title}
-      className="w-full h-[300px] rounded-[8px] bg-newTableHeader hover:bg-newTableBorder"
+      className="w-full min-h-[240px] sm:h-[300px] rounded-[12px] bg-newTableHeader hover:bg-newTableBorder"
     >
       <div key={plug.title} className="p-[16px] h-full flex flex-col flex-1">
         <div className="flex">
@@ -262,8 +262,11 @@ export const Plug = () => {
           onClose() {
             mutate();
           },
-          size: '500px',
+          size: 'calc(100vw - 24px)',
           title: `Auto Plug: ${p.title}`,
+          classNames: {
+            modal: 'w-full max-w-[500px] text-textColor',
+          },
           children: (
             <PlugPop
               plug={p}
@@ -283,7 +286,7 @@ export const Plug = () => {
     return null;
   }
   return (
-    <div className="grid grid-cols-3 gap-[30px]">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-[12px] sm:gap-[20px]">
       {plug.plugs.map((p) => (
         <PlugItem
           key={p.title + '-' + plug.providerId}

@@ -116,7 +116,11 @@ export const ThirdPartyListComponent: FC<{ reload: () => void }> = (props) => {
     (title: string, identifier: string) => () => {
       modals.openModal({
         title: `Add API key for ${title}`,
-        withCloseButton: false,
+        withCloseButton: true,
+        size: 'calc(100vw - 24px)',
+        classNames: {
+          modal: 'w-full max-w-[520px] text-textColor',
+        },
         children: (
           <ApiModal identifier={identifier} title={title} update={reload} />
         ),
@@ -126,7 +130,7 @@ export const ThirdPartyListComponent: FC<{ reload: () => void }> = (props) => {
   );
 
   return (
-    <div className="grid grid-cols-4 gap-[10px] justify-items-center justify-center">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[10px]">
       {data?.map((p: any) => (
         <div
           onClick={addApiKey(p.title, p.identifier)}

@@ -31,10 +31,19 @@ export const Autopost: FC = () => {
       modal.openModal({
         title: data ? t('edit_autopost', 'Edit Autopost') : t('add_autopost_title', 'Add Autopost'),
         withCloseButton: true,
-        children: <AddOrEditWebhook data={data} reload={mutate} />,
+        size: 'calc(100vw - 24px)',
+        height: 'calc(100dvh - 24px)',
+        classNames: {
+          modal: 'w-full max-w-[680px] text-textColor overflow-hidden !p-[16px] sm:!p-[24px] !gap-[12px] flex flex-col min-h-0',
+        },
+        children: (
+          <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden w-full max-w-full">
+            <AddOrEditWebhook data={data} reload={mutate} />
+          </div>
+        ),
       });
     },
-    []
+    [modal, mutate, t]
   );
   const deleteHook = useCallback(
     (data: any) => async () => {
@@ -296,8 +305,8 @@ export const AddOrEditWebhook: FC<{
   return (
     <FormProvider {...form}>
       <form onSubmit={form.handleSubmit(callBack)}>
-        <div className="relative flex gap-[20px] flex-col flex-1 rounded-[4px] border border-customColor6 pt-0">
-          <div>
+        <div className="relative flex flex-col flex-1 gap-[16px] overflow-x-hidden max-w-full">
+          <div className="flex flex-col gap-[12px]">
             <Input
               label="Title"
               translationKey="label_title"
@@ -399,16 +408,18 @@ export const AddOrEditWebhook: FC<{
               ))}
             </Select>
             {allIntegrations.value === 'specific' && dataList && !isLoading && (
-              <PickPlatforms
-                integrations={dataList.integrations}
-                selectedIntegrations={integrations as any[]}
-                onChange={(e) => form.setValue('integrations', e)}
-                singleSelect={false}
-                toolTip={true}
-                isMain={true}
-              />
+              <div className="max-w-full overflow-x-hidden">
+                <PickPlatforms
+                  integrations={dataList.integrations}
+                  selectedIntegrations={integrations as any[]}
+                  onChange={(e) => form.setValue('integrations', e)}
+                  singleSelect={false}
+                  toolTip={true}
+                  isMain={true}
+                />
+              </div>
             )}
-            <div className="flex gap-[10px]">
+            <div className="flex gap-[10px] flex-wrap w-full max-w-full">
               {valid === url && (syncLast || !!lastUrl) && (
                 <Button
                   type="submit"

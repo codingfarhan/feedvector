@@ -18,6 +18,7 @@ import useCookie from "react-use-cookie"
 import { SVGLine } from "@gitroom/frontend/components/launches/launches.component"
 import { LoadingComponent } from "@gitroom/frontend/components/layout/loading"
 import { useUser } from "@gitroom/frontend/components/layout/user.context"
+import { useModals } from "@gitroom/frontend/components/layout/new-modal"
 export const Plugs = () => {
   const fetch = useFetch()
   const router = useRouter()
@@ -26,6 +27,7 @@ export const Plugs = () => {
   const [current, setCurrent] = useState(0)
   const [refresh, setRefresh] = useState(false)
   const toaster = useToaster()
+  const modal = useModals()
   const load = useCallback(async () => {
     return (await (await fetch("/integrations/list")).json()).integrations
   }, [])
@@ -77,6 +79,84 @@ export const Plugs = () => {
     }
   }, [currentIntegration, plugList])
 
+  const openMobileChannelPicker = useCallback(() => {
+    modal.openModal({
+      removeLayout: true,
+      fullScreen: true,
+      withCloseButton: true,
+      title: t("select_channel", "Select channel"),
+      children: (
+        <div className="h-full w-full bg-newBgColorInner text-newTextColor p-[14px]">
+          <div className="flex flex-col gap-[8px] pb-[84px]">
+            {sortedIntegrations.map((integration: any, index: number) => {
+              const isActive = currentIntegration?.id === integration.id
+              return (
+                <button
+                  key={integration.id}
+                  type="button"
+                  onClick={() => {
+                    if (integration.refreshNeeded) {
+                      toaster.show("Please refresh the integration from the calendar", "warning")
+                      return
+                    }
+                    setRefresh(true)
+                    setTimeout(() => setRefresh(false), 10)
+                    setCurrent(index)
+                    modal.closeAll()
+                  }}
+                  className={clsx(
+                    "w-full text-left flex items-center gap-[12px] px-[12px] py-[12px] rounded-[14px] border border-newTableBorder bg-newTableHeader active:bg-boxHover",
+                    isActive && "border-[#612bd3]/60",
+                  )}
+                >
+                  <div className="relative shrink-0">
+                    <ImageWithFallback
+                      fallbackSrc={`/icons/platforms/${integration.identifier}.png`}
+                      src={integration.picture}
+                      className="rounded-[10px]"
+                      alt={integration.identifier}
+                      width={44}
+                      height={44}
+                    />
+                    <Image
+                      src={`/icons/platforms/${integration.identifier}.png`}
+                      className="rounded-[8px] absolute z-10 bottom-[-6px] -end-[-6px] border border-fifth bg-newBgColorInner"
+                      alt={integration.identifier}
+                      width={20}
+                      height={20}
+                    />
+                    {(integration.inBetweenSteps || integration.refreshNeeded) && (
+                      <div className="absolute start-[-4px] top-[-4px] bg-red-500 w-[16px] h-[16px] rounded-full z-[20] text-[10px] flex justify-center items-center">
+                        !
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[15px] font-[600] truncate">{integration.name}</div>
+                    <div className="text-[12px] text-textItemBlur truncate">
+                      {capitalize(integration.identifier)}
+                      {integration.refreshNeeded ? " • Needs refresh" : ""}
+                    </div>
+                  </div>
+                  {isActive && <div className="shrink-0 text-[#32d583] text-[12px] font-[600]">{t("selected", "Selected")}</div>}
+                </button>
+              )
+            })}
+          </div>
+          <div className="fixed bottom-0 left-0 right-0 p-[14px] bg-newBgColorInner border-t border-newTableBorder">
+            <button
+              type="button"
+              onClick={() => modal.closeAll()}
+              className="w-full h-[44px] rounded-[12px] bg-btnSimple text-btnText font-[600] active:bg-boxHover"
+            >
+              {t("close", "Close")}
+            </button>
+          </div>
+        </div>
+      ),
+    })
+  }, [modal, t, sortedIntegrations, currentIntegration?.id, toaster])
+
   if (isLoading || plugLoading) {
     return (
       <div className="bg-newBgColorInner p-[20px] flex flex-1 flex-col gap-[15px] transition-all items-center justify-center">
@@ -101,11 +181,12 @@ export const Plugs = () => {
     )
   }
   return (
-    <div className="relative flex flex-1 gap-[1px]">
-      <div className={clsx("flex flex-1 gap-[1px]", onFreePlan && "blur-sm pointer-events-none select-none")}>
+    <div className="relative flex flex-1 gap-[1px] min-w-0">
+      <div className={clsx("flex flex-1 gap-[1px] min-w-0", onFreePlan && "blur-sm pointer-events-none select-none")}>
+        <div className="flex flex-col sm:flex-row gap-[12px] flex-1 min-w-0">
         <div
           className={clsx(
-            "bg-newBgColorInner p-[20px] flex flex-col gap-[15px] transition-all",
+            "hidden sm:flex bg-newBgColorInner p-[20px] flex-col gap-[15px] transition-all",
             collapseMenu === "1" ? "group sidebar w-[100px]" : "w-[260px]",
           )}
         >
@@ -180,10 +261,49 @@ export const Plugs = () => {
             ))}
           </div>
         </div>
-        <div className="bg-newBgColorInner flex-1 flex-col flex p-[20px] gap-[12px]">
+        <div className="bg-newBgColorInner flex-1 flex-col flex p-[14px] sm:p-[20px] gap-[12px] min-w-0">
+          {/* Mobile: channel picker (no sidebar/drawer) */}
+          <div className="sm:hidden">
+            <button
+              type="button"
+              onClick={openMobileChannelPicker}
+              className="w-full flex items-center gap-[12px] px-[12px] py-[12px] rounded-[14px] border border-newTableBorder bg-newTableHeader active:bg-boxHover"
+              aria-label={t("select_channel", "Select channel")}
+            >
+              <div className="relative shrink-0">
+                <ImageWithFallback
+                  fallbackSrc={`/icons/platforms/${currentIntegration?.identifier}.png`}
+                  src={currentIntegration?.picture}
+                  className="rounded-[10px]"
+                  alt={currentIntegration?.identifier || "channel"}
+                  width={44}
+                  height={44}
+                />
+                {currentIntegration?.identifier && (
+                  <Image
+                    src={`/icons/platforms/${currentIntegration.identifier}.png`}
+                    className="rounded-[8px] absolute z-10 bottom-[-6px] -end-[-6px] border border-fifth bg-newBgColorInner"
+                    alt={currentIntegration.identifier}
+                    width={20}
+                    height={20}
+                  />
+                )}
+              </div>
+              <div className="flex-1 min-w-0 text-left">
+                <div className="text-[14px] text-textItemBlur">{t("channel", "Channel")}</div>
+                <div className="text-[16px] font-[700] truncate">{currentIntegration?.name}</div>
+              </div>
+              <div className="shrink-0 text-textItemBlur">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <path d="M6 9L12 15L18 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+            </button>
+          </div>
           <PlugsContext.Provider value={currentIntegrationPlug}>
             <Plug />
           </PlugsContext.Provider>
+        </div>
         </div>
       </div>
       {onFreePlan && (

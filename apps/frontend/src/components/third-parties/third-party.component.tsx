@@ -14,6 +14,7 @@ import { SVGLine } from "@gitroom/frontend/components/launches/launches.componen
 import { useUser } from "@gitroom/frontend/components/layout/user.context"
 import { Button } from "@gitroom/react/form/button"
 import { useRouter } from "next/navigation"
+import { useModals } from "@gitroom/frontend/components/layout/new-modal"
 
 export const ThirdPartyMenuComponent: FC<{
   reload: () => void
@@ -84,6 +85,7 @@ export const ThirdPartyComponent = () => {
   const user = useUser()
   const router = useRouter()
   const onFreePlan = user.tier.current == "FREE" && !user.trialActive
+  const modals = useModals()
 
   const integrations = useCallback(async () => {
     return (await fetch("/third-party")).json()
@@ -99,12 +101,68 @@ export const ThirdPartyComponent = () => {
   })
   const [collapseMenu, setCollapseMenu] = useCookie("collapseMenu", "0")
 
+  const openMobileIntegrations = useCallback(() => {
+    modals.openModal({
+      removeLayout: true,
+      fullScreen: true,
+      withCloseButton: true,
+      title: t("integrations", "Integrations"),
+      children: (
+        <div className="h-full w-full bg-newBgColorInner text-newTextColor p-[14px]">
+          <div className="text-[12px] uppercase tracking-wide text-textItemBlur mb-[10px]">
+            {t("your_integrations", "Your Integrations")}
+          </div>
+          <div className="flex flex-col gap-[10px] pb-[84px]">
+            {!isLoading && !data?.length ? (
+              <div className="text-textItemBlur">{t("no_integrations_yet", "No integrations yet")}</div>
+            ) : (
+              data?.map((p: any) => (
+                <div
+                  key={p.id}
+                  className="w-full flex items-center gap-[12px] px-[12px] py-[12px] rounded-[14px] border border-newTableBorder bg-newTableHeader"
+                >
+                  <div className="relative shrink-0">
+                    <ImageWithFallback
+                      fallbackSrc={`/icons/third-party/${p.identifier}.png`}
+                      src={`/icons/third-party/${p.identifier}.png`}
+                      className="rounded-[10px]"
+                      alt={p.title}
+                      width={40}
+                      height={40}
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[15px] font-[600] truncate">{p.name}</div>
+                    <div className="text-[12px] text-textItemBlur truncate">{p.title}</div>
+                  </div>
+                  <div className="shrink-0">
+                    <ThirdPartyMenuComponent reload={mutate} tParty={p} />
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+          <div className="fixed bottom-0 left-0 right-0 p-[14px] bg-newBgColorInner border-t border-newTableBorder">
+            <button
+              type="button"
+              onClick={() => modals.closeAll()}
+              className="w-full h-[44px] rounded-[12px] bg-btnSimple text-btnText font-[600] active:bg-boxHover"
+            >
+              {t("close", "Close")}
+            </button>
+          </div>
+        </div>
+      ),
+    })
+  }, [data, isLoading, modals, mutate, t])
+
   return (
-    <div className="relative flex flex-1 gap-[1px]">
-      <div className={clsx("flex flex-1 gap-[1px]", onFreePlan && "blur-sm pointer-events-none select-none")}>
+    <div className="relative flex flex-1 gap-[1px] min-w-0">
+      <div className={clsx("flex flex-1 gap-[1px] min-w-0", onFreePlan && "blur-sm pointer-events-none select-none")}>
+        <div className="flex flex-col sm:flex-row gap-[12px] flex-1 min-w-0">
         <div
           className={clsx(
-            "bg-newBgColorInner p-[20px] flex flex-col gap-[15px] transition-all",
+            "hidden sm:flex bg-newBgColorInner p-[20px] flex-col gap-[15px] transition-all",
             collapseMenu === "1" ? "group sidebar w-[100px]" : "w-[260px]",
           )}
         >
@@ -163,8 +221,29 @@ export const ThirdPartyComponent = () => {
             </div>
           </div>
         </div>
-        <div className="bg-newBgColorInner flex-1 flex-col flex p-[20px] gap-[12px]">
+        <div className="bg-newBgColorInner flex-1 flex-col flex p-[14px] sm:p-[20px] gap-[12px] min-w-0">
+          <div className="sm:hidden">
+            <button
+              type="button"
+              onClick={openMobileIntegrations}
+              className="w-full flex items-center justify-between gap-[12px] px-[12px] py-[12px] rounded-[14px] border border-newTableBorder bg-newTableHeader active:bg-boxHover"
+              aria-label={t("integrations", "Integrations")}
+            >
+              <div className="min-w-0 text-left">
+                <div className="text-[14px] text-textItemBlur">{t("your_integrations", "Your Integrations")}</div>
+                <div className="text-[16px] font-[700] truncate">
+                  {t("manage_integrations_count", "Manage integrations")} ({data?.length || 0})
+                </div>
+              </div>
+              <div className="shrink-0 text-textItemBlur">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <path d="M6 9L12 15L18 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+            </button>
+          </div>
           <ThirdPartyListComponent reload={mutate} />
+        </div>
         </div>
       </div>
       {onFreePlan && (
