@@ -1,6 +1,7 @@
 "use client"
 
 import React, { ReactNode, useCallback, useEffect, useMemo, useState } from "react"
+import { createPortal } from "react-dom"
 import { Logo } from "@gitroom/frontend/components/new-layout/logo"
 import { Plus_Jakarta_Sans } from "next/font/google"
 const ModeComponent = dynamic(() => import("@gitroom/frontend/components/layout/mode.component"), {
@@ -108,6 +109,29 @@ const MobileOrganizationDropdown = ({ currentOrgId }: { currentOrgId?: string })
   )
 }
 
+const TrialBanner = ({ trialDaysLeft, onClose }: { trialDaysLeft: number; onClose: () => void }) => {
+  if (typeof document === "undefined") return null
+  return createPortal(
+    <div className="fixed top-[calc(env(safe-area-inset-top)+12px)] left-1/2 -translate-x-1/2 z-[200] w-[calc(100vw-24px)] sm:w-fit max-w-[calc(100vw-24px)] px-[14px] sm:px-[16px] py-[10px] rounded-[10px] bg-newBgColorInner border border-newTableBorder text-newTextColor text-[13px] sm:text-[14px] flex flex-col sm:flex-row items-center gap-[8px] sm:gap-[10px] text-center shadow-[0_6px_20px_rgba(0,0,0,0.2)] pr-[44px] sm:pr-[16px]">
+      <div className="leading-[18px] sm:leading-normal">
+        {trialDaysLeft} day{trialDaysLeft === 1 ? "" : "s"} left in your free trial.
+      </div>
+      <a className="underline font-[600] hover:text-newTextColor block sm:inline" href="/billing">
+        Upgrade now
+      </a>
+      <button
+        type="button"
+        className="absolute top-[8px] right-[10px] sm:static sm:ml-[6px] text-[18px] leading-[18px] text-textItemBlur hover:text-newTextColor"
+        onClick={onClose}
+        aria-label="Close trial banner"
+      >
+        ×
+      </button>
+    </div>,
+    document.body,
+  )
+}
+
 export const LayoutComponent = ({ children }: { children: ReactNode }) => {
   const fetch = useFetch()
 
@@ -196,24 +220,7 @@ export const LayoutComponent = ({ children }: { children: ReactNode }) => {
         <ContinueProvider />
         <div className={clsx("flex flex-col min-h-screen min-w-screen text-newTextColor p-[12px]", jakartaSans.className)}>
           <div>{user?.admin ? <Impersonate /> : <div />}</div>
-          {showTrialBanner && (
-            <div className="fixed top-[calc(env(safe-area-inset-top)+12px)] left-1/2 -translate-x-1/2 z-[20] w-[calc(100vw-24px)] sm:w-fit max-w-[calc(100vw-24px)] px-[14px] sm:px-[16px] py-[10px] rounded-[10px] bg-newBgColorInner border border-newTableBorder text-[13px] sm:text-[14px] flex flex-col sm:flex-row items-start sm:items-center gap-[8px] sm:gap-[10px] text-left sm:text-center shadow-[0_6px_20px_rgba(0,0,0,0.2)] relative pr-[44px] sm:pr-[16px]">
-              <div className="leading-[18px] sm:leading-normal">
-                {trialDaysLeft} day{trialDaysLeft === 1 ? "" : "s"} left in your free trial.
-              </div>
-              <a className="underline font-[600] hover:text-newTextColor block sm:inline" href="/billing">
-                Upgrade now
-              </a>
-              <button
-                type="button"
-                className="absolute top-[8px] right-[10px] sm:static sm:ml-[6px] text-[18px] leading-[18px] text-textItemBlur hover:text-newTextColor"
-                onClick={() => setDismissTrialBanner(true)}
-                aria-label="Close trial banner"
-              >
-                ×
-              </button>
-            </div>
-          )}
+          {showTrialBanner && <TrialBanner trialDaysLeft={trialDaysLeft} onClose={() => setDismissTrialBanner(true)} />}
           {showTrialExpiredPaywall && isGeneral && billingEnabled ? (
             <FirstBillingComponent />
           ) : (

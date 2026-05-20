@@ -82,21 +82,20 @@ export class IntegrationsController {
         (
           await this._integrationService.getIntegrationsList(org.id)
         ).map(async (p) => {
-          const findIntegration = this._integrationManager.getSocialIntegration(
-            p.providerIdentifier
-          );
+          const findIntegration =
+            this._integrationManager.getSocialIntegration(p.providerIdentifier);
           return {
             name: p.name,
             id: p.id,
             internalId: p.internalId,
             disabled: p.disabled,
-            editor: findIntegration.editor,
+            editor: findIntegration?.editor,
             picture: p.picture || '/no-picture.jpg',
             identifier: p.providerIdentifier,
             inBetweenSteps: p.inBetweenSteps,
             refreshNeeded: p.refreshNeeded,
-            isCustomFields: !!findIntegration.customFields,
-            ...(findIntegration.customFields
+            isCustomFields: !!findIntegration?.customFields,
+            ...(findIntegration?.customFields
               ? { customFields: await findIntegration.customFields() }
               : {}),
             display: p.profile,

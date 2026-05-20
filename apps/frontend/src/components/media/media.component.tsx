@@ -431,7 +431,12 @@ export const MediaBox: FC<{
             <div className="shrink-0 w-full sm:w-auto">{btn}</div>
           )}
         </div>
-        <div className="w-full pointer-events-none relative mt-[5px] mb-[5px]">
+        <div
+          className={clsx(
+            'w-full pointer-events-none relative mt-[5px] mb-[5px]',
+            !loading && !isLoading && !data?.results?.length && 'hidden'
+          )}
+        >
           <div className="w-full h-[46px] overflow-hidden absolute left-0 bg-newBgColorInner uppyChange">
             <Dashboard
               height={46}
@@ -463,24 +468,18 @@ export const MediaBox: FC<{
                 'flex justify-center items-center gap-[20px] flex-col'
             )}
           >
-            {/* Responsive media grid */}
-            <div
-              className={clsx(
-                'w-full',
-                (isLoading || !!data?.results?.length) &&
-                  'grid grid-cols-2 min-[420px]:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-[8px]'
-              )}
-            >
-            {!isLoading && !data?.results?.length && (
-              <>
-                <NoMediaIcon />
-                <div className="text-[20px] font-[600]">
+            {!isLoading && !data?.results?.length ? (
+              <div className="w-full max-w-[560px] px-4 text-center">
+                <div className="flex justify-center mb-[12px]">
+                  <NoMediaIcon />
+                </div>
+                <div className="text-[20px] font-[600] text-center">
                   {t(
                     'you_dont_have_any_media_yet',
                     "You don't have any media yet"
                   )}
                 </div>
-                <div className="whitespace-pre-line text-newTextColor/[0.6] text-center">
+                <div className="mt-[6px] whitespace-pre-line text-newTextColor/[0.6] text-center">
                   {t(
                     'select_or_upload_pictures_max_1gb',
                     'Select or upload pictures (maximum 1 GB per upload).'
@@ -491,101 +490,110 @@ export const MediaBox: FC<{
                     'You can also drag & drop pictures.'
                   )}
                 </div>
-                <div className="forceChange">{btn}</div>
-              </>
-            )}
-            {isLoading && (
-              <>
-                {[...new Array(16)].map((_, i) => (
-                  <div
-                    className={clsx(
-                      'rounded-[6px] cursor-pointer aspect-square w-full'
-                    )}
-                    key={i}
-                  >
-                    <div className="w-full h-full bg-newSep rounded-[6px] animate-pulse" />
-                  </div>
-                ))}
-              </>
-            )}
-            {data?.results
-              ?.filter((f: any) => {
-                const isVideo = (f.path || '').toLowerCase().includes('.mp4');
-                if (type === 'video') {
-                  return isVideo;
-                } else if (type === 'image') {
-                  return !isVideo;
-                }
-                return true;
-              })
-              .map((media: any) => (
-                <div
-                  className={clsx(
-                    'group rounded-[6px] w-full aspect-square',
-                    !standalone && 'cursor-pointer'
-                  )}
-                  key={media.id}
-                >
-                  <div
-                    className={clsx(
-                      'w-full h-full rounded-[6px] border-[4px] relative',
-                      !!selected.find((p) => p.id === media.id)
-                        ? 'border-[#612BD3]'
-                        : 'border-transparent'
-                    )}
-                    onClick={addRemoveSelected(media)}
-                  >
-                    {!!selected.find((p: any) => p.id === media.id) ? (
-                      <div className="text-white flex z-[101] justify-center items-center text-[14px] font-[500] w-[24px] h-[24px] rounded-full bg-[#612BD3] absolute -bottom-[10px] -end-[10px]">
-                        {selected.findIndex((z: any) => z.id === media.id) + 1}
+                <div className="mt-[14px] flex justify-center forceChange">
+                  {btn}
+                </div>
+              </div>
+            ) : (
+              <div className="w-full grid grid-cols-2 min-[420px]:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-[8px]">
+                {isLoading && (
+                  <>
+                    {[...new Array(16)].map((_, i) => (
+                      <div
+                        className={clsx(
+                          'rounded-[6px] cursor-pointer aspect-square w-full'
+                        )}
+                        key={i}
+                      >
+                        <div className="w-full h-full bg-newSep rounded-[6px] animate-pulse" />
                       </div>
-                    ) : (
-                      <DeleteCircleIcon
-                        className="cursor-pointer hidden z-[100] group-hover:block absolute -top-[5px] -end-[5px]"
-                        onClick={deleteImage(media)}
-                      />
-                    )}
-                    <div className="absolute bottom-[8px] start-[8px] end-[8px] z-[100]">
-                      <div className="px-[8px] py-[4px] rounded-[8px] bg-black/45 text-white text-[11px] leading-[14px] truncate">
-                        {media.originalName}
-                      </div>
-                    </div>
-                    <div className="w-full h-full rounded-[6px] overflow-hidden relative">
-                      <div className="absolute z-[20] left-[50%] top-[50%] -translate-x-[50%] -translate-y-[50%]">
-                        <div
-                          onClick={maximize(media)}
-                          className="cursor-pointer p-[4px] bg-black/40 hidden group-hover:block hover:scale-150 transition-all"
-                        >
-                          <svg
-                            width="30"
-                            height="30"
-                            viewBox="0 0 14 14"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <path
-                              d="M2 9H0V14H5V12H2V9ZM0 5H2V2H5V0H0V5ZM12 12H9V14H14V9H12V12ZM9 0V2H12V5H14V0H9Z"
-                              fill="#F1F5F9"
+                    ))}
+                  </>
+                )}
+                {data?.results
+                  ?.filter((f: any) => {
+                    const isVideo = (f.path || '')
+                      .toLowerCase()
+                      .includes('.mp4');
+                    if (type === 'video') {
+                      return isVideo;
+                    } else if (type === 'image') {
+                      return !isVideo;
+                    }
+                    return true;
+                  })
+                  .map((media: any) => (
+                    <div
+                      className={clsx(
+                        'group rounded-[6px] w-full aspect-square',
+                        !standalone && 'cursor-pointer'
+                      )}
+                      key={media.id}
+                    >
+                      <div
+                        className={clsx(
+                          'w-full h-full rounded-[6px] border-[4px] relative',
+                          !!selected.find((p) => p.id === media.id)
+                            ? 'border-[#612BD3]'
+                            : 'border-transparent'
+                        )}
+                        onClick={addRemoveSelected(media)}
+                      >
+                        {!!selected.find((p: any) => p.id === media.id) ? (
+                          <div className="text-white flex z-[101] justify-center items-center text-[14px] font-[500] w-[24px] h-[24px] rounded-full bg-[#612BD3] absolute -bottom-[10px] -end-[10px]">
+                            {selected.findIndex((z: any) => z.id === media.id) +
+                              1}
+                          </div>
+                        ) : (
+                          <DeleteCircleIcon
+                            className="cursor-pointer hidden z-[100] group-hover:block absolute -top-[5px] -end-[5px]"
+                            onClick={deleteImage(media)}
+                          />
+                        )}
+                        <div className="absolute bottom-[8px] start-[8px] end-[8px] z-[100]">
+                          <div className="px-[8px] py-[4px] rounded-[8px] bg-black/45 text-white text-[11px] leading-[14px] truncate">
+                            {media.originalName}
+                          </div>
+                        </div>
+                        <div className="w-full h-full rounded-[6px] overflow-hidden relative">
+                          <div className="absolute z-[20] left-[50%] top-[50%] -translate-x-[50%] -translate-y-[50%]">
+                            <div
+                              onClick={maximize(media)}
+                              className="cursor-pointer p-[4px] bg-black/40 hidden group-hover:block hover:scale-150 transition-all"
+                            >
+                              <svg
+                                width="30"
+                                height="30"
+                                viewBox="0 0 14 14"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <path
+                                  d="M2 9H0V14H5V12H2V9ZM0 5H2V2H5V0H0V5ZM12 12H9V14H14V9H12V12ZM9 0V2H12V5H14V0H9Z"
+                                  fill="#F1F5F9"
+                                />
+                              </svg>
+                            </div>
+                          </div>
+                          {(media.path || '').toLowerCase().includes('.mp4') ? (
+                            <VideoFrame
+                              url={mediaDirectory.set(media.path)}
                             />
-                          </svg>
+                          ) : (
+                            <img
+                              width="100%"
+                              height="100%"
+                              className="w-full h-full object-cover"
+                              src={mediaDirectory.set(media.path)}
+                              alt="media"
+                            />
+                          )}
                         </div>
                       </div>
-                      {(media.path || '').toLowerCase().includes('.mp4') ? (
-                        <VideoFrame url={mediaDirectory.set(media.path)} />
-                      ) : (
-                        <img
-                          width="100%"
-                          height="100%"
-                          className="w-full h-full object-cover"
-                          src={mediaDirectory.set(media.path)}
-                          alt="media"
-                        />
-                      )}
                     </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+                  ))}
+              </div>
+            )}
           </div>
         </div>
         {(data?.pages || 0) > 1 && (

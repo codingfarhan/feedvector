@@ -114,11 +114,11 @@ export const AgentList: FC<{ onChange: (arr: any[]) => void }> = ({
   return (
     <div
       className={clsx(
-        'trz bg-newBgColorInner flex flex-col gap-[15px] transition-all relative',
+        'trz bg-newBgColorInner flex flex-col gap-[15px] transition-all relative h-full min-h-0',
         collapseMenu === '1' ? 'group sidebar w-[100px]' : 'w-[260px]'
       )}
     >
-      <div className="absolute top-0 start-0 w-full h-full p-[20px] overflow-auto scrollbar scrollbar-thumb-fifth scrollbar-track-newBgColor">
+      <div className="absolute top-0 start-0 w-full h-full p-[20px] overflow-auto min-h-0 scrollbar scrollbar-thumb-fifth scrollbar-track-newBgColor">
         <div className="flex items-center">
           <h2 className="group-[.sidebar]:hidden flex-1 text-[20px] font-[500] mb-[15px]">
             {t('select_channels', 'Select Channels')}
@@ -252,19 +252,19 @@ export const Agent: FC<{ children: ReactNode }> = ({ children }) => {
 
   return (
     <PropertiesContext.Provider value={{ properties }}>
-      <div className="flex flex-1 min-w-0">
-        <div className="hidden sm:block">
+      <div className="flex flex-1 min-w-0 min-h-0">
+        <div className="hidden sm:block h-full min-h-0">
           <AgentList onChange={setProperties} />
         </div>
-        <div className="bg-newBgColorInner flex flex-1 min-w-0 flex-col">
+        <div className="bg-newBgColorInner flex flex-1 min-w-0 min-h-0 flex-col">
           <MobileAgentsTopBar
             title={pathname.startsWith('/agents/new') ? t('new_chat', 'New chat') : t('your_assistant', 'Your Assistant')}
             onOpenChannels={openChannels}
             onOpenChats={openChats}
           />
-          <div className="flex flex-1 min-w-0">{children}</div>
+          <div className="flex flex-1 min-w-0 min-h-0">{children}</div>
         </div>
-        <div className="hidden sm:block">
+        <div className="hidden sm:block h-full min-h-0">
           <Threads />
         </div>
       </div>
@@ -287,11 +287,11 @@ const Threads: FC = () => {
   return (
     <div
       className={clsx(
-        'trz bg-newBgColorInner flex flex-col gap-[15px] transition-all relative',
+        'trz bg-newBgColorInner flex flex-col gap-[15px] transition-all relative h-full min-h-0',
         'w-[260px]'
       )}
     >
-      <div className="absolute top-0 start-0 w-full h-full p-[20px] overflow-auto scrollbar scrollbar-thumb-fifth scrollbar-track-newBgColor">
+      <div className="absolute top-0 start-0 w-full h-full p-[20px] overflow-auto min-h-0 scrollbar scrollbar-thumb-fifth scrollbar-track-newBgColor">
         <div className="mb-[15px] justify-center flex group-[.sidebar]:pb-[15px]">
           <Link
             href={`/agents`}
