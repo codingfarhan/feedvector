@@ -227,9 +227,11 @@ export const LayoutComponent = ({ children }: { children: ReactNode }) => {
             <div className="flex-1 flex gap-[8px]">
               <Support />
               <div className="hidden sm:flex flex-col bg-newBgColorInner w-[80px] rounded-[12px]">
-                <div className={clsx("fixed h-full w-[64px] start-[17px] flex flex-1 top-0", user?.admin && "pt-[60px] max-h-[1000px]:w-[500px]")}>
+                <div className={clsx("fixed h-full w-[64px] start-[20px] flex flex-1 top-0", user?.admin && "pt-[60px] max-h-[1000px]:w-[500px]")}>
                   <div className="flex flex-col h-full gap-[32px] flex-1 py-[12px]">
-                    <Logo />
+                    <div className="w-[64px] flex justify-center translate-x-[4px]">
+                      <Logo />
+                    </div>
                     <TopMenu />
                   </div>
                 </div>

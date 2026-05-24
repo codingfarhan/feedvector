@@ -520,7 +520,7 @@ export const AddProviderComponent: FC<{
           className={clsx(
             'grid gap-[10px] justify-items-center justify-center',
             onboarding
-              ? 'grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-9'
+              ? 'grid-cols-3 sm:grid-cols-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6'
               : 'grid-cols-3 sm:grid-cols-4 md:grid-cols-5'
           )}
         >
