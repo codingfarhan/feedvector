@@ -14,7 +14,7 @@ function getFrontendUrl() {
 }
 
 function getBackendUrl() {
-  return stripTrailingSlash(process.env.BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL || process.env.FRONTEND_URL || "")
+  return stripTrailingSlash(process.env.NEXT_PUBLIC_BACKEND_URL || `${process.env.FRONTEND_URL}/api` || "")
 }
 
 @Injectable()
