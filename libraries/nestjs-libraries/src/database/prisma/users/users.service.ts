@@ -20,6 +20,22 @@ export class UsersService {
     return this._usersRepository.getUserById(id);
   }
 
+  setProductActivatedAtIfNull(userId: string) {
+    return this._usersRepository.setProductActivatedAtIfNull(userId);
+  }
+
+  setUnsubscribedAtIfNull(userId: string) {
+    return this._usersRepository.setUnsubscribedAtIfNull(userId);
+  }
+
+  setEmailBouncedAtByEmail(email: string) {
+    return this._usersRepository.setEmailBouncedAtByEmail(email);
+  }
+
+  setEmailSuppressedAtByEmail(email: string) {
+    return this._usersRepository.setEmailSuppressedAtByEmail(email);
+  }
+
   getImpersonateUser(name: string) {
     return this._organizationRepository.getImpersonateUser(name);
   }

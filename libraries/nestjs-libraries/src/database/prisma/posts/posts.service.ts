@@ -32,11 +32,14 @@ import {
   organizationId,
   postId as postIdSearchParam,
 } from '@gitroom/nestjs-libraries/temporal/temporal.search.attribute';
+import { ONBOARDING_PRODUCT_ACTIVATED_SIGNAL } from '@gitroom/nestjs-libraries/temporal/signals/onboarding.lifecycle';
 import { AnalyticsData } from '@gitroom/nestjs-libraries/integrations/social/social.integrations.interface';
 import { timer } from '@gitroom/helpers/utils/timer';
 import { ioRedis } from '@gitroom/nestjs-libraries/redis/redis.service';
 import { RefreshToken } from '@gitroom/nestjs-libraries/integrations/social.abstract';
 import { RefreshIntegrationService } from '@gitroom/nestjs-libraries/integrations/refresh.integration.service';
+import { OrganizationRepository } from '@gitroom/nestjs-libraries/database/prisma/organizations/organization.repository';
+import { UsersService } from '@gitroom/nestjs-libraries/database/prisma/users/users.service';
 
 type PostWithConditionals = Post & {
   integration?: Integration;
@@ -54,8 +57,33 @@ export class PostsService {
     private _shortLinkService: ShortLinkService,
     private _openaiService: OpenaiService,
     private _temporalService: TemporalService,
-    private _refreshIntegrationService: RefreshIntegrationService
+    private _refreshIntegrationService: RefreshIntegrationService,
+    private _organizationRepository: OrganizationRepository,
+    private _usersService: UsersService
   ) {}
+
+  private async maybeActivateProductForOrg(organizationId: string) {
+    try {
+      const ownerUserId =
+        await this._organizationRepository.getOrganizationOwnerUserId(
+          organizationId
+        );
+      if (!ownerUserId) return;
+      await this._usersService.setProductActivatedAtIfNull(ownerUserId);
+      try {
+        await this._temporalService.client
+          .getRawClient()
+          ?.workflow.signalWithStart('onboardingLifecycleWorkflow', {
+            workflowId: `onboarding_lifecycle_${organizationId}`,
+            taskQueue: 'main',
+            signal: ONBOARDING_PRODUCT_ACTIVATED_SIGNAL,
+            args: [{ orgId: organizationId }],
+            signalArgs: [],
+            workflowIdConflictPolicy: 'USE_EXISTING',
+          });
+      } catch (err) {}
+    } catch (err) {}
+  }
 
   searchForMissingThreeHoursPosts() {
     return this._postRepository.searchForMissingThreeHoursPosts();
@@ -686,6 +714,8 @@ export class PostsService {
 
   async createPost(orgId: string, body: CreatePostDto): Promise<any[]> {
     const postList = [];
+    const shouldAttemptActivation =
+      body.type === 'schedule' || body.type === 'now';
     for (const post of body.posts) {
       const messages = (post.value || []).map((p) => p.content);
       const updateContent = !body.shortLink
@@ -726,6 +756,10 @@ export class PostsService {
       });
     }
 
+    if (shouldAttemptActivation && postList.length > 0) {
+      this.maybeActivateProductForOrg(orgId).catch((err) => {});
+    }
+
     return postList;
   }
 
@@ -764,6 +798,8 @@ export class PostsService {
           getPostById.state === 'DRAFT' ? 'DRAFT' : 'QUEUE'
         );
       } catch (err) {}
+
+      await this.maybeActivateProductForOrg(orgId);
     }
 
     return newDate;

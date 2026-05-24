@@ -47,6 +47,54 @@ export class UsersRepository {
     });
   }
 
+  async setProductActivatedAtIfNull(userId: string) {
+    await (this._user.model.user as any).updateMany({
+      where: {
+        id: userId,
+        productActivatedAt: null,
+      },
+      data: {
+        productActivatedAt: new Date(),
+      },
+    });
+  }
+
+  async setUnsubscribedAtIfNull(userId: string) {
+    await (this._user.model.user as any).updateMany({
+      where: {
+        id: userId,
+        unsubscribedAt: null,
+      },
+      data: {
+        unsubscribedAt: new Date(),
+      },
+    });
+  }
+
+  async setEmailBouncedAtByEmail(email: string) {
+    await (this._user.model.user as any).updateMany({
+      where: {
+        email,
+        emailBouncedAt: null,
+      },
+      data: {
+        emailBouncedAt: new Date(),
+      },
+    });
+  }
+
+  async setEmailSuppressedAtByEmail(email: string) {
+    await (this._user.model.user as any).updateMany({
+      where: {
+        email,
+        emailSuppressedAt: null,
+      },
+      data: {
+        emailSuppressedAt: new Date(),
+      },
+    });
+  }
+
   getUserByEmail(email: string) {
     return this._user.model.user.findFirst({
       where: {

@@ -11,6 +11,7 @@ import { NotificationService } from '@gitroom/nestjs-libraries/database/prisma/n
 import { ForgotReturnPasswordDto } from '@gitroom/nestjs-libraries/dtos/auth/forgot-return.password.dto';
 import { EmailService } from '@gitroom/nestjs-libraries/services/email.service';
 import { NewsletterService } from '@gitroom/nestjs-libraries/newsletter/newsletter.service';
+import { TemporalService } from 'nestjs-temporal-core';
 
 @Injectable()
 export class AuthService {
@@ -18,8 +19,37 @@ export class AuthService {
     private _userService: UsersService,
     private _organizationService: OrganizationService,
     private _notificationService: NotificationService,
-    private _emailService: EmailService
+    private _emailService: EmailService,
+    private _temporalService: TemporalService
   ) {}
+
+  private async startOnboardingLifecycle(orgId: string) {
+    try {
+      await this._temporalService.client.getRawClient()?.workflow.start('onboardingLifecycleWorkflow', {
+        workflowId: `onboarding_lifecycle_${orgId}`,
+        taskQueue: 'main',
+        workflowIdConflictPolicy: 'USE_EXISTING',
+        args: [{ orgId }],
+      });
+    } catch (err) {}
+  }
+
+  private async startTrialLifecycle(orgId: string) {
+    try {
+      await this._temporalService.client.getRawClient()?.workflow.start('trialLifecycleWorkflow', {
+        workflowId: `trial_lifecycle_${orgId}`,
+        taskQueue: 'main',
+        workflowIdConflictPolicy: 'USE_EXISTING',
+        args: [{ orgId }],
+      });
+    } catch (err) {}
+  }
+
+  private startLifecycleWorkflows(orgId: string) {
+    this.startOnboardingLifecycle(orgId).catch((err) => {});
+    this.startTrialLifecycle(orgId).catch((err) => {});
+  }
+
   async canRegister(provider: string) {
     if (
       process.env.DISABLE_REGISTRATION !== 'true' ||
@@ -174,6 +204,8 @@ export class AuthService {
 
     await NewsletterService.register(providerUser.email);
 
+    this.startLifecycleWorkflows(create.id);
+
     return create.users[0].user;
   }
 
@@ -244,9 +276,16 @@ export class AuthService {
         return false;
       }
       await this._userService.activateUser(user.id);
+      const orgIds =
+        await this._organizationService.resetTrialCreatedAtForOwnedTrialOrgs(
+          user.id
+        );
       user.activated = true;
       this._track('register', user.email, tracking).catch((err) => {});
       await NewsletterService.register(user.email);
+      orgIds.forEach((orgId) => {
+        this.startLifecycleWorkflows(orgId);
+      });
       return this.jwt(user as any);
     }
 

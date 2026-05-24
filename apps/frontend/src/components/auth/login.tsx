@@ -15,7 +15,7 @@ import { useVariables } from "@gitroom/react/helpers/variable.context"
 import { FarcasterProvider } from "@gitroom/frontend/components/auth/providers/farcaster.provider"
 import WalletProvider from "@gitroom/frontend/components/auth/providers/wallet.provider"
 import { useT } from "@gitroom/react/translation/get.transation.service.client"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useFireEvents } from "@gitroom/helpers/utils/use.fire.events"
 type Inputs = {
   email: string
@@ -26,6 +26,7 @@ type Inputs = {
 export function Login() {
   const t = useT()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const fireEvents = useFireEvents()
   const [loading, setLoading] = useState(false)
   const [notActivated, setNotActivated] = useState(false)
@@ -53,7 +54,9 @@ export function Login() {
     })
     if (login.status === 200) {
       fireEvents("login_success", { provider: "LOCAL" })
-      router.push("/")
+      const next = searchParams?.get("next")
+      const safeNext = next && next.startsWith("/") ? next : "/"
+      router.push(safeNext)
       return
     }
     if (login.status === 400) {

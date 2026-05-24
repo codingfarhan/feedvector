@@ -49,6 +49,10 @@ export class OrganizationService {
     return this._organizationRepository.getOrgById(id);
   }
 
+  getOnboardingLifecycleState(orgId: string) {
+    return this._organizationRepository.getOnboardingLifecycleState(orgId);
+  }
+
   getOrgByApiKey(api: string) {
     return this._organizationRepository.getOrgByApiKey(api);
   }
@@ -70,6 +74,12 @@ export class OrganizationService {
       orgId,
       isTrailing,
       allowTrial
+    );
+  }
+
+  resetTrialCreatedAtForOwnedTrialOrgs(userId: string) {
+    return this._organizationRepository.resetTrialCreatedAtForOwnedTrialOrgs(
+      userId
     );
   }
 

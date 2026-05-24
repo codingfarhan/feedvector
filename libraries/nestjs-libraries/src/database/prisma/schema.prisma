@@ -92,6 +92,10 @@ model User {
   lastReadNotifications DateTime           @default(now())
   inviteId              String?
   activated             Boolean            @default(true)
+  productActivatedAt    DateTime?
+  unsubscribedAt        DateTime?
+  emailBouncedAt        DateTime?
+  emailSuppressedAt     DateTime?
   account               String?
   connectedAccount      Boolean            @default(false)
   lastOnline            DateTime           @default(now())

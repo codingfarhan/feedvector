@@ -194,6 +194,47 @@ export class OrganizationRepository {
     });
   }
 
+  async getOnboardingLifecycleState(orgId: string) {
+    return (this._organization.model.organization as any).findUnique({
+      where: {
+        id: orgId,
+      },
+      select: {
+        id: true,
+        createdAt: true,
+        isTrailing: true,
+        subscription: {
+          select: {
+            subscriptionTier: true,
+            deletedAt: true,
+          },
+        },
+        users: {
+          where: {
+            role: Role.SUPERADMIN,
+            disabled: false,
+          },
+          select: {
+            user: {
+              select: {
+                id: true,
+                email: true,
+                name: true,
+                createdAt: true,
+                activated: true,
+                productActivatedAt: true,
+                unsubscribedAt: true,
+                emailBouncedAt: true,
+                emailSuppressedAt: true,
+              },
+            },
+          },
+          take: 1,
+        },
+      },
+    });
+  }
+
   async addUserToOrg(
     userId: string,
     id: string,
@@ -305,6 +346,43 @@ export class OrganizationRepository {
         allowTrial,
       },
     });
+  }
+
+  async resetTrialCreatedAtForOwnedTrialOrgs(userId: string) {
+    const orgs = await this._organization.model.organization.findMany({
+      where: {
+        allowTrial: true,
+        isTrailing: true,
+        subscription: null,
+        users: {
+          some: {
+            userId,
+            role: Role.SUPERADMIN,
+          },
+        },
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (!orgs.length) {
+      return [];
+    }
+
+    const orgIds = orgs.map((org) => org.id);
+    await this._organization.model.organization.updateMany({
+      where: {
+        id: {
+          in: orgIds,
+        },
+      },
+      data: {
+        createdAt: new Date(),
+      },
+    });
+
+    return orgIds;
   }
 
   getOrgByCustomerId(customerId: string) {
@@ -425,5 +503,27 @@ export class OrganizationRepository {
         shortlink,
       },
     });
+  }
+
+  async getOrganizationOwnerUserId(organizationId: string) {
+    const org = await this._organization.model.organization.findUnique({
+      where: {
+        id: organizationId,
+      },
+      select: {
+        users: {
+          where: {
+            role: Role.SUPERADMIN,
+            disabled: false,
+          },
+          select: {
+            userId: true,
+          },
+          take: 1,
+        },
+      },
+    });
+
+    return org?.users?.[0]?.userId || null;
   }
 }

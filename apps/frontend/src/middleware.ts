@@ -90,6 +90,13 @@ export async function middleware(request: NextRequest) {
   }
 
   // If the url is /auth and the cookie exists, redirect to /
+  if (nextUrl.pathname.startsWith('/auth/login') && authCookie) {
+    const next = nextUrl.searchParams.get('next');
+    if (next && next.startsWith('/')) {
+      return NextResponse.redirect(new URL(next, nextUrl.href));
+    }
+    return NextResponse.redirect(new URL(`/`, nextUrl.href));
+  }
   if (nextUrl.href.indexOf('/auth') > -1 && authCookie) {
     return NextResponse.redirect(new URL(`/${url}`, nextUrl.href));
   }

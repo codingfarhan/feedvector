@@ -35,6 +35,7 @@ import { ThirdPartyController } from '@gitroom/backend/api/routes/third-party.co
 import { MonitorController } from '@gitroom/backend/api/routes/monitor.controller';
 import { NoAuthIntegrationsController } from '@gitroom/backend/api/routes/no.auth.integrations.controller';
 import { EnterpriseController } from '@gitroom/backend/api/routes/enterprise.controller';
+import { EmailController } from '@gitroom/backend/api/routes/email.controller';
 
 const authenticatedController = [
   UsersController,
@@ -59,6 +60,7 @@ const authenticatedController = [
     StripeController,
     RazorpayController,
     AuthController,
+    EmailController,
     PublicController,
     MonitorController,
     EnterpriseController,
