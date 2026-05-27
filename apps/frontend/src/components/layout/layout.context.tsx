@@ -68,9 +68,7 @@ function LayoutContextInner(params: { children: ReactNode }) {
         }
       }
       if (response?.headers?.get('onboarding')) {
-        window.location.href = isGeneral
-          ? '/launches?onboarding=true'
-          : '/analytics?onboarding=true';
+        window.location.href = isGeneral ? '/launches' : '/analytics';
         return true;
       }
 

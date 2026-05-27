@@ -152,7 +152,7 @@ export const ContinueIntegration: FC<{
       }
 
       const { inBetweenSteps, id, onboarding: resOnboarding, pages, returnURL, extensionToken } = await data.json()
-      const onboarding = resOnboarding || searchParams.onboarding === "true"
+      const onboarding = !!resOnboarding
 
       // Store refresh token in extension for background cookie refresh
       if (extensionToken && extensionId && typeof chrome !== "undefined" && chrome?.runtime?.sendMessage) {
@@ -190,7 +190,7 @@ export const ContinueIntegration: FC<{
         status: data.status,
         inBetweenSteps: !!inBetweenSteps,
       })
-      navigateOrShow(`/launches?added=${provider}&msg=Channel Updated${onboarding ? "&onboarding=true" : ""}`, returnURL, "Channel Updated")
+      navigateOrShow(`/launches?added=${provider}&msg=Channel Updated`, returnURL, "Channel Updated")
     })()
   }, [])
 
@@ -228,7 +228,7 @@ export const ContinueIntegration: FC<{
           inBetweenSteps: true,
         })
         navigateOrShow(
-          `/launches?added=${provider}&msg=Channel Added${twoStepState.onboarding ? "&onboarding=true" : ""}`,
+          `/launches?added=${provider}&msg=Channel Added`,
           twoStepState.returnURL,
           "Channel Added",
         )

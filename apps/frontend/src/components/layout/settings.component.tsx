@@ -1,7 +1,7 @@
 "use client"
 
 import { useModals } from "@gitroom/frontend/components/layout/new-modal"
-import React, { FC, Ref, useCallback, useEffect, useMemo, useState } from "react"
+import React, { FC, Ref, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { FormProvider, useForm } from "react-hook-form"
 import { showMediaBox } from "@gitroom/frontend/components/media/media.component"
 import { useFetch } from "@gitroom/helpers/utils/custom.fetch"
@@ -10,7 +10,7 @@ import { UserDetailDto } from "@gitroom/nestjs-libraries/dtos/users/user.details
 import { useToaster } from "@gitroom/react/toaster/toaster"
 import { useSWRConfig } from "swr"
 import clsx from "clsx"
-import { TeamsComponent } from "@gitroom/frontend/components/settings/teams.component"
+import { AddMember, TeamsComponent } from "@gitroom/frontend/components/settings/teams.component"
 import { useUser } from "@gitroom/frontend/components/layout/user.context"
 import { LogoutComponent } from "@gitroom/frontend/components/layout/logout.component"
 import { useSearchParams } from "next/navigation"
@@ -74,6 +74,7 @@ export const SettingsPopup: FC<{
   }, [])
 
   const [tab, setTab] = useState("global_settings")
+  const handledOnboardingAction = useRef(false)
 
   const t = useT()
   const list = useMemo(() => {
@@ -105,6 +106,32 @@ export const SettingsPopup: FC<{
   const currentTabLabel = useMemo(() => {
     return list.find((p) => p.tab === tab)?.label || t("settings", "Settings")
   }, [list, tab, t])
+
+  useEffect(() => {
+    const requestedTab = url.get("tab")
+    if (!requestedTab || !list.some((item) => item.tab === requestedTab)) {
+      return
+    }
+    setTab(requestedTab)
+  }, [list, url])
+
+  useEffect(() => {
+    const action = url.get("onboardingAction")
+    if (handledOnboardingAction.current || action !== "add-member" || tab !== "teams") {
+      return
+    }
+
+    handledOnboardingAction.current = true
+    window.history.replaceState(null, "", "/settings")
+    modal.openModal({
+      classNames: {
+        modal: "bg-newBgColorInner text-newTextColor",
+      },
+      title: t("top_title_add_member", "Add Member"),
+      withCloseButton: true,
+      children: <AddMember />,
+    })
+  }, [modal, t, tab, url])
 
   const openMobileSettingsMenu = useCallback(() => {
     modal.openModal({

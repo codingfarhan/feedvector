@@ -22,6 +22,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { UsersService } from '@gitroom/nestjs-libraries/database/prisma/users/users.service';
 import { UserDetailDto } from '@gitroom/nestjs-libraries/dtos/users/user.details.dto';
 import { EmailNotificationsDto } from '@gitroom/nestjs-libraries/dtos/users/email-notifications.dto';
+import { OnboardingGoalDto } from '@gitroom/nestjs-libraries/dtos/users/onboarding.goal.dto';
 import { HttpForbiddenException } from '@gitroom/nestjs-libraries/services/exception.filter';
 import { RealIP } from 'nestjs-real-ip';
 import { UserAgent } from '@gitroom/nestjs-libraries/user/user.agent';
@@ -29,6 +30,7 @@ import { TrackEnum } from '@gitroom/nestjs-libraries/user/track.enum';
 import { TrackService } from '@gitroom/nestjs-libraries/track/track.service';
 import { makeId } from '@gitroom/nestjs-libraries/services/make.is';
 import { AuthorizationActions, Sections } from '@gitroom/backend/services/auth/permissions/permission.exception.class';
+import { IntegrationService } from '@gitroom/nestjs-libraries/database/prisma/integrations/integration.service';
 
 @ApiTags('User')
 @Controller('/user')
@@ -38,7 +40,8 @@ export class UsersController {
     private _authService: AuthService,
     private _orgService: OrganizationService,
     private _userService: UsersService,
-    private _trackService: TrackService
+    private _trackService: TrackService,
+    private _integrationService: IntegrationService
   ) {}
   @Get('/self')
   async getSelf(
@@ -59,6 +62,16 @@ export class UsersController {
       !!organization?.isTrailing &&
       !!trialEndsAt &&
       trialEndsAt.getTime() > Date.now();
+    // @ts-ignore
+    const role = organization?.users[0]?.role;
+    const canCompleteOnboarding =
+      role === 'SUPERADMIN' || role === 'ADMIN';
+    const connectedIntegrations = (
+      await this._integrationService.getIntegrationsList(organization.id)
+    ).filter((integration) => !integration.inBetweenSteps);
+    const onboardingState = await this._orgService.getOnboardingState(
+      organization.id
+    );
 
     return {
       ...user,
@@ -68,7 +81,7 @@ export class UsersController {
       // @ts-ignore
       tier: organization?.subscription?.subscriptionTier || (!process.env.RAZORPAY_KEY_ID ? 'ULTIMATE' : 'FREE'),
       // @ts-ignore
-      role: organization?.users[0]?.role,
+      role,
       // @ts-ignore
       isLifetime: !!organization?.subscription?.isLifetime,
       admin: !!user.isSuperAdmin,
@@ -78,9 +91,52 @@ export class UsersController {
       trialEndsAt,
       trialActive,
       streakSince: organization?.streakSince || null,
+      onboardingGoal: onboardingState?.onboardingGoal || null,
+      onboardingPersona: onboardingState?.onboardingPersona || null,
+      onboardingPersonaOther: onboardingState?.onboardingPersonaOther || null,
+      onboardingCompletedAt: onboardingState?.onboardingCompletedAt || null,
+      onboardingRequired:
+        canCompleteOnboarding && !onboardingState?.onboardingCompletedAt,
+      onboardingCanComplete: canCompleteOnboarding,
+      onboardingHasIntegration: connectedIntegrations.length > 0,
       // @ts-ignore
-      publicApi: organization?.users[0]?.role === 'SUPERADMIN' || organization?.users[0]?.role === 'ADMIN' ? organization?.apiKey : '',
+      publicApi: role === 'SUPERADMIN' || role === 'ADMIN' ? organization?.apiKey : '',
     };
+  }
+
+  @Post('/onboarding')
+  async completeOnboarding(
+    @GetOrgFromRequest() organization: Organization,
+    @Body() body: OnboardingGoalDto
+  ) {
+    if (!organization) {
+      throw new HttpForbiddenException();
+    }
+
+    // @ts-ignore
+    const role = organization?.users[0]?.role;
+    if (role !== 'SUPERADMIN' && role !== 'ADMIN') {
+      throw new HttpForbiddenException();
+    }
+
+    const connectedIntegrations = (
+      await this._integrationService.getIntegrationsList(organization.id)
+    ).filter((integration) => !integration.inBetweenSteps);
+
+    if (connectedIntegrations.length === 0) {
+      throw new HttpException('Connect at least one channel first', 400);
+    }
+
+    if (body.persona === 'other' && !body.personaOther?.trim()) {
+      throw new HttpException('Please specify what best describes you', 400);
+    }
+
+    return this._orgService.completeOnboarding(
+      organization.id,
+      body.goal,
+      body.persona,
+      body.personaOther?.trim()
+    );
   }
 
   @Get('/personal')

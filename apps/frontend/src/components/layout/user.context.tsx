@@ -21,6 +21,13 @@ export const UserContext = createContext<
       trialEndsAt?: string | null;
       trialActive?: boolean;
       streakSince: string | null;
+      onboardingGoal?: string | null;
+      onboardingPersona?: string | null;
+      onboardingPersonaOther?: string | null;
+      onboardingCompletedAt?: string | null;
+      onboardingRequired?: boolean;
+      onboardingCanComplete?: boolean;
+      onboardingHasIntegration?: boolean;
     })
 >(undefined);
 export const ContextWrapper: FC<{

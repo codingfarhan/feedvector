@@ -225,13 +225,14 @@ export const GeneratorPopup = () => {
     </div>
   )
 }
-export const GeneratorComponent = () => {
+
+export const useGeneratePostsAction = () => {
   const t = useT()
   const user = useUser()
   const router = useRouter()
   const modal = useModals()
   const all = useCalendar()
-  const generate = useCallback(async () => {
+  return useCallback(async () => {
     if (!user?.tier?.ai) {
       if (
         await deleteDialog(
@@ -258,7 +259,11 @@ export const GeneratorComponent = () => {
         </CalendarWeekProvider>
       ),
     })
-  }, [user, all])
+  }, [all, modal, router, t, user])
+}
+
+export const GeneratorComponent = () => {
+  const generate = useGeneratePostsAction()
   return (
     <div className="h-[44px] w-[44px] group-[.sidebar]:w-full bg-ai justify-center items-center flex rounded-[8px] cursor-pointer" onClick={generate}>
       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">

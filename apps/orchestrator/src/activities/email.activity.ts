@@ -92,7 +92,7 @@ export class EmailActivity {
     const replyTo = process.env.LIFECYCLE_REPLY_TO || process.env.EMAIL_FROM_ADDRESS || ""
     const token = AuthService.signJWT({ type: "lifecycle_unsubscribe", id: userId })
     const unsubscribeUrl = `${backendUrl}/email/unsubscribe/${encodeURIComponent(token)}`
-    const nextPath = "/launches?onboarding=true"
+    const nextPath = "/launches"
     const deepLinkUrl = `${frontendUrl}/auth/login?next=${encodeURIComponent(nextPath)}`
     const loomUrl = process.env.LIFECYCLE_LOOM_URL
     const bookingUrl = process.env.LIFECYCLE_BOOKING_URL

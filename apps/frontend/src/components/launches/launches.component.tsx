@@ -1,7 +1,7 @@
 "use client"
 
 import { AddProviderButton } from "@gitroom/frontend/components/launches/add.provider.component"
-import { FC, useCallback, useEffect, useMemo, useState } from "react"
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import Image from "next/image"
 import { groupBy, orderBy } from "lodash"
 import { CalendarWeekProvider } from "@gitroom/frontend/components/launches/calendar.context"
@@ -19,17 +19,17 @@ import { useFireEvents } from "@gitroom/helpers/utils/use.fire.events"
 import { Calendar } from "./calendar"
 import { useDrag, useDrop } from "react-dnd"
 import { DNDProvider } from "@gitroom/frontend/components/launches/helpers/dnd.provider"
-import { GeneratorComponent } from "./generator/generator"
+import { GeneratorComponent, useGeneratePostsAction } from "./generator/generator"
 import { useVariables } from "@gitroom/react/helpers/variable.context"
 import { NewPost } from "@gitroom/frontend/components/launches/new.post"
 import { useT } from "@gitroom/react/translation/get.transation.service.client"
 import { useIntegrationList } from "@gitroom/frontend/components/launches/helpers/use.integration.list"
 import useCookie from "react-use-cookie"
-import { Onboarding } from "@gitroom/frontend/components/onboarding/onboarding"
 import { MobileCreateActionsFab, MobileCreatePostHeaderButton } from "@gitroom/frontend/components/launches/mobile-create-post"
 import { useModals } from "@gitroom/frontend/components/layout/new-modal"
 import { MobileChannelsDrawer } from "@gitroom/frontend/components/launches/mobile-channels-drawer"
 import { useAddProvider } from "@gitroom/frontend/components/launches/add.provider.component"
+import { useCreatePostAction } from "@gitroom/frontend/components/launches/use-create-post"
 
 export const SVGLine = () => {
   return (
@@ -281,6 +281,41 @@ export const MenuComponent: FC<
     </div>
   )
 }
+
+const LaunchesOnboardingAction: FC<{
+  update: (shouldReload: boolean) => void
+}> = ({ update }) => {
+  const search = useSearchParams()
+  const createPost = useCreatePostAction()
+  const addChannel = useAddProvider(() => update(true))
+  const generatePosts = useGeneratePostsAction()
+  const handled = useRef(false)
+
+  useEffect(() => {
+    const action = search.get("onboardingAction")
+    if (!action || handled.current) return
+
+    handled.current = true
+    window.history.replaceState(null, "", "/launches")
+
+    if (action === "create-post") {
+      createPost()
+      return
+    }
+
+    if (action === "add-channel") {
+      addChannel()
+      return
+    }
+
+    if (action === "generate-posts") {
+      generatePosts()
+    }
+  }, [addChannel, createPost, generatePosts, search])
+
+  return null
+}
+
 export const LaunchesComponent = () => {
   const fetch = useFetch()
   const user = useUser()
@@ -423,8 +458,8 @@ export const LaunchesComponent = () => {
 
   const content = (
     <>
-      <Onboarding />
       <CalendarWeekProvider integrations={sortedIntegrations}>
+        <LaunchesOnboardingAction update={update} />
         {!isMobile && (
           <div className={clsx("flex relative flex-col", collapseMenu === "1" ? "group sidebar w-[100px]" : "w-[260px]")}>
             <div

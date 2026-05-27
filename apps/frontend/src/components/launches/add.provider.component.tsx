@@ -169,7 +169,7 @@ export const CustomVariables: FC<{
   gotoUrl(url: string): void
   onboarding?: boolean
 }> = (props) => {
-  const { close, gotoUrl, identifier, variables, onboarding } = props
+  const { close, gotoUrl, identifier, variables } = props
   const fetch = useFetch()
   const modals = useModals()
   const schema = useMemo(() => {
@@ -201,15 +201,13 @@ export const CustomVariables: FC<{
   })
   const submit = useCallback(
     async (data: FieldValues) => {
-      const { url } = await (await fetch(`/integrations/social/${identifier}${onboarding ? "?onboarding=true" : ""}`)).json()
+      const { url } = await (await fetch(`/integrations/social/${identifier}`)).json()
       modals.closeAll()
       gotoUrl(
-        `/integrations/social/${identifier}?state=${url}&code=${Buffer.from(JSON.stringify(data)).toString("base64")}${
-          onboarding ? "&onboarding=true" : ""
-        }`,
+        `/integrations/social/${identifier}?state=${url}&code=${Buffer.from(JSON.stringify(data)).toString("base64")}`,
       )
     },
-    [variables, onboarding],
+    [variables],
   )
 
   const t = useT()
@@ -370,10 +368,9 @@ export const AddProviderComponent: FC<{
         }>,
       ) =>
       async () => {
-        const onboardingParam = onboarding ? "onboarding=true" : ""
         const openWeb3 = async () => {
           const { component: Web3Providers } = web3List.find((item) => item.identifier === identifier)!
-          const { url } = await (await fetch(`/integrations/social/${identifier}${onboarding ? "?onboarding=true" : ""}`)).json()
+          const { url } = await (await fetch(`/integrations/social/${identifier}`)).json()
           modal.openModal({
             title: `Add ${capitalize(identifier)}`,
             withCloseButton: true,
@@ -383,7 +380,7 @@ export const AddProviderComponent: FC<{
             children: (
               <Web3Providers
                 onComplete={(code, newState) => {
-                  window.location.href = `/integrations/social/${identifier}?code=${code}&state=${newState}${onboarding ? "&onboarding=true" : ""}`
+                  window.location.href = `/integrations/social/${identifier}?code=${code}&state=${newState}`
                 }}
                 nonce={url}
               />
@@ -392,7 +389,7 @@ export const AddProviderComponent: FC<{
           return
         }
         const gotoIntegration = async (externalUrl?: string) => {
-          const params = [externalUrl ? `externalUrl=${externalUrl}` : "", onboardingParam].filter(Boolean).join("&")
+          const params = [externalUrl ? `externalUrl=${externalUrl}` : ""].filter(Boolean).join("&")
           const { url, err } = await (await fetch(`/integrations/social/${identifier}${params ? `?${params}` : ""}`)).json()
           if (err) {
             toaster.show(t("could_not_connect_to_platform", "Could not connect to the platform"), "warning")
@@ -472,11 +469,11 @@ export const AddProviderComponent: FC<{
               )
               return
             }
-            const { url } = await (await fetch(`/integrations/social/${identifier}${onboarding ? "?onboarding=true" : ""}`)).json()
+            const { url } = await (await fetch(`/integrations/social/${identifier}`)).json()
             modal.closeAll()
             window.location.href = `/integrations/social/${identifier}?state=${url}&code=${Buffer.from(
               JSON.stringify(cookieResponse.cookies),
-            ).toString("base64")}${onboarding ? "&onboarding=true" : ""}`
+            ).toString("base64")}`
           } catch {
             toaster.show(t("extension_communication_error", "Failed to communicate with the browser extension."), "warning")
           }

@@ -431,14 +431,15 @@ export class StripeService {
     }
 
     const isUtm = body.utm ? `&utm_source=${body.utm}` : '';
+    const checkUrl = body.utm
+      ? `/launches?check=${uniqueId}${isUtm}`
+      : `/launches?check=${uniqueId}`;
     // @ts-ignore
     const { client_secret } = await stripeCustom.checkout.sessions.create({
       // @ts-ignore
       ui_mode: 'custom',
       customer,
-      return_url:
-        process.env['FRONTEND_URL'] +
-        `/launches?onboarding=true&check=${uniqueId}${isUtm}`,
+      return_url: process.env['FRONTEND_URL'] + checkUrl,
       mode: 'subscription',
       subscription_data: {
         ...(allowTrial ? { trial_period_days: 7 } : {}),
@@ -484,6 +485,9 @@ export class StripeService {
     allowTrial: boolean
   ) {
     const isUtm = body.utm ? `&utm_source=${body.utm}` : '';
+    const checkUrl = body.utm
+      ? `/launches?check=${uniqueId}${isUtm}`
+      : `/launches?check=${uniqueId}`;
 
     if (body.dub) {
       await stripe.customers.update(customer, {
@@ -497,9 +501,7 @@ export class StripeService {
     const { url } = await stripe.checkout.sessions.create({
       customer,
       cancel_url: process.env['FRONTEND_URL'] + `/billing?cancel=true${isUtm}`,
-      success_url:
-        process.env['FRONTEND_URL'] +
-        `/launches?onboarding=true&check=${uniqueId}${isUtm}`,
+      success_url: process.env['FRONTEND_URL'] + checkUrl,
       mode: 'subscription',
       subscription_data: {
         ...(allowTrial ? { trial_period_days: 7 } : {}),

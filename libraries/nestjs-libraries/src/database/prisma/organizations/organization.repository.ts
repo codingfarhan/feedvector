@@ -81,7 +81,18 @@ export class OrganizationRepository {
       select: {
         user: true,
         organization: {
-          include: {
+          select: {
+            id: true,
+            name: true,
+            description: true,
+            apiKey: true,
+            paymentId: true,
+            streakSince: true,
+            createdAt: true,
+            updatedAt: true,
+            allowTrial: true,
+            isTrailing: true,
+            shortlink: true,
             users: {
               select: {
                 id: true,
@@ -164,7 +175,18 @@ export class OrganizationRepository {
           },
         },
       },
-      include: {
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        apiKey: true,
+        paymentId: true,
+        streakSince: true,
+        createdAt: true,
+        updatedAt: true,
+        allowTrial: true,
+        isTrailing: true,
+        shortlink: true,
         users: {
           where: {
             userId,
@@ -184,6 +206,24 @@ export class OrganizationRepository {
         },
       },
     });
+  }
+
+  async getOnboardingState(orgId: string) {
+    try {
+      return await this._organization.model.organization.findUnique({
+        where: {
+          id: orgId,
+        },
+        select: {
+          onboardingGoal: true,
+          onboardingPersona: true,
+          onboardingPersonaOther: true,
+          onboardingCompletedAt: true,
+        },
+      });
+    } catch (err) {
+      return null;
+    }
   }
 
   async getOrgById(id: string) {
@@ -501,6 +541,31 @@ export class OrganizationRepository {
       },
       data: {
         shortlink,
+      },
+    });
+  }
+
+  completeOnboarding(
+    orgId: string,
+    goal: string,
+    persona: string,
+    personaOther?: string
+  ) {
+    return this._organization.model.organization.update({
+      where: {
+        id: orgId,
+      },
+      data: {
+        onboardingGoal: goal,
+        onboardingPersona: persona,
+        onboardingPersonaOther: persona === 'other' ? personaOther : null,
+        onboardingCompletedAt: new Date(),
+      },
+      select: {
+        onboardingGoal: true,
+        onboardingPersona: true,
+        onboardingPersonaOther: true,
+        onboardingCompletedAt: true,
       },
     });
   }

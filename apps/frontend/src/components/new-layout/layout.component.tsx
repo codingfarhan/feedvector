@@ -1,6 +1,6 @@
 "use client"
 
-import React, { ReactNode, useCallback, useEffect, useMemo, useState } from "react"
+import React, { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import { Logo } from "@gitroom/frontend/components/new-layout/logo"
 import { Plus_Jakarta_Sans } from "next/font/google"
@@ -41,6 +41,8 @@ import { PreConditionComponent } from "@gitroom/frontend/components/layout/pre-c
 import { AttachToFeedbackIcon } from "@gitroom/frontend/components/new-layout/sentry.feedback.component"
 import { FirstBillingComponent } from "@gitroom/frontend/components/billing/first.billing.component"
 import { LogoutComponent } from "@gitroom/frontend/components/layout/logout.component"
+import { useModals } from "@gitroom/frontend/components/layout/new-modal"
+import { OnboardingModal } from "@gitroom/frontend/components/onboarding/onboarding.modal"
 
 const jakartaSans = Plus_Jakarta_Sans({
   weight: ["600", "500", "700"],
@@ -134,6 +136,7 @@ const TrialBanner = ({ trialDaysLeft, onClose }: { trialDaysLeft: number; onClos
 
 export const LayoutComponent = ({ children }: { children: ReactNode }) => {
   const fetch = useFetch()
+  const modals = useModals()
 
   const { backendUrl, billingEnabled, isGeneral } = useVariables()
   const pathname = usePathname()
@@ -153,6 +156,40 @@ export const LayoutComponent = ({ children }: { children: ReactNode }) => {
 
   const [dismissTrialBanner, setDismissTrialBanner] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const onboardingModalOpen = useRef(false)
+
+  useEffect(() => {
+    if (!user) return
+
+    if (!user.onboardingRequired) {
+      if (onboardingModalOpen.current) {
+        modals.closeById("required-onboarding")
+        onboardingModalOpen.current = false
+      }
+      return
+    }
+
+    if (onboardingModalOpen.current) return
+
+    onboardingModalOpen.current = true
+    modals.openModal({
+      id: "required-onboarding",
+      withCloseButton: false,
+      closeOnEscape: false,
+      closeOnClickOutside: false,
+      removeLayout: true,
+      fullScreen: true,
+      children: (
+        <OnboardingModal
+          onClose={() => {
+            onboardingModalOpen.current = false
+            modals.closeById("required-onboarding")
+            mutate()
+          }}
+        />
+      ),
+    })
+  }, [modals, mutate, user])
 
   useEffect(() => {
     if (!mobileMenuOpen) return
@@ -204,7 +241,8 @@ export const LayoutComponent = ({ children }: { children: ReactNode }) => {
   const trialEndsAt = user.trialEndsAt ? new Date(user.trialEndsAt) : null
   const trialDaysLeft = trialEndsAt ? Math.max(0, Math.ceil((trialEndsAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24))) : 0
   const showTrialBanner = !dismissTrialBanner && !!user.trialActive && trialDaysLeft > 0 && onFreePlan
-  const showTrialExpiredPaywall = userTier === "FREE" && !!user.trialEndsAt && !user.trialActive
+  const showTrialExpiredPaywall = false
+  // userTier === "FREE" && !!user.trialEndsAt && !user.trialActive
 
   const appContent = (
     <MantineWrapper>

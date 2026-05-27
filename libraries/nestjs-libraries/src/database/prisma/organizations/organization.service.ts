@@ -65,6 +65,10 @@ export class OrganizationService {
     return this._organizationRepository.getOrgsByUserId(userId);
   }
 
+  getOnboardingState(orgId: string) {
+    return this._organizationRepository.getOnboardingState(orgId);
+  }
+
   updateApiKey(orgId: string) {
     return this._organizationRepository.updateApiKey(orgId);
   }
@@ -146,6 +150,20 @@ export class OrganizationService {
     return this._organizationRepository.updateShortlinkPreference(
       orgId,
       shortlink
+    );
+  }
+
+  completeOnboarding(
+    orgId: string,
+    goal: string,
+    persona: string,
+    personaOther?: string
+  ) {
+    return this._organizationRepository.completeOnboarding(
+      orgId,
+      goal,
+      persona,
+      personaOther
     );
   }
 }
