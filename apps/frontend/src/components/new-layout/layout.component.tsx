@@ -157,11 +157,12 @@ export const LayoutComponent = ({ children }: { children: ReactNode }) => {
   const [dismissTrialBanner, setDismissTrialBanner] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const onboardingModalOpen = useRef(false)
+  const isIntegrationConnectionPage = pathname.startsWith("/integrations/social/")
 
   useEffect(() => {
     if (!user) return
 
-    if (!user.onboardingRequired) {
+    if (!user.onboardingRequired || isIntegrationConnectionPage) {
       if (onboardingModalOpen.current) {
         modals.closeById("required-onboarding")
         onboardingModalOpen.current = false
@@ -189,7 +190,7 @@ export const LayoutComponent = ({ children }: { children: ReactNode }) => {
         />
       ),
     })
-  }, [modals, mutate, user])
+  }, [isIntegrationConnectionPage, modals, mutate, user])
 
   useEffect(() => {
     if (!mobileMenuOpen) return
@@ -241,7 +242,8 @@ export const LayoutComponent = ({ children }: { children: ReactNode }) => {
   const trialEndsAt = user.trialEndsAt ? new Date(user.trialEndsAt) : null
   const trialDaysLeft = trialEndsAt ? Math.max(0, Math.ceil((trialEndsAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24))) : 0
   const showTrialBanner = !dismissTrialBanner && !!user.trialActive && trialDaysLeft > 0 && onFreePlan
-  const showTrialExpiredPaywall = userTier === "FREE" && !!user.trialEndsAt && !user.trialActive
+  const showTrialExpiredPaywall = false
+  // userTier === "FREE" && !!user.trialEndsAt && !user.trialActive
 
   const appContent = (
     <MantineWrapper>
