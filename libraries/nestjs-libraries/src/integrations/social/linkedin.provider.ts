@@ -39,11 +39,20 @@ type LinkedinProfilePost = {
   post_url?: string
   posted?: string
   repost_stats?: Partial<LinkedinProfilePost>
+  reposted?: string
   reshared?: boolean
   resharer_comment?: string
   text?: string
   urn?: string
   video?: { duration?: number; stream_url?: string }
+}
+
+type LinkedinProfilePerformancePost = {
+  post: LinkedinProfilePost
+  stats: Partial<LinkedinProfilePost>
+  date: string
+  text: string
+  reshared: boolean
 }
 
 @Rules(
@@ -644,46 +653,76 @@ export class LinkedinProvider extends SocialAbstract implements SocialProvider {
     return `https://www.linkedin.com/in/${profile.replace(/^@/, "")}/`
   }
 
-  private profilePostStats(post: LinkedinProfilePost) {
-    return post.reshared && post.repost_stats ? post.repost_stats : post
+  private profilePostActivityDate(post: LinkedinProfilePost) {
+    return post.reshared ? post.reposted || post.posted : post.posted
   }
 
-  private profilePostEngagement(post: LinkedinProfilePost) {
-    const stats = this.profilePostStats(post)
+  private profilePerformancePost(post: LinkedinProfilePost): LinkedinProfilePerformancePost | undefined {
+    const date = this.profilePostActivityDate(post)
+
+    if (!date) {
+      return undefined
+    }
+
+    if (post.reshared) {
+      if (!post.repost_stats) {
+        return undefined
+      }
+
+      return {
+        post,
+        stats: post.repost_stats,
+        date,
+        text: post.resharer_comment || "",
+        reshared: true,
+      }
+    }
+
+    return {
+      post,
+      stats: post,
+      date,
+      text: post.text || "",
+      reshared: false,
+    }
+  }
+
+  private profilePostEngagement(post: LinkedinProfilePerformancePost) {
+    const stats = post.stats
     return Number(stats.num_reactions || 0) + Number(stats.num_comments || 0) + Number(stats.num_reposts || 0)
   }
 
-  private profilePostMediaType(post: LinkedinProfilePost) {
-    if (post.document) {
+  private profilePostMediaType(post: LinkedinProfilePerformancePost) {
+    if (post.post.document) {
       return "document"
     }
 
-    if (post.video) {
+    if (post.post.video) {
       return "video"
     }
 
-    if (post.article_title || post.article_target_url) {
+    if (post.post.article_title || post.post.article_target_url) {
       return "article"
     }
 
-    if ((post.images?.length || 0) > 1) {
+    if ((post.post.images?.length || 0) > 1) {
       return "multi-image"
     }
 
-    if ((post.images?.length || 0) === 1) {
+    if ((post.post.images?.length || 0) === 1) {
       return "image"
     }
 
     return "text"
   }
 
-  private profilePostLabel(post: LinkedinProfilePost) {
-    const text = (post.resharer_comment || post.text || post.post_url || post.urn || "Post").replace(/\s+/g, " ").trim()
+  private profilePostLabel(post: LinkedinProfilePerformancePost) {
+    const text = (post.text || post.post.text || post.post.post_url || post.post.urn || "Post").replace(/\s+/g, " ").trim()
 
     return text.length > 72 ? `${text.slice(0, 69)}...` : text
   }
 
-  private groupAverage(posts: LinkedinProfilePost[], getKey: (post: LinkedinProfilePost) => string) {
+  private groupAverage(posts: LinkedinProfilePerformancePost[], getKey: (post: LinkedinProfilePerformancePost) => string) {
     const grouped = posts.reduce((all, post) => {
       const key = getKey(post)
       all[key] = all[key] || { total: 0, count: 0 }
@@ -730,8 +769,10 @@ export class LinkedinProvider extends SocialAbstract implements SocialProvider {
       const returnedPosts = useLatestProfilePosts ? (result.data || []).slice(0, 50) : result.data || []
       const nowInTimezone = dayjs.utc().utcOffset(timezone)
       const since = useLatestProfilePosts ? undefined : nowInTimezone.subtract(date, "days").startOf("day")
-      const posts = returnedPosts.filter((post) => {
-        if (!post.posted) {
+      const activityPosts = returnedPosts.filter((post) => {
+        const activityDate = this.profilePostActivityDate(post)
+
+        if (!activityDate) {
           return false
         }
 
@@ -739,12 +780,14 @@ export class LinkedinProvider extends SocialAbstract implements SocialProvider {
           return true
         }
 
-        return dayjs.utc(post.posted).utcOffset(timezone).isAfter(since)
+        return dayjs.utc(activityDate).utcOffset(timezone).isAfter(since)
       })
 
-      if (posts.length === 0) {
+      if (activityPosts.length === 0) {
         return []
       }
+
+      const posts = activityPosts.map((post) => this.profilePerformancePost(post)).filter((post): post is LinkedinProfilePerformancePost => !!post)
 
       const today = nowInTimezone.format("YYYY-MM-DD")
       const numberFormat = new Intl.NumberFormat("en-US")
@@ -756,18 +799,29 @@ export class LinkedinProvider extends SocialAbstract implements SocialProvider {
         data: [{ total: typeof value === "number" ? value : 0, date: today }],
       })
 
-      const totals = posts.reduce(
+      const activityTotals = activityPosts.reduce(
         (all, post) => {
-          const stats = this.profilePostStats(post)
-          all.reactions += Number(stats.num_reactions || 0)
-          all.comments += Number(stats.num_comments || 0)
-          all.reposts += Number(stats.num_reposts || 0)
-          all.textLength += (post.resharer_comment || post.text || "").length
           if (post.reshared) {
             all.reshared += 1
           } else {
             all.original += 1
           }
+
+          return all
+        },
+        {
+          original: 0,
+          reshared: 0,
+        },
+      )
+
+      const totals = posts.reduce(
+        (all, post) => {
+          const stats = post.stats
+          all.reactions += Number(stats.num_reactions || 0)
+          all.comments += Number(stats.num_comments || 0)
+          all.reposts += Number(stats.num_reposts || 0)
+          all.textLength += post.text.length
           return all
         },
         {
@@ -775,30 +829,33 @@ export class LinkedinProvider extends SocialAbstract implements SocialProvider {
           comments: 0,
           reposts: 0,
           textLength: 0,
-          original: 0,
-          reshared: 0,
         },
       )
 
       const totalEngagement = totals.reactions + totals.comments + totals.reposts
-      const averageEngagement = totalEngagement / posts.length
-      const postTimestamps = posts.map((post) => dayjs.utc(post.posted).valueOf()).filter(Number.isFinite)
+      const averageEngagement = posts.length ? totalEngagement / posts.length : 0
+      const activityTimestamps = activityPosts.map((post) => dayjs.utc(this.profilePostActivityDate(post)!).valueOf()).filter(Number.isFinite)
       const coveredDays =
-        useLatestProfilePosts && postTimestamps.length > 1
-          ? Math.max(1, (Math.max(...postTimestamps) - Math.min(...postTimestamps)) / (24 * 60 * 60 * 1000))
+        useLatestProfilePosts && activityTimestamps.length > 1
+          ? Math.max(1, (Math.max(...activityTimestamps) - Math.min(...activityTimestamps)) / (24 * 60 * 60 * 1000))
           : date
-      const postsPerWeek = posts.length / Math.max(coveredDays / 7, 1)
-      const bestPost = posts.reduce((best, post) => (this.profilePostEngagement(post) > this.profilePostEngagement(best) ? post : best))
-      const mostCommentedPost = posts.reduce((best, post) =>
-        Number(this.profilePostStats(post).num_comments || 0) > Number(this.profilePostStats(best).num_comments || 0) ? post : best,
+      const postsPerWeek = activityPosts.length / Math.max(coveredDays / 7, 1)
+      const bestPost = posts.reduce<LinkedinProfilePerformancePost | undefined>(
+        (best, post) => (!best || this.profilePostEngagement(post) > this.profilePostEngagement(best) ? post : best),
+        undefined,
       )
-      const mostRepostedPost = posts.reduce((best, post) =>
-        Number(this.profilePostStats(post).num_reposts || 0) > Number(this.profilePostStats(best).num_reposts || 0) ? post : best,
+      const mostCommentedPost = posts.reduce<LinkedinProfilePerformancePost | undefined>(
+        (best, post) => (!best || Number(post.stats.num_comments || 0) > Number(best.stats.num_comments || 0) ? post : best),
+        undefined,
+      )
+      const mostRepostedPost = posts.reduce<LinkedinProfilePerformancePost | undefined>(
+        (best, post) => (!best || Number(post.stats.num_reposts || 0) > Number(best.stats.num_reposts || 0) ? post : best),
+        undefined,
       )
 
       const engagementByDate = Object.entries(
         posts.reduce((all, post) => {
-          const key = dayjs.utc(post.posted).utcOffset(timezone).format("YYYY-MM-DD")
+          const key = dayjs.utc(post.date).utcOffset(timezone).format("YYYY-MM-DD")
           all[key] = (all[key] || 0) + this.profilePostEngagement(post)
           return all
         }, {} as Record<string, number>),
@@ -817,11 +874,11 @@ export class LinkedinProvider extends SocialAbstract implements SocialProvider {
       ].map(([label, key]) => ({
         label,
         date: label,
-        total: posts.reduce((sum, post) => sum + Number((this.profilePostStats(post) as any)[key] || 0), 0),
+        total: posts.reduce((sum, post) => sum + Number((post.stats as any)[key] || 0), 0),
       }))
 
-      const lengthBucket = (post: LinkedinProfilePost) => {
-        const length = (post.resharer_comment || post.text || "").length
+      const lengthBucket = (post: LinkedinProfilePerformancePost) => {
+        const length = post.text.length
         if (length <= 100) return "0-100 chars"
         if (length <= 300) return "101-300 chars"
         if (length <= 700) return "301-700 chars"
@@ -843,21 +900,21 @@ export class LinkedinProvider extends SocialAbstract implements SocialProvider {
         single("Total reactions", totals.reactions),
         single("Total comments", totals.comments),
         single("Total reposts", totals.reposts),
-        single("Best post", this.profilePostEngagement(bestPost)),
-        single("Most-commented post", Number(this.profilePostStats(mostCommentedPost).num_comments || 0)),
-        single("Most-reposted post", Number(this.profilePostStats(mostRepostedPost).num_reposts || 0)),
+        single("Best post", bestPost ? this.profilePostEngagement(bestPost) : 0),
+        single("Most-commented post", Number(mostCommentedPost?.stats.num_comments || 0)),
+        single("Most-reposted post", Number(mostRepostedPost?.stats.num_reposts || 0)),
         single("Posts per week", postsPerWeek.toFixed(1)),
         {
           label: "Original vs reshared posts",
           chartType: "bar",
           percentageChange: 0,
-          total: `${totals.original} / ${totals.reshared}`,
+          total: `${activityTotals.original} / ${activityTotals.reshared}`,
           data: [
-            { label: "Original", date: "Original", total: totals.original },
-            { label: "Reshared", date: "Reshared", total: totals.reshared },
+            { label: "Original", date: "Original", total: activityTotals.original },
+            { label: "Reshared", date: "Reshared", total: activityTotals.reshared },
           ],
         },
-        single("Average post text length", total(totals.textLength / posts.length)),
+        single("Average post text length", posts.length ? total(totals.textLength / posts.length) : "0"),
         {
           label: "Top 10 posts by engagement",
           chartType: "horizontalBar",
@@ -912,7 +969,7 @@ export class LinkedinProvider extends SocialAbstract implements SocialProvider {
           label: "Posting day/time performance",
           chartType: "horizontalBar",
           percentageChange: 0,
-          data: this.groupAverage(posts, (post) => dayjs.utc(post.posted).utcOffset(timezone).format("ddd HH:00"))
+          data: this.groupAverage(posts, (post) => dayjs.utc(post.date).utcOffset(timezone).format("ddd HH:00"))
             .sort((a, b) => b.total - a.total)
             .slice(0, 10),
         },
