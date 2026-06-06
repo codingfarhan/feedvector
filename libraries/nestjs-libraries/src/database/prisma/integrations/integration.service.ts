@@ -350,7 +350,8 @@ export class IntegrationService {
     org: Organization,
     integration: string,
     date: string,
-    forceRefresh = false
+    forceRefresh = false,
+    timezone = 0
   ): Promise<AnalyticsData[]> {
     const getIntegration = await this.getIntegrationById(org.id, integration);
 
@@ -392,7 +393,7 @@ export class IntegrationService {
     }
 
     const getIntegrationData = await ioRedis.get(
-      `integration:${org.id}:${integration}:${date}`
+      `integration:${org.id}:${integration}:${date}:${timezone}`
     );
     if (getIntegrationData) {
       return JSON.parse(getIntegrationData);
@@ -403,10 +404,11 @@ export class IntegrationService {
         const loadAnalytics = await integrationProvider.analytics(
           getIntegration.internalId,
           getIntegration.token,
-          +date
+          +date,
+          { integration: getIntegration, timezone }
         );
         await ioRedis.set(
-          `integration:${org.id}:${integration}:${date}`,
+          `integration:${org.id}:${integration}:${date}:${timezone}`,
           JSON.stringify(loadAnalytics),
           'EX',
           !process.env.NODE_ENV || process.env.NODE_ENV === 'development'
@@ -416,7 +418,7 @@ export class IntegrationService {
         return loadAnalytics;
       } catch (e) {
         if (e instanceof RefreshToken) {
-          return this.checkAnalytics(org, integration, date, true);
+          return this.checkAnalytics(org, integration, date, true, timezone);
         }
       }
     }

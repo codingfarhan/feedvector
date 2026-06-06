@@ -1,7 +1,7 @@
 'use client';
 
 import useSWR from 'swr';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { capitalize, orderBy } from 'lodash';
 import clsx from 'clsx';
 import ImageWithFallback from '@gitroom/react/helpers/image.with.fallback';
@@ -22,6 +22,7 @@ const allowedIntegrations = [
   'facebook',
   'instagram',
   'instagram-standalone',
+  'linkedin',
   'linkedin-page',
   'tiktok',
   'youtube',
@@ -30,6 +31,8 @@ const allowedIntegrations = [
   'threads',
   'x',
 ];
+const LATEST_LINKEDIN_POSTS_KEY = -1;
+
 export const PlatformAnalytics = () => {
   const fetch = useFetch();
   const t = useT();
@@ -37,7 +40,7 @@ export const PlatformAnalytics = () => {
   const { disableXAnalytics } = useVariables();
 
   const [current, setCurrent] = useState(0);
-  const [key, setKey] = useState(7);
+  const [key, setKey] = useState(LATEST_LINKEDIN_POSTS_KEY);
   const [refresh, setRefresh] = useState(false);
   const [collapseMenu, setCollapseMenu] = useCookie('collapseMenu', '0');
   const toaster = useToaster();
@@ -72,16 +75,31 @@ export const PlatformAnalytics = () => {
   const currentIntegration = useMemo(() => {
     return sortedIntegrations[current];
   }, [current, sortedIntegrations]);
+  const isPersonalLinkedIn = currentIntegration?.identifier === 'linkedin';
+
+  useEffect(() => {
+    if (isPersonalLinkedIn) {
+      setKey(LATEST_LINKEDIN_POSTS_KEY);
+    }
+  }, [currentIntegration?.id, isPersonalLinkedIn]);
+
   const options = useMemo(() => {
     if (!currentIntegration) {
       return [];
     }
     const arr = [];
+    if (isPersonalLinkedIn) {
+      arr.push({
+        key: LATEST_LINKEDIN_POSTS_KEY,
+        value: t('latest_50_posts', 'Latest 50 Posts'),
+      });
+    }
     if (
       [
         'facebook',
         'instagram',
         'instagram-standalone',
+        'linkedin',
         'linkedin-page',
         'pinterest',
         'youtube',
@@ -101,6 +119,7 @@ export const PlatformAnalytics = () => {
         'facebook',
         'instagram',
         'instagram-standalone',
+        'linkedin',
         'linkedin-page',
         'pinterest',
         'youtube',
@@ -116,7 +135,7 @@ export const PlatformAnalytics = () => {
       });
     }
     if (
-      ['facebook', 'linkedin-page', 'pinterest', 'youtube', 'x', 'gmb'].indexOf(
+      ['facebook', 'linkedin', 'linkedin-page', 'pinterest', 'youtube', 'x', 'gmb'].indexOf(
         currentIntegration.identifier
       ) !== -1
     ) {
@@ -126,7 +145,7 @@ export const PlatformAnalytics = () => {
       });
     }
     return arr;
-  }, [currentIntegration]);
+  }, [currentIntegration, isPersonalLinkedIn, t]);
   const keys = useMemo(() => {
     if (!currentIntegration) {
       return 7;
@@ -135,7 +154,7 @@ export const PlatformAnalytics = () => {
       return key;
     }
     return options[0]?.key;
-  }, [key, currentIntegration]);
+  }, [key, currentIntegration, options]);
 
   const openMobileChannelPicker = useCallback(() => {
     modal.openModal({
@@ -426,6 +445,7 @@ export const PlatformAnalytics = () => {
                 name="date"
                 disableForm={true}
                 hideErrors={true}
+                value={keys}
                 onChange={(e) => setKey(+e.target.value)}
               >
                 {options.map((option) => (

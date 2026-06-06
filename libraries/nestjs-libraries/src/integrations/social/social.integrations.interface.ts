@@ -26,7 +26,8 @@ export interface IAuthenticator {
   analytics?(
     id: string,
     accessToken: string,
-    date: number
+    date: number,
+    context?: any
   ): Promise<AnalyticsData[]>;
   postAnalytics?(
     integrationId: string,
@@ -52,8 +53,11 @@ export interface IAuthenticator {
 
 export interface AnalyticsData {
   label: string;
-  data: Array<{ total: string; date: string }>;
+  data: Array<{ total: string | number; date: string; label?: string }>;
   percentageChange: number;
+  average?: boolean;
+  chartType?: 'line' | 'bar' | 'horizontalBar' | 'doughnut';
+  total?: string | number;
 }
 
 

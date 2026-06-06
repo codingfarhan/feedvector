@@ -1,6 +1,7 @@
 import { Controller, Get, HttpException, Param, Query } from "@nestjs/common"
-import { Organization } from "@prisma/client"
+import { Organization, User } from "@prisma/client"
 import { GetOrgFromRequest } from "@gitroom/nestjs-libraries/user/org.from.request"
+import { GetUserFromRequest } from "@gitroom/nestjs-libraries/user/user.from.request"
 import { ApiTags } from "@nestjs/swagger"
 import { IntegrationService } from "@gitroom/nestjs-libraries/database/prisma/integrations/integration.service"
 import { PostsService } from "@gitroom/nestjs-libraries/database/prisma/posts/posts.service"
@@ -11,8 +12,8 @@ export class AnalyticsController {
   constructor(private _integrationService: IntegrationService, private _postsService: PostsService) {}
 
   @Get("/:integration")
-  async getIntegration(@GetOrgFromRequest() org: Organization, @Param("integration") integration: string, @Query("date") date: string) {
-    return this._integrationService.checkAnalytics(org, integration, date)
+  async getIntegration(@GetOrgFromRequest() org: Organization, @GetUserFromRequest() user: User, @Param("integration") integration: string, @Query("date") date: string) {
+    return this._integrationService.checkAnalytics(org, integration, date, false, user.timezone)
   }
 
   @Get("/post/:postId")
