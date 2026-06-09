@@ -169,7 +169,7 @@ export const CustomVariables: FC<{
   gotoUrl(url: string): void
   onboarding?: boolean
 }> = (props) => {
-  const { close, gotoUrl, identifier, variables } = props
+  const { close, gotoUrl, identifier, onboarding, variables } = props
   const fetch = useFetch()
   const modals = useModals()
   const schema = useMemo(() => {
@@ -201,7 +201,7 @@ export const CustomVariables: FC<{
   })
   const submit = useCallback(
     async (data: FieldValues) => {
-      const { url } = await (await fetch(`/integrations/social/${identifier}`)).json()
+      const { url } = await (await fetch(`/integrations/social/${identifier}${onboarding ? "?onboarding=true" : ""}`)).json()
       modals.closeAll()
       gotoUrl(
         `/integrations/social/${identifier}?state=${url}&code=${Buffer.from(JSON.stringify(data)).toString("base64")}`,
@@ -389,7 +389,7 @@ export const AddProviderComponent: FC<{
           return
         }
         const gotoIntegration = async (externalUrl?: string) => {
-          const params = [externalUrl ? `externalUrl=${externalUrl}` : ""].filter(Boolean).join("&")
+          const params = [externalUrl ? `externalUrl=${externalUrl}` : "", onboarding ? "onboarding=true" : ""].filter(Boolean).join("&")
           const { url, err } = await (await fetch(`/integrations/social/${identifier}${params ? `?${params}` : ""}`)).json()
           if (err) {
             toaster.show(t("could_not_connect_to_platform", "Could not connect to the platform"), "warning")
@@ -517,11 +517,12 @@ export const AddProviderComponent: FC<{
           className={clsx(
             'grid gap-[10px] justify-items-center justify-center',
             onboarding
-              ? 'grid-cols-3 sm:grid-cols-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6'
+              ? 'grid-cols-1 max-w-[260px] mx-auto'
               : 'grid-cols-3 sm:grid-cols-4 md:grid-cols-5'
           )}
         >
           {social
+            .filter((item) => !onboarding || item.identifier === "linkedin")
             .filter((item) => {
               if (!props.invite) {
                 return true
@@ -595,7 +596,7 @@ export const AddProviderComponent: FC<{
         </div>
       </div>
 
-      {comingSoon.length > 0 && (
+      {!onboarding && comingSoon.length > 0 && (
         <div className="text-center text-[12px] text-textColor opacity-60">
           {t("coming_soon", "Coming Soon:")} {comingSoon.join(" and ")}
         </div>

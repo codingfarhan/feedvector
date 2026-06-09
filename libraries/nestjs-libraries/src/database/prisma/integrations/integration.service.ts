@@ -82,6 +82,19 @@ export class IntegrationService {
     );
   }
 
+  updateOnboardingProfile(
+    org: string,
+    id: string,
+    data: {
+      role: string;
+      audience: string;
+      goal: string;
+      websiteUrl?: string;
+    }
+  ) {
+    return this._integrationRepository.updateOnboardingProfile(org, id, data);
+  }
+
   checkPreviousConnections(org: string, id: string) {
     return this._integrationRepository.checkPreviousConnections(org, id);
   }

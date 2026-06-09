@@ -123,19 +123,40 @@ export class UsersController {
       await this._integrationService.getIntegrationsList(organization.id)
     ).filter((integration) => !integration.inBetweenSteps);
 
-    if (connectedIntegrations.length === 0) {
-      throw new HttpException('Connect at least one channel first', 400);
+    const selectedIntegration = connectedIntegrations.find(
+      (integration) =>
+        integration.id === body.integrationId &&
+        integration.providerIdentifier === 'linkedin'
+    );
+
+    if (!selectedIntegration) {
+      throw new HttpException('Connect your personal LinkedIn account first', 400);
     }
 
-    if (body.persona === 'other' && !body.personaOther?.trim()) {
-      throw new HttpException('Please specify what best describes you', 400);
+    const onboardingRole = body.role.trim();
+    const onboardingAudience = body.audience.trim();
+    const onboardingGoal = body.goal.trim();
+    const websiteUrl = body.websiteUrl?.trim();
+
+    if (!onboardingRole || !onboardingAudience || !onboardingGoal) {
+      throw new HttpException('Please complete your positioning sentence', 400);
     }
+
+    await this._integrationService.updateOnboardingProfile(
+      organization.id,
+      selectedIntegration.id,
+      {
+        role: onboardingRole,
+        audience: onboardingAudience,
+        goal: onboardingGoal,
+        websiteUrl: websiteUrl || undefined,
+      }
+    );
 
     return this._orgService.completeOnboarding(
       organization.id,
-      body.goal,
-      body.persona,
-      body.personaOther?.trim()
+      onboardingGoal,
+      onboardingRole
     );
   }
 
