@@ -29,8 +29,12 @@ import { UserAgent } from '@gitroom/nestjs-libraries/user/user.agent';
 import { TrackEnum } from '@gitroom/nestjs-libraries/user/track.enum';
 import { TrackService } from '@gitroom/nestjs-libraries/track/track.service';
 import { makeId } from '@gitroom/nestjs-libraries/services/make.is';
-import { AuthorizationActions, Sections } from '@gitroom/backend/services/auth/permissions/permission.exception.class';
+import {
+  AuthorizationActions,
+  Sections,
+} from '@gitroom/backend/services/auth/permissions/permission.exception.class';
 import { IntegrationService } from '@gitroom/nestjs-libraries/database/prisma/integrations/integration.service';
+import { OnboardingEnrichmentService } from '@gitroom/nestjs-libraries/onboarding/onboarding.enrichment.service';
 
 @ApiTags('User')
 @Controller('/user')
@@ -41,7 +45,8 @@ export class UsersController {
     private _orgService: OrganizationService,
     private _userService: UsersService,
     private _trackService: TrackService,
-    private _integrationService: IntegrationService
+    private _integrationService: IntegrationService,
+    private _onboardingEnrichmentService: OnboardingEnrichmentService
   ) {}
   @Get('/self')
   async getSelf(
@@ -64,26 +69,38 @@ export class UsersController {
       trialEndsAt.getTime() > Date.now();
     // @ts-ignore
     const role = organization?.users[0]?.role;
-    const canCompleteOnboarding =
-      role === 'SUPERADMIN' || role === 'ADMIN';
+    const canCompleteOnboarding = role === 'SUPERADMIN' || role === 'ADMIN';
     const connectedIntegrations = (
       await this._integrationService.getIntegrationsList(organization.id)
     ).filter((integration) => !integration.inBetweenSteps);
     const onboardingState = await this._orgService.getOnboardingState(
       organization.id
     );
+    const subscription = (
+      organization as typeof organization & {
+        subscription?: {
+          totalChannels?: number;
+          subscriptionTier?: string;
+          isLifetime?: boolean;
+        };
+      }
+    ).subscription;
 
     return {
       ...user,
       orgId: organization.id,
       // @ts-ignore
-      totalChannels: !process.env.RAZORPAY_KEY_ID ? 10000 : organization?.subscription?.totalChannels || pricing.FREE.channel,
+      totalChannels: !process.env.RAZORPAY_KEY_ID
+        ? 10000
+        : subscription?.totalChannels || pricing.FREE.channel,
       // @ts-ignore
-      tier: organization?.subscription?.subscriptionTier || (!process.env.RAZORPAY_KEY_ID ? 'ULTIMATE' : 'FREE'),
+      tier:
+        subscription?.subscriptionTier ||
+        (!process.env.RAZORPAY_KEY_ID ? 'ULTIMATE' : 'FREE'),
       // @ts-ignore
       role,
       // @ts-ignore
-      isLifetime: !!organization?.subscription?.isLifetime,
+      isLifetime: !!subscription?.isLifetime,
       admin: !!user.isSuperAdmin,
       impersonate: !!impersonate,
       isTrailing: !!organization?.isTrailing,
@@ -94,13 +111,15 @@ export class UsersController {
       onboardingGoal: onboardingState?.onboardingGoal || null,
       onboardingPersona: onboardingState?.onboardingPersona || null,
       onboardingPersonaOther: onboardingState?.onboardingPersonaOther || null,
+      onboardingAudience: onboardingState?.onboardingAudience || null,
       onboardingCompletedAt: onboardingState?.onboardingCompletedAt || null,
       onboardingRequired:
         canCompleteOnboarding && !onboardingState?.onboardingCompletedAt,
       onboardingCanComplete: canCompleteOnboarding,
       onboardingHasIntegration: connectedIntegrations.length > 0,
       // @ts-ignore
-      publicApi: role === 'SUPERADMIN' || role === 'ADMIN' ? organization?.apiKey : '',
+      publicApi:
+        role === 'SUPERADMIN' || role === 'ADMIN' ? organization?.apiKey : '',
     };
   }
 
@@ -130,7 +149,10 @@ export class UsersController {
     );
 
     if (!selectedIntegration) {
-      throw new HttpException('Connect your personal LinkedIn account first', 400);
+      throw new HttpException(
+        'Connect your personal LinkedIn account first',
+        400
+      );
     }
 
     const onboardingRole = body.role.trim();
@@ -142,6 +164,14 @@ export class UsersController {
       throw new HttpException('Please complete your positioning sentence', 400);
     }
 
+    const websiteContext = websiteUrl
+      ? await this._onboardingEnrichmentService.scrapeWebsite(websiteUrl)
+      : undefined;
+    const linkedinProfileContext =
+      await this._onboardingEnrichmentService.enrichLinkedinProfile(
+        selectedIntegration.profile
+      );
+
     await this._integrationService.updateOnboardingProfile(
       organization.id,
       selectedIntegration.id,
@@ -149,14 +179,21 @@ export class UsersController {
         role: onboardingRole,
         audience: onboardingAudience,
         goal: onboardingGoal,
-        websiteUrl: websiteUrl || undefined,
+        websiteUrl: websiteContext?.normalizedUrl || websiteUrl || undefined,
+        linkedinProfileContext,
+        websiteProfile: websiteContext?.profile,
+        websitePages: websiteContext?.pages,
+        websiteScrapeStatus: websiteUrl ? 'success' : null,
+        websiteScrapeError: null,
+        websiteScrapedAt: websiteContext ? new Date() : null,
       }
     );
 
     return this._orgService.completeOnboarding(
       organization.id,
       onboardingGoal,
-      onboardingRole
+      onboardingRole,
+      onboardingAudience
     );
   }
 

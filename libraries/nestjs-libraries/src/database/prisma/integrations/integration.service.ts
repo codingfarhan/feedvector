@@ -90,6 +90,12 @@ export class IntegrationService {
       audience: string;
       goal: string;
       websiteUrl?: string;
+      linkedinProfileContext?: any;
+      websiteProfile?: any;
+      websitePages?: any;
+      websiteScrapeStatus?: string | null;
+      websiteScrapeError?: string | null;
+      websiteScrapedAt?: Date | null;
     }
   ) {
     return this._integrationRepository.updateOnboardingProfile(org, id, data);
@@ -127,7 +133,8 @@ export class IntegrationService {
   ) {
     const organization = await this._organizationService.getOrgById(org);
     if (organization?.isTrailing) {
-      const integrations = await this._integrationRepository.getIntegrationsList(org);
+      const integrations =
+        await this._integrationRepository.getIntegrationsList(org);
       const hasExisting = integrations.some(
         (integration) =>
           !integration.deletedAt && integration.internalId === internalId

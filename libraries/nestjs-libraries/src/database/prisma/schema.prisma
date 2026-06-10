@@ -20,6 +20,7 @@ model Organization {
   onboardingGoal         String?
   onboardingPersona      String?
   onboardingPersonaOther String?
+  onboardingAudience     String?
   onboardingCompletedAt  DateTime?
   allowTrial             Boolean             @default(false)
   isTrailing             Boolean             @default(false)
@@ -317,32 +318,32 @@ model Customer {
 }
 
 model Integration {
-  id                    String                 @id @default(cuid())
-  internalId            String
-  organizationId        String
-  name                  String
-  picture               String?
-  providerIdentifier    String
-  type                  String
-  token                 String
-  disabled              Boolean                @default(false)
-  tokenExpiration       DateTime?
-  refreshToken          String?
-  profile               String?
-  deletedAt             DateTime?
-  createdAt             DateTime               @default(now())
-  updatedAt             DateTime?              @updatedAt
-  inBetweenSteps        Boolean                @default(false)
-  refreshNeeded         Boolean                @default(false)
-  postingTimes          String                 @default("[{\"time\":120}, {\"time\":400}, {\"time\":700}]")
-  customInstanceDetails String?
-  customerId            String?
-  rootInternalId        String?
-  additionalSettings    String?                @default("[]")
-  onboardingRole        String?
-  onboardingAudience    String?
-  onboardingGoal        String?
-  onboardingWebsiteUrl  String?
+  id                            String                 @id @default(cuid())
+  internalId                    String
+  organizationId                String
+  name                          String
+  picture                       String?
+  providerIdentifier            String
+  type                          String
+  token                         String
+  disabled                      Boolean                @default(false)
+  tokenExpiration               DateTime?
+  refreshToken                  String?
+  profile                       String?
+  deletedAt                     DateTime?
+  createdAt                     DateTime               @default(now())
+  updatedAt                     DateTime?              @updatedAt
+  inBetweenSteps                Boolean                @default(false)
+  refreshNeeded                 Boolean                @default(false)
+  postingTimes                  String                 @default("[{\"time\":120}, {\"time\":400}, {\"time\":700}]")
+  customInstanceDetails         String?
+  customerId                    String?
+  rootInternalId                String?
+  additionalSettings            String?                @default("[]")
+  onboardingRole                String?
+  onboardingAudience            String?
+  onboardingGoal                String?
+  onboardingWebsiteUrl          String?
   onboardingWebsiteScrapeStatus String?
   onboardingWebsiteScrapeError  String?
   onboardingWebsiteProfile      Json?
@@ -350,13 +351,13 @@ model Integration {
   onboardingWebsiteScrapedAt    DateTime?
   linkedinProfileContext        Json?
   linkedinProfileFetchedAt      DateTime?
-  exisingPlugData       ExisingPlugData[]
-  customer              Customer?              @relation(fields: [customerId], references: [id])
-  organization          Organization           @relation(fields: [organizationId], references: [id])
-  webhooks              IntegrationsWebhooks[]
-  orderItems            OrderItems[]
-  plugs                 Plugs[]
-  posts                 Post[]
+  exisingPlugData               ExisingPlugData[]
+  customer                      Customer?              @relation(fields: [customerId], references: [id])
+  organization                  Organization           @relation(fields: [organizationId], references: [id])
+  webhooks                      IntegrationsWebhooks[]
+  orderItems                    OrderItems[]
+  plugs                         Plugs[]
+  posts                         Post[]
 
   @@unique([organizationId, internalId])
   @@index([rootInternalId])

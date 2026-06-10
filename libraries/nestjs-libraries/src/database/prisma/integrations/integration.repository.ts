@@ -106,6 +106,12 @@ export class IntegrationRepository {
       audience: string;
       goal: string;
       websiteUrl?: string;
+      linkedinProfileContext?: any;
+      websiteProfile?: any;
+      websitePages?: any;
+      websiteScrapeStatus?: string | null;
+      websiteScrapeError?: string | null;
+      websiteScrapedAt?: Date | null;
     }
   ) {
     return this._integration.model.integration.update({
@@ -119,6 +125,15 @@ export class IntegrationRepository {
         onboardingAudience: data.audience,
         onboardingGoal: data.goal,
         onboardingWebsiteUrl: data.websiteUrl || null,
+        linkedinProfileContext: data.linkedinProfileContext,
+        linkedinProfileFetchedAt: data.linkedinProfileContext
+          ? new Date()
+          : undefined,
+        onboardingWebsiteProfile: data.websiteProfile,
+        onboardingWebsitePages: data.websitePages,
+        onboardingWebsiteScrapeStatus: data.websiteScrapeStatus,
+        onboardingWebsiteScrapeError: data.websiteScrapeError,
+        onboardingWebsiteScrapedAt: data.websiteScrapedAt,
       } as any,
       select: {
         id: true,
@@ -126,6 +141,13 @@ export class IntegrationRepository {
         onboardingAudience: true,
         onboardingGoal: true,
         onboardingWebsiteUrl: true,
+        linkedinProfileContext: true,
+        linkedinProfileFetchedAt: true,
+        onboardingWebsiteProfile: true,
+        onboardingWebsitePages: true,
+        onboardingWebsiteScrapeStatus: true,
+        onboardingWebsiteScrapeError: true,
+        onboardingWebsiteScrapedAt: true,
       } as any,
     });
   }

@@ -218,8 +218,9 @@ export class OrganizationRepository {
           onboardingGoal: true,
           onboardingPersona: true,
           onboardingPersonaOther: true,
+          onboardingAudience: true,
           onboardingCompletedAt: true,
-        },
+        } as any,
       });
     } catch (err) {
       return null;
@@ -372,11 +373,7 @@ export class OrganizationRepository {
     });
   }
 
-  updateTrialStatus(
-    orgId: string,
-    isTrailing: boolean,
-    allowTrial: boolean
-  ) {
+  updateTrialStatus(orgId: string, isTrailing: boolean, allowTrial: boolean) {
     return this._organization.model.organization.update({
       where: {
         id: orgId,
@@ -549,6 +546,7 @@ export class OrganizationRepository {
     orgId: string,
     goal: string,
     persona: string,
+    audience?: string,
     personaOther?: string
   ) {
     return this._organization.model.organization.update({
@@ -559,14 +557,16 @@ export class OrganizationRepository {
         onboardingGoal: goal,
         onboardingPersona: persona,
         onboardingPersonaOther: persona === 'other' ? personaOther : null,
+        onboardingAudience: audience || null,
         onboardingCompletedAt: new Date(),
-      },
+      } as any,
       select: {
         onboardingGoal: true,
         onboardingPersona: true,
         onboardingPersonaOther: true,
+        onboardingAudience: true,
         onboardingCompletedAt: true,
-      },
+      } as any,
     });
   }
 

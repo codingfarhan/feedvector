@@ -32,8 +32,18 @@ export class OrganizationService {
     return this._organizationRepository.getCount();
   }
 
-  async createMaxUser(id: string, name: string, saasName: string, email: string) {
-    return this._organizationRepository.createMaxUser(id, name, saasName, email);
+  async createMaxUser(
+    id: string,
+    name: string,
+    saasName: string,
+    email: string
+  ) {
+    return this._organizationRepository.createMaxUser(
+      id,
+      name,
+      saasName,
+      email
+    );
   }
 
   addUserToOrg(
@@ -157,12 +167,14 @@ export class OrganizationService {
     orgId: string,
     goal: string,
     persona: string,
+    audience?: string,
     personaOther?: string
   ) {
     return this._organizationRepository.completeOnboarding(
       orgId,
       goal,
       persona,
+      audience,
       personaOther
     );
   }

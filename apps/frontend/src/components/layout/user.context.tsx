@@ -24,6 +24,7 @@ export const UserContext = createContext<
       onboardingGoal?: string | null;
       onboardingPersona?: string | null;
       onboardingPersonaOther?: string | null;
+      onboardingAudience?: string | null;
       onboardingCompletedAt?: string | null;
       onboardingRequired?: boolean;
       onboardingCanComplete?: boolean;

@@ -16,6 +16,29 @@ const VoicePrompt = z.object({
   voice: z.string(),
 });
 
+const CompanyProfilePrompt = z.object({
+  companyName: z.string().nullable(),
+  description: z.string(),
+  industry: z.string().nullable(),
+  targetAudience: z.array(z.string()),
+  keyProducts: z.array(z.string()),
+  keyFeatures: z.array(z.string()),
+  customerPainPoints: z.array(z.string()),
+  proofPoints: z.array(z.string()),
+  brandTone: z.string(),
+  founderOrCompanyStory: z.string().nullable(),
+  contentAngles: z.array(z.string()),
+  pricingSummary: z.string().nullable(),
+});
+
+const LinkedinProfileContextPrompt = z.object({
+  professionalSummary: z.string(),
+  expertiseAreas: z.array(z.string()),
+  credibilityPoints: z.array(z.string()),
+  contentAngles: z.array(z.string()),
+  audienceSignals: z.array(z.string()),
+});
+
 @Injectable()
 export class OpenaiService {
   async generateImage(prompt: string, isUrl: boolean, isVertical = false) {
@@ -150,6 +173,62 @@ export class OpenaiService {
     const { content: articleContent } = websiteContent.choices[0].message;
 
     return this.generatePosts(articleContent!);
+  }
+
+  async extractCompanyProfileFromWebsite(pages: any[]) {
+    return (
+      (
+        await openai.chat.completions.parse({
+          model: 'gpt-4.1',
+          messages: [
+            {
+              role: 'system',
+              content:
+                'You extract company positioning from cleaned website text for LinkedIn personal-brand content generation. Return strict JSON only. Be concise, factual, and do not invent specifics that are not supported by the pages.',
+            },
+            {
+              role: 'user',
+              content: JSON.stringify({ pages }),
+            },
+          ],
+          response_format: zodResponseFormat(
+            CompanyProfilePrompt,
+            'companyProfile'
+          ),
+        })
+      ).choices[0].message.parsed || null
+    );
+  }
+
+  async extractLinkedinProfileAiContext(profile: any) {
+    return (
+      (
+        await openai.chat.completions.parse({
+          model: 'gpt-4.1',
+          messages: [
+            {
+              role: 'system',
+              content:
+                'You extract a LinkedIn profile context for personal-brand content generation. Return strict JSON only. Base every field on the supplied profile data and avoid unsupported claims.',
+            },
+            {
+              role: 'user',
+              content: JSON.stringify({ profile }),
+            },
+          ],
+          response_format: zodResponseFormat(
+            LinkedinProfileContextPrompt,
+            'linkedinProfileContext'
+          ),
+        })
+      ).choices[0].message.parsed || {
+        professionalSummary: '',
+        expertiseAreas: [],
+        credibilityPoints: [],
+        contentAngles: [],
+        audienceSignals: [],
+      }
+    );
   }
 
   async separatePosts(content: string, len: number) {
