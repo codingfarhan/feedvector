@@ -132,7 +132,7 @@ export class PostsRepository {
             OR: [
               {
                 organizationId: orgId,
-              }
+              },
             ],
           },
           {
@@ -516,6 +516,7 @@ export class PostsRepository {
             }),
         image: JSON.stringify(value.image),
         settings: JSON.stringify(body.settings),
+        generationMetadata: body.generationMetadata || undefined,
         organization: {
           connect: {
             id: orgId,

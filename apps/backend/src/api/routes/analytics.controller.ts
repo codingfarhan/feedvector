@@ -13,7 +13,17 @@ export class AnalyticsController {
 
   @Get("/:integration")
   async getIntegration(@GetOrgFromRequest() org: Organization, @GetUserFromRequest() user: User, @Param("integration") integration: string, @Query("date") date: string) {
-    return this._integrationService.checkAnalytics(org, integration, date, false, user.timezone)
+    const organization = org as Organization & {
+      subscription?: { subscriptionTier?: string } | null
+      isTrailing?: boolean
+      createdAt?: Date
+    }
+    const trialEndsAt = organization.createdAt ? new Date(organization.createdAt.getTime() + 7 * 24 * 60 * 60 * 1000) : null
+    const trialActive = !!organization.isTrailing && !!trialEndsAt && trialEndsAt.getTime() > Date.now()
+    const tier = organization.subscription?.subscriptionTier || (!process.env.RAZORPAY_KEY_ID ? "ULTIMATE" : "FREE")
+    const cacheTtlSeconds = tier === "FREE" && !trialActive ? 10 * 60 * 60 : undefined
+
+    return this._integrationService.checkAnalytics(org, integration, date, false, user.timezone, cacheTtlSeconds)
   }
 
   @Get("/post/:postId")

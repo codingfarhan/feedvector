@@ -39,6 +39,15 @@ const LinkedinProfileContextPrompt = z.object({
   audienceSignals: z.array(z.string()),
 });
 
+const OnboardingGeneratedPostPrompt = z.object({
+  templateId: z.string(),
+  content: z.string(),
+});
+
+const OnboardingGeneratedPostsPrompt = z.object({
+  posts: z.array(OnboardingGeneratedPostPrompt),
+});
+
 @Injectable()
 export class OpenaiService {
   async generateImage(prompt: string, isUrl: boolean, isVertical = false) {
@@ -228,6 +237,52 @@ export class OpenaiService {
         contentAngles: [],
         audienceSignals: [],
       }
+    );
+  }
+
+  async generateOnboardingLinkedinPosts(input: {
+    role: string;
+    audience: string;
+    goal: string;
+    linkedinProfileContext: any;
+    websiteProfile?: any;
+    templates: Array<{
+      id: string;
+      name: string;
+      pillar: string;
+      template: string;
+      variables: string[];
+      ctaOptions: Array<{
+        id: string;
+        action: string;
+        intensity: string;
+        text: string;
+      }>;
+      proofRequirement: string;
+      antiPatterns: string[];
+    }>;
+  }) {
+    return (
+      (
+        await openai.chat.completions.parse({
+          model: 'gpt-4.1',
+          messages: [
+            {
+              role: 'system',
+              content:
+                'You write concise LinkedIn posts for onboarding. Fill each supplied template with specific, believable details from the provided profile/context. Return strict JSON only. Do not invent metrics, clients, revenue, employers, job offers, or proof. Do not leave placeholders like [audience] in the output. Do not add hashtags. Each template includes CTA options with id, action, intensity, and text. Choose one CTA option and lightly adapt its wording so it relates to the post topic and audience. Preserve the selected CTA action exactly: comment CTAs must ask for a comment, dm CTAs must ask for a DM, connect CTAs must ask to connect, follow CTAs must ask to follow or keep an eye on future work, apply CTAs must invite applying or reaching out, view_product CTAs must point to the product/service, request_resource CTAs must ask for a resource request, share_example CTAs must ask for an example, and reflect CTAs must stay reflective. Do not make the CTA stronger than its intensity allows. Keep the adapted CTA to one sentence. Do not invent a resource, demo, product, or offer unless it is present in the CTA text or supplied context.',
+            },
+            {
+              role: 'user',
+              content: JSON.stringify(input),
+            },
+          ],
+          response_format: zodResponseFormat(
+            OnboardingGeneratedPostsPrompt,
+            'onboardingGeneratedPosts'
+          ),
+        })
+      ).choices[0].message.parsed?.posts || []
     );
   }
 

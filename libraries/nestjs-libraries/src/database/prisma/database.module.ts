@@ -41,6 +41,7 @@ import { VideoManager } from '@gitroom/nestjs-libraries/videos/video.manager';
 import { FalService } from '@gitroom/nestjs-libraries/openai/fal.service';
 import { RefreshIntegrationService } from '@gitroom/nestjs-libraries/integrations/refresh.integration.service';
 import { OnboardingEnrichmentService } from '@gitroom/nestjs-libraries/onboarding/onboarding.enrichment.service';
+import { OnboardingPostSuggestionService } from '@gitroom/nestjs-libraries/onboarding/onboarding.post-suggestion.service';
 
 @Global()
 @Module({
@@ -76,6 +77,7 @@ import { OnboardingEnrichmentService } from '@gitroom/nestjs-libraries/onboardin
     IntegrationManager,
     RefreshIntegrationService,
     OnboardingEnrichmentService,
+    OnboardingPostSuggestionService,
     ExtractContentService,
     OpenaiService,
     FalService,

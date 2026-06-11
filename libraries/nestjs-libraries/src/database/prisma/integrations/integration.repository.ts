@@ -112,6 +112,7 @@ export class IntegrationRepository {
       websiteScrapeStatus?: string | null;
       websiteScrapeError?: string | null;
       websiteScrapedAt?: Date | null;
+      contentPillars?: string[];
     }
   ) {
     return this._integration.model.integration.update({
@@ -134,6 +135,7 @@ export class IntegrationRepository {
         onboardingWebsiteScrapeStatus: data.websiteScrapeStatus,
         onboardingWebsiteScrapeError: data.websiteScrapeError,
         onboardingWebsiteScrapedAt: data.websiteScrapedAt,
+        onboardingContentPillars: data.contentPillars,
       } as any,
       select: {
         id: true,
@@ -148,6 +150,7 @@ export class IntegrationRepository {
         onboardingWebsiteScrapeStatus: true,
         onboardingWebsiteScrapeError: true,
         onboardingWebsiteScrapedAt: true,
+        onboardingContentPillars: true,
       } as any,
     });
   }

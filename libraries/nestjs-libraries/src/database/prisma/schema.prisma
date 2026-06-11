@@ -351,6 +351,7 @@ model Integration {
   onboardingWebsiteScrapedAt    DateTime?
   linkedinProfileContext        Json?
   linkedinProfileFetchedAt      DateTime?
+  onboardingContentPillars      Json?
   exisingPlugData               ExisingPlugData[]
   customer                      Customer?              @relation(fields: [customerId], references: [id])
   organization                  Organization           @relation(fields: [organizationId], references: [id])
@@ -422,6 +423,7 @@ model Post {
   releaseId                  String?
   releaseURL                 String?
   settings                   String?
+  generationMetadata         Json?
   image                      String?
   submittedForOrderId        String?
   submittedForOrganizationId String?

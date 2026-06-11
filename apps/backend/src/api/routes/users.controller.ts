@@ -22,7 +22,10 @@ import { ApiTags } from '@nestjs/swagger';
 import { UsersService } from '@gitroom/nestjs-libraries/database/prisma/users/users.service';
 import { UserDetailDto } from '@gitroom/nestjs-libraries/dtos/users/user.details.dto';
 import { EmailNotificationsDto } from '@gitroom/nestjs-libraries/dtos/users/email-notifications.dto';
-import { OnboardingGoalDto } from '@gitroom/nestjs-libraries/dtos/users/onboarding.goal.dto';
+import {
+  OnboardingCompleteDto,
+  OnboardingSuggestionDto,
+} from '@gitroom/nestjs-libraries/dtos/users/onboarding.goal.dto';
 import { HttpForbiddenException } from '@gitroom/nestjs-libraries/services/exception.filter';
 import { RealIP } from 'nestjs-real-ip';
 import { UserAgent } from '@gitroom/nestjs-libraries/user/user.agent';
@@ -35,6 +38,7 @@ import {
 } from '@gitroom/backend/services/auth/permissions/permission.exception.class';
 import { IntegrationService } from '@gitroom/nestjs-libraries/database/prisma/integrations/integration.service';
 import { OnboardingEnrichmentService } from '@gitroom/nestjs-libraries/onboarding/onboarding.enrichment.service';
+import { OnboardingPostSuggestionService } from '@gitroom/nestjs-libraries/onboarding/onboarding.post-suggestion.service';
 
 @ApiTags('User')
 @Controller('/user')
@@ -46,7 +50,8 @@ export class UsersController {
     private _userService: UsersService,
     private _trackService: TrackService,
     private _integrationService: IntegrationService,
-    private _onboardingEnrichmentService: OnboardingEnrichmentService
+    private _onboardingEnrichmentService: OnboardingEnrichmentService,
+    private _onboardingPostSuggestionService: OnboardingPostSuggestionService
   ) {}
   @Get('/self')
   async getSelf(
@@ -123,10 +128,157 @@ export class UsersController {
     };
   }
 
+  @Post('/onboarding/suggestions')
+  async generateOnboardingSuggestions(
+    @GetOrgFromRequest() organization: Organization,
+    @Body() body: OnboardingSuggestionDto
+  ) {
+    const selectedIntegration = await this.getOnboardingLinkedInIntegration(
+      organization,
+      body.integrationId
+    );
+
+    const onboardingRole = body.role.trim();
+    const onboardingAudience = body.audience.trim();
+    const onboardingGoal = body.goal.trim();
+    const websiteUrl = body.websiteUrl?.trim();
+
+    if (!onboardingRole || !onboardingAudience || !onboardingGoal) {
+      throw new HttpException('Please complete your positioning sentence', 400);
+    }
+
+    const storedOnboarding =
+      selectedIntegration as typeof selectedIntegration & {
+        linkedinProfileContext?: any;
+        onboardingWebsiteUrl?: string | null;
+        onboardingWebsiteProfile?: any;
+        onboardingWebsitePages?: any;
+        onboardingWebsiteScrapedAt?: Date | null;
+      };
+    let websiteContext:
+      | {
+          normalizedUrl: string;
+          pages: any;
+          profile: any;
+        }
+      | undefined;
+    let reusedWebsiteContext = false;
+    const normalizedWebsite = websiteUrl
+      ? this._onboardingEnrichmentService.normalizeWebsiteUrl(websiteUrl)
+      : undefined;
+
+    const getWebsiteContext = async () => {
+      if (!normalizedWebsite) {
+        return undefined;
+      }
+
+      const canReuseWebsiteContext =
+        storedOnboarding.onboardingWebsiteUrl ===
+          normalizedWebsite.normalizedUrl &&
+        !!storedOnboarding.onboardingWebsiteProfile;
+      reusedWebsiteContext = canReuseWebsiteContext;
+
+      return canReuseWebsiteContext
+        ? {
+            normalizedUrl: normalizedWebsite.normalizedUrl,
+            pages: storedOnboarding.onboardingWebsitePages || [],
+            profile: storedOnboarding.onboardingWebsiteProfile,
+          }
+        : await this._onboardingEnrichmentService.scrapeWebsite(websiteUrl);
+    };
+
+    const getLinkedinProfileContext = async () => {
+      return (
+        storedOnboarding.linkedinProfileContext ||
+        (await this._onboardingEnrichmentService.enrichLinkedinProfile(
+          selectedIntegration.profile
+        ))
+      );
+    };
+
+    const [resolvedWebsiteContext, linkedinProfileContext] = await Promise.all([
+      getWebsiteContext(),
+      getLinkedinProfileContext(),
+    ]);
+    websiteContext = resolvedWebsiteContext;
+    const suggestions =
+      await this._onboardingPostSuggestionService.generateSuggestions({
+        role: onboardingRole,
+        audience: onboardingAudience,
+        goal: onboardingGoal,
+        linkedinProfileContext,
+        websiteProfile: websiteContext?.profile,
+      });
+    const contentPillars = suggestions.map((suggestion) => suggestion.pillar);
+
+    await this._integrationService.updateOnboardingProfile(
+      organization.id,
+      selectedIntegration.id,
+      {
+        role: onboardingRole,
+        audience: onboardingAudience,
+        goal: onboardingGoal,
+        websiteUrl: websiteContext?.normalizedUrl || websiteUrl || undefined,
+        linkedinProfileContext,
+        websiteProfile: websiteUrl ? websiteContext?.profile : null,
+        websitePages: websiteUrl ? websiteContext?.pages : null,
+        websiteScrapeStatus: websiteUrl ? 'success' : null,
+        websiteScrapeError: null,
+        websiteScrapedAt: websiteUrl
+          ? reusedWebsiteContext
+            ? storedOnboarding.onboardingWebsiteScrapedAt || new Date()
+            : new Date()
+          : null,
+        contentPillars,
+      }
+    );
+
+    return {
+      pillars: contentPillars,
+      suggestions,
+    };
+  }
+
   @Post('/onboarding')
   async completeOnboarding(
     @GetOrgFromRequest() organization: Organization,
-    @Body() body: OnboardingGoalDto
+    @Body() body: OnboardingCompleteDto
+  ) {
+    await this.getOnboardingLinkedInIntegration(
+      organization,
+      body.integrationId
+    );
+
+    const onboardingRole = body.role.trim();
+    const onboardingAudience = body.audience.trim();
+    const onboardingGoal = body.goal.trim();
+
+    if (!onboardingRole || !onboardingAudience || !onboardingGoal) {
+      throw new HttpException('Please complete your positioning sentence', 400);
+    }
+
+    const reviewedSuggestions = body.reviewedSuggestions || [];
+    if (
+      reviewedSuggestions.length < 4 ||
+      reviewedSuggestions.some((suggestion) => !suggestion.action)
+    ) {
+      throw new HttpException(
+        'Please review all post suggestions before completing onboarding',
+        400
+      );
+    }
+
+    return this._orgService.completeOnboarding(
+      organization.id,
+      onboardingGoal,
+      onboardingRole,
+      onboardingAudience
+    );
+  }
+
+  private async getOnboardingLinkedInIntegration(
+    organization: Organization,
+    integrationId: string
   ) {
     if (!organization) {
       throw new HttpForbiddenException();
@@ -144,7 +296,7 @@ export class UsersController {
 
     const selectedIntegration = connectedIntegrations.find(
       (integration) =>
-        integration.id === body.integrationId &&
+        integration.id === integrationId &&
         integration.providerIdentifier === 'linkedin'
     );
 
@@ -155,46 +307,7 @@ export class UsersController {
       );
     }
 
-    const onboardingRole = body.role.trim();
-    const onboardingAudience = body.audience.trim();
-    const onboardingGoal = body.goal.trim();
-    const websiteUrl = body.websiteUrl?.trim();
-
-    if (!onboardingRole || !onboardingAudience || !onboardingGoal) {
-      throw new HttpException('Please complete your positioning sentence', 400);
-    }
-
-    const websiteContext = websiteUrl
-      ? await this._onboardingEnrichmentService.scrapeWebsite(websiteUrl)
-      : undefined;
-    const linkedinProfileContext =
-      await this._onboardingEnrichmentService.enrichLinkedinProfile(
-        selectedIntegration.profile
-      );
-
-    await this._integrationService.updateOnboardingProfile(
-      organization.id,
-      selectedIntegration.id,
-      {
-        role: onboardingRole,
-        audience: onboardingAudience,
-        goal: onboardingGoal,
-        websiteUrl: websiteContext?.normalizedUrl || websiteUrl || undefined,
-        linkedinProfileContext,
-        websiteProfile: websiteContext?.profile,
-        websitePages: websiteContext?.pages,
-        websiteScrapeStatus: websiteUrl ? 'success' : null,
-        websiteScrapeError: null,
-        websiteScrapedAt: websiteContext ? new Date() : null,
-      }
-    );
-
-    return this._orgService.completeOnboarding(
-      organization.id,
-      onboardingGoal,
-      onboardingRole,
-      onboardingAudience
-    );
+    return selectedIntegration;
   }
 
   @Get('/personal')

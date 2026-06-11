@@ -96,6 +96,7 @@ export class IntegrationService {
       websiteScrapeStatus?: string | null;
       websiteScrapeError?: string | null;
       websiteScrapedAt?: Date | null;
+      contentPillars?: string[];
     }
   ) {
     return this._integrationRepository.updateOnboardingProfile(org, id, data);
@@ -371,7 +372,8 @@ export class IntegrationService {
     integration: string,
     date: string,
     forceRefresh = false,
-    timezone = 0
+    timezone = 0,
+    cacheTtlSeconds?: number
   ): Promise<AnalyticsData[]> {
     const getIntegration = await this.getIntegrationById(org.id, integration);
 
@@ -427,18 +429,31 @@ export class IntegrationService {
           +date,
           { integration: getIntegration, timezone }
         );
+        const defaultCacheTtlSeconds =
+          !process.env.NODE_ENV || process.env.NODE_ENV === 'development'
+            ? 1
+            : 3600;
+        const resolvedCacheTtlSeconds = cacheTtlSeconds
+          ? Math.max(defaultCacheTtlSeconds, cacheTtlSeconds)
+          : defaultCacheTtlSeconds;
+
         await ioRedis.set(
           `integration:${org.id}:${integration}:${date}:${timezone}`,
           JSON.stringify(loadAnalytics),
           'EX',
-          !process.env.NODE_ENV || process.env.NODE_ENV === 'development'
-            ? 1
-            : 3600
+          resolvedCacheTtlSeconds
         );
         return loadAnalytics;
       } catch (e) {
         if (e instanceof RefreshToken) {
-          return this.checkAnalytics(org, integration, date, true, timezone);
+          return this.checkAnalytics(
+            org,
+            integration,
+            date,
+            true,
+            timezone,
+            cacheTtlSeconds
+          );
         }
       }
     }

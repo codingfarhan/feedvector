@@ -21,6 +21,42 @@ export const useMenuItem = () => {
 
   const firstMenu = [
     {
+      name: t("dashboard", "Dashboard"),
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" viewBox="0 0 24 24" fill="none">
+          <path
+            d="M4 5.8C4 4.80589 4.80589 4 5.8 4H9.2C10.1941 4 11 4.80589 11 5.8V9.2C11 10.1941 10.1941 11 9.2 11H5.8C4.80589 11 4 10.1941 4 9.2V5.8Z"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M13 5.8C13 4.80589 13.8059 4 14.8 4H18.2C19.1941 4 20 4.80589 20 5.8V9.2C20 10.1941 19.1941 11 18.2 11H14.8C13.8059 11 13 10.1941 13 9.2V5.8Z"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M4 14.8C4 13.8059 4.80589 13 5.8 13H9.2C10.1941 13 11 13.8059 11 14.8V18.2C11 19.1941 10.1941 20 9.2 20H5.8C4.80589 20 4 19.1941 4 18.2V14.8Z"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M13 14.8C13 13.8059 13.8059 13 14.8 13H18.2C19.1941 13 20 13.8059 20 14.8V18.2C20 19.1941 19.1941 20 18.2 20H14.8C13.8059 20 13 19.1941 13 18.2V14.8Z"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      ),
+      path: "/dashboard",
+    },
+    {
       name: isGeneral ? t("calendar", "Calendar") : t("launches", "Launches"),
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" width="21" height="23" viewBox="0 0 21 23" fill="none">

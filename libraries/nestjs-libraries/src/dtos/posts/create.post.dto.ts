@@ -1,5 +1,6 @@
 import {
   ArrayMinSize,
+  IsObject,
   IsArray,
   IsBoolean,
   IsDateString,
@@ -76,6 +77,10 @@ export class Post {
     },
   })
   settings: AllProvidersSettings;
+
+  @IsOptional()
+  @IsObject()
+  generationMetadata?: Record<string, any>;
 }
 
 class Tags {
