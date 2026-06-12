@@ -142,13 +142,6 @@ const getMonday = (date: Date) => {
   return startOfDay(addDays(date, diff))
 }
 
-const getTargetCampaignStart = () => {
-  const today = new Date()
-  const monday = getMonday(today)
-  const day = today.getDay()
-  return day === 0 || day === 5 || day === 6 ? addDays(monday, 7) : monday
-}
-
 export const OnboardingModal: FC<OnboardingModalProps> = ({ onClose }) => {
   const fetch = useFetch()
   const router = useRouter()
@@ -338,8 +331,8 @@ export const OnboardingModal: FC<OnboardingModalProps> = ({ onClose }) => {
       }
 
       if (action !== "ignored") {
-        const campaignStart = getTargetCampaignStart()
         const postDate = action === "schedule" && scheduleDate ? new Date(scheduleDate) : new Date()
+        const campaignStart = getMonday(postDate)
         const response = await fetch("/posts", {
           method: "POST",
           body: JSON.stringify({
@@ -978,7 +971,7 @@ const OnboardingLoadingStep: FC<{
     <div className="min-h-[420px] flex flex-col items-center justify-center gap-[22px] text-center">
       <div className="h-[54px] w-[54px] rounded-full border-[4px] border-newTableBorder border-t-[#8b5cf6] animate-spin" />
       <div className="flex flex-col gap-[8px]">
-        <div className="text-[24px] font-semibold">Setting up FeedVector</div>
+        <div className="text-[24px] font-semibold">Setting up your Workspace</div>
         <div className="text-[15px] text-customColor18">{loadingMessages[index]}...</div>
       </div>
     </div>

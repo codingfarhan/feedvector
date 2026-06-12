@@ -18,6 +18,11 @@ import { Readable } from "stream"
 import { Rules } from "@gitroom/nestjs-libraries/chat/rules.description.decorator"
 import dayjs from "dayjs"
 import utc from "dayjs/plugin/utc"
+import {
+  LINKEDIN_ANALYTICS_HOOK_STYLES,
+  LINKEDIN_ANALYTICS_TOPICS,
+  OpenaiService,
+} from "@gitroom/nestjs-libraries/openai/openai.service"
 
 dayjs.extend(utc)
 
@@ -54,6 +59,14 @@ type LinkedinProfilePerformancePost = {
   text: string
   reshared: boolean
 }
+
+type LinkedinAnalyticsPostClassification = {
+  hookStyle: (typeof LINKEDIN_ANALYTICS_HOOK_STYLES)[number]
+  topic: (typeof LINKEDIN_ANALYTICS_TOPICS)[number]
+  confidence?: "Low" | "Medium" | "High"
+}
+
+const linkedinAnalyticsOpenaiService = new OpenaiService()
 
 @Rules(
   "LinkedIn can have maximum one attachment when selecting video, when choosing a carousel on LinkedIn minimum amount of attachment must be two, and only pictures, if uploading a video, LinkedIn can have only one attachment",
@@ -738,6 +751,198 @@ export class LinkedinProvider extends SocialAbstract implements SocialProvider {
     }))
   }
 
+  private confidenceForSample(count: number): "Low" | "Medium" | "High" {
+    if (count >= 8) {
+      return "High"
+    }
+
+    if (count >= 3) {
+      return "Medium"
+    }
+
+    return "Low"
+  }
+
+  private profilePostClassificationId(post: LinkedinProfilePerformancePost, index: number) {
+    return post.post.urn || post.post.post_url || `${dayjs.utc(post.date).valueOf()}-${index}`
+  }
+
+  private profilePostTopic(post: LinkedinProfilePerformancePost): (typeof LINKEDIN_ANALYTICS_TOPICS)[number] {
+    const text = post.text.toLowerCase()
+    const topics: Array<{ label: (typeof LINKEDIN_ANALYTICS_TOPICS)[number]; keywords: string[] }> = [
+      { label: "Sales and revenue", keywords: ["sales", "crm", "pipeline", "follow-up", "lead", "revenue", "deal", "conversion"] },
+      { label: "Marketing and content", keywords: ["marketing", "content", "linkedin", "post", "writing", "creator", "audience", "brand"] },
+      { label: "Product and service", keywords: ["product", "service", "offer", "feature", "customer", "client", "pricing"] },
+      { label: "Operations and systems", keywords: ["process", "system", "workflow", "handoff", "operation", "automation", "ops"] },
+      { label: "Leadership and management", keywords: ["leadership", "manager", "management", "decision", "strategy", "team"] },
+      { label: "Hiring and culture", keywords: ["hiring", "recruit", "culture", "interview", "talent", "candidate"] },
+      { label: "Founder journey", keywords: ["founder", "startup", "build", "business", "operator", "company"] },
+      { label: "Career and professional growth", keywords: ["career", "skill", "role", "job", "experience", "learned", "promotion"] },
+      { label: "Customer insights", keywords: ["customer", "client", "user", "buyer", "audience", "feedback"] },
+      { label: "Industry trends", keywords: ["trend", "market", "industry", "shift", "future", "ai"] },
+      { label: "Personal productivity", keywords: ["productivity", "focus", "routine", "habit", "calendar", "time"] },
+      { label: "Case studies and proof", keywords: ["case study", "result", "proof", "testimonial", "before", "after"] },
+      { label: "Opinion and commentary", keywords: ["opinion", "take", "believe", "think", "point of view", "pov"] },
+    ]
+
+    return topics.find((topic) => topic.keywords.some((keyword) => text.includes(keyword)))?.label || "Opinion and commentary"
+  }
+
+  private profilePostHookStyle(post: LinkedinProfilePerformancePost): (typeof LINKEDIN_ANALYTICS_HOOK_STYLES)[number] {
+    const firstLine = post.text.split("\n").map((line) => line.trim()).find(Boolean) || post.text
+    const normalized = firstLine.toLowerCase()
+
+    if (normalized.endsWith("?")) {
+      return "Question-led"
+    }
+
+    if (normalized.startsWith("most ") || normalized.includes("not the problem") || normalized.includes("wrong")) {
+      return "Contrarian statement"
+    }
+
+    if (normalized.includes("mistake") || normalized.includes("confession") || normalized.includes("i was wrong")) {
+      return "Mistake/confession"
+    }
+
+    if (normalized.includes("problem") || normalized.includes("fix")) {
+      return "Problem diagnosis"
+    }
+
+    if (/^\d+[\).\s-]/.test(normalized) || normalized.includes("things ") || normalized.includes("ways ")) {
+      return "List-led"
+    }
+
+    if (/\d+%|\$\d+|\d+x/.test(normalized)) {
+      return "Data/stat-led"
+    }
+
+    if (normalized.includes("prediction") || normalized.includes("trend") || normalized.includes("future")) {
+      return "Prediction/trend"
+    }
+
+    if (normalized.startsWith('"') || normalized.startsWith("“")) {
+      return "Quote/borrowed insight"
+    }
+
+    if (normalized.includes("result") || normalized.includes("grew") || normalized.includes("increased")) {
+      return "Result-led"
+    }
+
+    if (normalized.startsWith("how ") || normalized.startsWith("here's how") || normalized.startsWith("here is how")) {
+      return "Process breakdown"
+    }
+
+    if (normalized.includes("before") && normalized.includes("after")) {
+      return "Before / after"
+    }
+
+    if (normalized.startsWith("i ") || normalized.startsWith("we ")) {
+      return "Personal observation"
+    }
+
+    return "Direct statement"
+  }
+
+  private async profilePostClassifications(posts: LinkedinProfilePerformancePost[]) {
+    const fallback = posts.reduce((all, post, index) => {
+      all[this.profilePostClassificationId(post, index)] = {
+        hookStyle: this.profilePostHookStyle(post),
+        topic: this.profilePostTopic(post),
+        confidence: "Low",
+      }
+      return all
+    }, {} as Record<string, LinkedinAnalyticsPostClassification>)
+
+    if (!process.env.OPENAI_API_KEY || posts.length === 0) {
+      return fallback
+    }
+
+    try {
+      const classifications = await linkedinAnalyticsOpenaiService.classifyLinkedinAnalyticsPosts({
+        posts: posts.map((post, index) => ({
+          id: this.profilePostClassificationId(post, index),
+          text: post.text,
+        })),
+      })
+
+      return classifications.reduce((all, classification) => {
+        if (
+          LINKEDIN_ANALYTICS_HOOK_STYLES.includes(classification.hookStyle as any) &&
+          LINKEDIN_ANALYTICS_TOPICS.includes(classification.topic as any)
+        ) {
+          all[classification.id] = {
+            hookStyle: classification.hookStyle,
+            topic: classification.topic,
+            confidence: classification.confidence,
+          }
+        }
+
+        return all
+      }, fallback)
+    } catch (err) {
+      console.error("Error classifying LinkedIn analytics posts:", err)
+      return fallback
+    }
+  }
+
+  private profilePostCtaStyle(post: LinkedinProfilePerformancePost) {
+    const lines = post.text
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean)
+    const ending = lines.slice(-3).join(" ").toLowerCase()
+
+    if (!ending) {
+      return "No clear CTA"
+    }
+
+    if (ending.includes("dm") || ending.includes("message me") || ending.includes("send me")) {
+      return "DM prompt"
+    }
+
+    if (ending.includes("book") || ending.includes("call")) {
+      return "Booking prompt"
+    }
+
+    if (ending.includes("comment") || ending.includes("what do you think") || ending.includes("curious")) {
+      return "Comment prompt"
+    }
+
+    if (ending.endsWith("?")) {
+      return "Question prompt"
+    }
+
+    return "Soft close"
+  }
+
+  private groupPerformance(posts: LinkedinProfilePerformancePost[], getKey: (post: LinkedinProfilePerformancePost) => string, averageEngagement: number) {
+    const grouped = posts.reduce((all, post) => {
+      const key = getKey(post)
+      all[key] = all[key] || { total: 0, count: 0 }
+      all[key].total += this.profilePostEngagement(post)
+      all[key].count += 1
+      return all
+    }, {} as Record<string, { total: number; count: number }>)
+
+    return Object.entries(grouped)
+      .map(([label, value]) => {
+        const average = value.count ? value.total / value.count : 0
+        return {
+          label,
+          date: label,
+          total: Math.round(average),
+          count: value.count,
+          vsAverage: averageEngagement ? Math.round(((average - averageEngagement) / averageEngagement) * 100) : 0,
+          confidence: this.confidenceForSample(value.count),
+        }
+      })
+      .sort((a, b) => Number(b.total) - Number(a.total))
+  }
+
+  private bestPatternLabel(patterns: Array<{ label: string; total: number | string; count?: number }>, fallback: string) {
+    return patterns.find((pattern) => Number(pattern.total) > 0)?.label || fallback
+  }
+
   async analytics(id: string, accessToken: string, date: number, context?: any): Promise<AnalyticsData[]> {
     const integration = (context?.integration || context) as Integration | undefined
     const timezone = typeof context?.timezone === "number" ? context.timezone : 0
@@ -792,11 +997,13 @@ export class LinkedinProvider extends SocialAbstract implements SocialProvider {
       const today = nowInTimezone.format("YYYY-MM-DD")
       const numberFormat = new Intl.NumberFormat("en-US")
       const total = (value: number) => numberFormat.format(Math.round(value))
-      const single = (label: string, value: number | string): AnalyticsData => ({
+      const single = (label: string, value: number | string, key?: string, meta?: Record<string, any>): AnalyticsData => ({
+        key,
         label,
         percentageChange: 0,
         total: typeof value === "number" ? total(value) : value,
         data: [{ total: typeof value === "number" ? value : 0, date: today }],
+        meta,
       })
 
       const activityTotals = activityPosts.reduce(
@@ -835,9 +1042,11 @@ export class LinkedinProvider extends SocialAbstract implements SocialProvider {
       const totalEngagement = totals.reactions + totals.comments + totals.reposts
       const averageEngagement = posts.length ? totalEngagement / posts.length : 0
       const activityTimestamps = activityPosts.map((post) => dayjs.utc(this.profilePostActivityDate(post)!).valueOf()).filter(Number.isFinite)
+      const oldestActivityTimestamp = activityTimestamps.length ? Math.min(...activityTimestamps) : undefined
+      const newestActivityTimestamp = activityTimestamps.length ? Math.max(...activityTimestamps) : undefined
       const coveredDays =
-        useLatestProfilePosts && activityTimestamps.length > 1
-          ? Math.max(1, (Math.max(...activityTimestamps) - Math.min(...activityTimestamps)) / (24 * 60 * 60 * 1000))
+        useLatestProfilePosts && oldestActivityTimestamp && newestActivityTimestamp
+          ? Math.max(1, (newestActivityTimestamp - oldestActivityTimestamp) / (24 * 60 * 60 * 1000))
           : date
       const postsPerWeek = activityPosts.length / Math.max(coveredDays / 7, 1)
       const bestPost = posts.reduce<LinkedinProfilePerformancePost | undefined>(
@@ -862,6 +1071,11 @@ export class LinkedinProvider extends SocialAbstract implements SocialProvider {
       )
         .sort(([a], [b]) => a.localeCompare(b))
         .map(([label, value]) => ({ label, date: label, total: value }))
+      const trendFirstHalf = engagementByDate.slice(0, Math.max(1, Math.floor(engagementByDate.length / 2)))
+      const trendSecondHalf = engagementByDate.slice(Math.max(1, Math.floor(engagementByDate.length / 2)))
+      const trendFirstAverage = trendFirstHalf.reduce((sum, point) => sum + Number(point.total || 0), 0) / Math.max(trendFirstHalf.length, 1)
+      const trendSecondAverage = trendSecondHalf.reduce((sum, point) => sum + Number(point.total || 0), 0) / Math.max(trendSecondHalf.length, 1)
+      const engagementTrendChange = trendFirstAverage ? Math.round(((trendSecondAverage - trendFirstAverage) / trendFirstAverage) * 100) : 0
 
       const reactionBreakdown = [
         ["Likes", "num_likes"],
@@ -884,6 +1098,14 @@ export class LinkedinProvider extends SocialAbstract implements SocialProvider {
         if (length <= 700) return "301-700 chars"
         return "700+ chars"
       }
+      const postClassifications = await this.profilePostClassifications(posts)
+      const originalPostIndexes = new Map(posts.map((post, index) => [post, index]))
+      const classificationFor = (post: LinkedinProfilePerformancePost) =>
+        postClassifications[this.profilePostClassificationId(post, originalPostIndexes.get(post) || 0)] || {
+          hookStyle: this.profilePostHookStyle(post),
+          topic: this.profilePostTopic(post),
+          confidence: "Low",
+        }
 
       const topPosts = [...posts]
         .sort((a, b) => this.profilePostEngagement(b) - this.profilePostEngagement(a))
@@ -892,20 +1114,112 @@ export class LinkedinProvider extends SocialAbstract implements SocialProvider {
           label: this.profilePostLabel(post),
           date: this.profilePostLabel(post),
           total: this.profilePostEngagement(post),
+          comments: Number(post.stats.num_comments || 0),
+          reposts: Number(post.stats.num_reposts || 0),
+          reactions: Number(post.stats.num_reactions || 0),
+          format: this.profilePostMediaType(post),
+          topic: classificationFor(post).topic,
+          hookStyle: classificationFor(post).hookStyle,
+          classificationConfidence: classificationFor(post).confidence,
+          ctaStyle: this.profilePostCtaStyle(post),
+          reshared: post.reshared,
+          postUrl: post.post.post_url,
+          publishedAt: dayjs.utc(post.date).utcOffset(timezone).format("ddd, MMM D [at] h:mm A"),
+          timestamp: dayjs.utc(post.date).utcOffset(timezone).valueOf(),
+          vsAverage: averageEngagement ? Number((this.profilePostEngagement(post) / averageEngagement).toFixed(1)) : 0,
         }))
+      const mediaPerformance = this.groupPerformance(posts, (post) => this.profilePostMediaType(post), averageEngagement)
+      const lengthPerformance = this.groupPerformance(posts, lengthBucket, averageEngagement)
+      const postingWindowPerformance = this.groupPerformance(posts, (post) => dayjs.utc(post.date).utcOffset(timezone).format("ddd HH:00"), averageEngagement)
+        .sort((a, b) => Number(b.total) - Number(a.total))
+        .slice(0, 10)
+      const originalResharedPerformance = this.groupPerformance(posts, (post) => (post.reshared ? "Reshared" : "Original"), averageEngagement)
+      const topicPerformance = this.groupPerformance(posts, (post) => classificationFor(post).topic, averageEngagement)
+      const hookPerformance = this.groupPerformance(posts, (post) => classificationFor(post).hookStyle, averageEngagement)
+      const ctaPerformance = this.groupPerformance(posts, (post) => this.profilePostCtaStyle(post), averageEngagement)
+      const bestMedia = mediaPerformance[0]
+      const bestLength = lengthPerformance[0]
+      const bestPostingWindow = postingWindowPerformance[0]
+      const bestTopic = topicPerformance[0]
+      const bestHook = hookPerformance[0]
+      const bestCta = ctaPerformance[0]
+      const originalPerformance = originalResharedPerformance.find((item) => item.label === "Original")
+      const resharedPerformance = originalResharedPerformance.find((item) => item.label === "Reshared")
+      const originalMultiplier =
+        originalPerformance && resharedPerformance && Number(resharedPerformance.total) > 0
+          ? Number((Number(originalPerformance.total) / Number(resharedPerformance.total)).toFixed(1))
+          : undefined
+      const bestPostEngagement = bestPost ? this.profilePostEngagement(bestPost) : 0
+      const bestPostMeta = bestPost
+        ? {
+            preview: this.profilePostLabel(bestPost),
+            engagement: bestPostEngagement,
+            vsAverage: averageEngagement ? Number((bestPostEngagement / averageEngagement).toFixed(1)) : 0,
+            topic: classificationFor(bestPost).topic,
+            hookStyle: classificationFor(bestPost).hookStyle,
+            classificationConfidence: classificationFor(bestPost).confidence,
+            format: this.profilePostMediaType(bestPost),
+            publishedAt: dayjs.utc(bestPost.date).utcOffset(timezone).format("dddd [at] h:mm A"),
+            postUrl: bestPost.post.post_url,
+          }
+        : undefined
+      const nextDecision = {
+        write: `A ${this.bestPatternLabel(topicPerformance, "practical")} post using a ${this.bestPatternLabel(hookPerformance, "direct statement").toLowerCase()} hook`,
+        use: `${this.bestPatternLabel(mediaPerformance, "text")} format, ${this.bestPatternLabel(lengthPerformance, "301-700 chars")}`,
+        publish: bestPostingWindow?.label ? `${bestPostingWindow.label.replace(":00", "")}:00 local time` : "your next consistent posting window",
+        why:
+          bestMedia && bestLength
+            ? `${bestMedia.label} posts and ${bestLength.label} posts are currently your strongest classified patterns.`
+            : "This combines the strongest available patterns from your recent posts.",
+        confidence: this.confidenceForSample(Math.max(bestMedia?.count || 0, bestLength?.count || 0, bestPostingWindow?.count || 0)),
+      }
 
       return [
-        single("Total engagement", totalEngagement),
-        single("Average engagement per post", total(averageEngagement)),
-        single("Total reactions", totals.reactions),
-        single("Total comments", totals.comments),
-        single("Total reposts", totals.reposts),
-        single("Best post", bestPost ? this.profilePostEngagement(bestPost) : 0),
-        single("Most-commented post", Number(mostCommentedPost?.stats.num_comments || 0)),
-        single("Most-reposted post", Number(mostRepostedPost?.stats.num_reposts || 0)),
-        single("Posts per week", postsPerWeek.toFixed(1)),
         {
-          label: "Original vs reshared posts",
+          key: "performance_overview",
+          label: "Performance overview",
+          percentageChange: engagementTrendChange,
+          total: total(averageEngagement),
+          data: [{ total: averageEngagement, date: today }],
+          insight: `Your posts average ${total(averageEngagement)} engagements across ${posts.length} posts.`,
+          recommendation: engagementTrendChange >= 0 ? "Double down on the post patterns below." : "Use the pattern analysis below to reset the next few posts.",
+          meta: {
+            averageEngagement: Math.round(averageEngagement),
+            totalEngagement,
+            reactions: totals.reactions,
+            comments: totals.comments,
+            reposts: totals.reposts,
+            postsAnalyzed: posts.length,
+          },
+        },
+        single("Total engagement", totalEngagement, "total_engagement"),
+        single("Average engagement per post", total(averageEngagement), "average_engagement_per_post"),
+        single("Total reactions received", totals.reactions, "total_reactions"),
+        single("Total comments received", totals.comments, "total_comments"),
+        single("Total reposts of your posts", totals.reposts, "total_reposts"),
+        single("Engagement on your best post", bestPostEngagement, "best_post_engagement", bestPostMeta),
+        single("Most-commented on post", Number(mostCommentedPost?.stats.num_comments || 0), "most_commented_post", {
+          preview: mostCommentedPost ? this.profilePostLabel(mostCommentedPost) : "",
+          postUrl: mostCommentedPost?.post.post_url,
+        }),
+        single("Your post with most Reposts", Number(mostRepostedPost?.stats.num_reposts || 0), "most_reposted_post", {
+          preview: mostRepostedPost ? this.profilePostLabel(mostRepostedPost) : "",
+          postUrl: mostRepostedPost?.post.post_url,
+        }),
+        single("Average posts per week", postsPerWeek.toFixed(1), "posts_per_week", {
+          postsAnalyzed: activityPosts.length,
+          coveredDays: Math.ceil(coveredDays),
+          period:
+            useLatestProfilePosts && oldestActivityTimestamp && newestActivityTimestamp
+              ? `${dayjs.utc(oldestActivityTimestamp).utcOffset(timezone).format("MMM D")} - ${dayjs
+                  .utc(newestActivityTimestamp)
+                  .utcOffset(timezone)
+                  .format("MMM D")}`
+              : `Last ${date} days`,
+        }),
+        {
+          key: "original_vs_reshared_mix",
+          label: "Original vs reshared mix",
           chartType: "bar",
           percentageChange: 0,
           total: `${activityTotals.original} / ${activityTotals.reshared}`,
@@ -913,23 +1227,38 @@ export class LinkedinProvider extends SocialAbstract implements SocialProvider {
             { label: "Original", date: "Original", total: activityTotals.original },
             { label: "Reshared", date: "Reshared", total: activityTotals.reshared },
           ],
+          insight:
+            typeof originalMultiplier === "number"
+              ? `Original posts average ${originalMultiplier}x the engagement of reshared posts.`
+              : `${activityTotals.original} original and ${activityTotals.reshared} reshared posts analyzed.`,
+          recommendation: "Keep reshared posts as support content; use original posts for your main weekly strategy.",
+          meta: {
+            performance: originalResharedPerformance,
+          },
         },
-        single("Average post text length", posts.length ? total(totals.textLength / posts.length) : "0"),
+        single("Average post text length", posts.length ? total(totals.textLength / posts.length) : "0", "average_post_text_length"),
         {
+          key: "top_posts_by_engagement",
           label: "Top 10 posts by engagement",
           chartType: "horizontalBar",
           percentageChange: 0,
           data: topPosts,
           total: topPosts[0]?.total || 0,
+          insight: "Study and repurpose the posts that beat your account average.",
+          recommendation: "Start with posts that have both comments and reposts, not only reactions.",
         } as AnalyticsData,
         {
+          key: "engagement_trend",
           label: "Engagement trend over time",
           chartType: "line",
-          percentageChange: 0,
+          percentageChange: engagementTrendChange,
           data: engagementByDate,
           total: totalEngagement,
+          insight: engagementTrendChange >= 0 ? "Engagement is trending upward in this period." : "Engagement is trending downward in this period.",
+          recommendation: engagementTrendChange >= 0 ? "Repeat the strongest topics and formats." : "Use the best-performing format and hook style for the next post.",
         },
         {
+          key: "response_mix",
           label: "Reactions vs comments vs reposts",
           chartType: "bar",
           percentageChange: 0,
@@ -939,8 +1268,14 @@ export class LinkedinProvider extends SocialAbstract implements SocialProvider {
             { label: "Comments", date: "Comments", total: totals.comments },
             { label: "Reposts", date: "Reposts", total: totals.reposts },
           ],
+          meta: {
+            averageComments: posts.length ? totals.comments / posts.length : 0,
+            averageReposts: posts.length ? totals.reposts / posts.length : 0,
+            averageReactions: posts.length ? totals.reactions / posts.length : 0,
+          },
         },
         {
+          key: "reaction_type_breakdown",
           label: "Reaction type breakdown",
           chartType: "doughnut",
           percentageChange: 0,
@@ -948,30 +1283,86 @@ export class LinkedinProvider extends SocialAbstract implements SocialProvider {
           data: reactionBreakdown.filter((item) => item.total > 0),
         },
         {
+          key: "media_type_performance",
           label: "Media type performance",
           chartType: "bar",
           percentageChange: 0,
-          data: this.groupAverage(posts, (post) => this.profilePostMediaType(post)),
+          data: mediaPerformance,
+          insight: bestMedia ? `${bestMedia.label} posts have the strongest average engagement.` : "Not enough posts to compare media types.",
+          recommendation: bestMedia ? `Use ${bestMedia.label} when the idea supports it; sample size confidence is ${bestMedia.confidence}.` : undefined,
+          confidence: bestMedia?.confidence,
         },
         {
-          label: "Original vs reshared performance",
+          key: "original_vs_reshared_performance",
+          label: "Original vs reshared posts performance",
           chartType: "bar",
           percentageChange: 0,
-          data: this.groupAverage(posts, (post) => (post.reshared ? "Reshared" : "Original")),
+          data: originalResharedPerformance,
+          insight:
+            typeof originalMultiplier === "number"
+              ? `Original posts average ${originalMultiplier}x reshared posts.`
+              : "Original and reshared performance are not both available yet.",
+          recommendation: "Prioritize original posts unless resharing adds a strong personal point of view.",
         },
         {
+          key: "post_length_performance",
           label: "Post length performance",
           chartType: "bar",
           percentageChange: 0,
-          data: this.groupAverage(posts, lengthBucket),
+          data: lengthPerformance,
+          insight: bestLength ? `${bestLength.label} is your strongest-performing length bucket.` : "Not enough posts to compare length buckets.",
+          recommendation: bestLength ? `Keep the next post around ${bestLength.label}.` : undefined,
+          confidence: bestLength?.confidence,
         },
         {
+          key: "posting_day_time_performance",
           label: "Posting day/time performance",
           chartType: "horizontalBar",
           percentageChange: 0,
-          data: this.groupAverage(posts, (post) => dayjs.utc(post.date).utcOffset(timezone).format("ddd HH:00"))
-            .sort((a, b) => b.total - a.total)
-            .slice(0, 10),
+          data: postingWindowPerformance,
+          insight: bestPostingWindow ? `${bestPostingWindow.label} is your strongest detected posting window.` : "Not enough posts to compare posting windows.",
+          recommendation: bestPostingWindow ? `Test your next strong post around ${bestPostingWindow.label}.` : undefined,
+          confidence: bestPostingWindow?.confidence,
+        },
+        {
+          key: "topic_performance",
+          label: "Best topic / pillar",
+          percentageChange: 0,
+          total: bestTopic?.label || "Not enough data",
+          data: topicPerformance,
+          insight: bestTopic ? `${bestTopic.label} is your strongest detected topic.` : "Not enough posts to detect a topic pattern.",
+          recommendation: bestTopic ? `Use ${bestTopic.label.toLowerCase()} as the subject of your next post.` : undefined,
+          confidence: bestTopic?.confidence,
+        },
+        {
+          key: "hook_style_performance",
+          label: "Best hook style",
+          percentageChange: 0,
+          total: bestHook?.label || "Not enough data",
+          data: hookPerformance,
+          insight: bestHook ? `${bestHook.label} hooks are performing best.` : "Not enough posts to detect a hook pattern.",
+          recommendation: bestHook ? `Open the next post with a ${bestHook.label.toLowerCase()} hook.` : undefined,
+          confidence: bestHook?.confidence,
+        },
+        {
+          key: "cta_style_performance",
+          label: "Best CTA style",
+          percentageChange: 0,
+          total: bestCta?.label || "Not enough data",
+          data: ctaPerformance,
+          insight: bestCta ? `${bestCta.label} is your strongest detected CTA style.` : "Not enough posts to detect a CTA pattern.",
+          recommendation: bestCta ? `Close the next post with a ${bestCta.label.toLowerCase()}.` : undefined,
+          confidence: bestCta?.confidence,
+        },
+        {
+          key: "next_content_decision",
+          label: "Your next content decision",
+          percentageChange: 0,
+          total: nextDecision.write,
+          data: [{ total: Math.round(averageEngagement), date: today }],
+          recommendation: `${nextDecision.write}. Use ${nextDecision.use}. Publish around ${nextDecision.publish}.`,
+          confidence: nextDecision.confidence,
+          meta: nextDecision,
         },
       ]
     } catch (err) {

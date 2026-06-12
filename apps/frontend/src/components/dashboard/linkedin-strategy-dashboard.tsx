@@ -66,6 +66,7 @@ type RepurposeSourceConfig = {
   id: RepurposeSource
   source: string
   sentence: string
+  shortDescription: string
   button: string
 }
 
@@ -93,18 +94,21 @@ const repurposeSources: RepurposeSourceConfig[] = [
     id: "website",
     source: "Website page",
     sentence: "💡 Paste a page URL and we will turn the page's content into a LinkedIn post for your audience.",
+    shortDescription: "Turn a page URL into a LinkedIn post.",
     button: "Turn into post",
   },
   {
     id: "past_posts",
     source: "Past LinkedIn posts",
     sentence: "💡 Select one or more top posts and we will reuse the core idea with a fresh angle.",
+    shortDescription: "Refresh a proven past post.",
     button: "Repurpose posts",
   },
   {
     id: "profile",
     source: "Your LinkedIn profile",
     sentence: "💡 Choose a profile detail and we will turn your experience or credibility into a new post.",
+    shortDescription: "Create from your profile.",
     button: "Create from profile",
   },
 ]
@@ -695,9 +699,9 @@ export const LinkedinStrategyDashboard = () => {
         (weeklyPosts as CampaignPost[]).filter((post) => {
           const metadata = post.generationMetadata || {}
           const isLinkedinPost = post.integration?.id === linkedinIntegration?.id
-          const isWeeklyCampaignPost = metadata.source === WEEKLY_CAMPAIGN_SOURCE && metadata.campaignWeekStart === weekStartKey
-          const isOnboardingCampaignPost =
-            metadata.source === ONBOARDING_CAMPAIGN_SOURCE && (!metadata.campaignWeekStart || metadata.campaignWeekStart === weekStartKey)
+          const isWeeklyCampaignPost =
+            metadata.source === WEEKLY_CAMPAIGN_SOURCE && (!metadata.campaignWeekStart || metadata.campaignWeekStart === weekStartKey)
+          const isOnboardingCampaignPost = metadata.source === ONBOARDING_CAMPAIGN_SOURCE
 
           return isLinkedinPost && isPostInWeek(post, weekStart) && (isWeeklyCampaignPost || isOnboardingCampaignPost)
         }),
@@ -1200,7 +1204,7 @@ export const LinkedinStrategyDashboard = () => {
                   )}
                 </>
               ) : (
-                <div className="rounded-[10px] text-center border border-newTableBorder bg-newTableHeader p-[12px] text-[13px] leading-[19px] text-customColor18">
+                <div className="rounded-[10px] text-center p-[12px] text-[13px] leading-[19px] text-customColor18">
                   You're all caught up for this week ✅
                 </div>
               )}
@@ -1213,7 +1217,11 @@ export const LinkedinStrategyDashboard = () => {
             title="✨ This week's posts"
             className="border-[#8b5cf6]/25 bg-newBgColorInner shadow-[inset_0_0_0_1px_rgba(139,92,246,0.08)]"
             action={
-              <div className="inline-flex w-fit rounded-[9px] border border-newTableBorder bg-newBgColorInner p-[3px]">
+              <div
+                className="inline-flex w-fit items-center rounded-full border border-newTableBorder bg-newTableHeader p-[4px] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
+                role="group"
+                aria-label="Post list filter"
+              >
                 {[
                   ["suggested", "Suggested posts"],
                   ["all", "All posts"],
@@ -1221,9 +1229,12 @@ export const LinkedinStrategyDashboard = () => {
                   <button
                     key={value}
                     type="button"
+                    aria-pressed={postView === value}
                     onClick={() => setPostView(value as "suggested" | "all")}
-                    className={`rounded-[7px] px-[10px] py-[5px] text-[12px] font-semibold ${
-                      postView === value ? "bg-[#8b5cf6] text-white" : "text-customColor18"
+                    className={`relative min-w-[112px] rounded-full px-[13px] py-[7px] text-[12px] font-semibold transition-all ${
+                      postView === value
+                        ? "bg-[#8b5cf6] text-white shadow-[0_6px_16px_rgba(139,92,246,0.28)]"
+                        : "bg-newBgColorInner text-customColor18 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.03)] hover:bg-newTableBorder hover:text-newTextColor"
                     }`}
                   >
                     {label}
@@ -1342,7 +1353,7 @@ export const LinkedinStrategyDashboard = () => {
                         {item.button}
                       </button>
                     </div>
-                    <div className="mt-[8px] text-[13px] leading-[19px] text-customColor18">{item.sentence}</div>
+                    <div className="mt-[8px] text-[13px] leading-[19px] text-customColor18 text-gray">{item.shortDescription}</div>
                   </div>
                 ))}
               </div>
@@ -1417,6 +1428,21 @@ export const LinkedinStrategyDashboard = () => {
             Connect a personal LinkedIn profile to replace the mocked strategy inputs with account-specific recommendations.
           </div>
         )}
+
+        <section className="flex flex-col gap-[12px] rounded-[12px] border border-newTableBorder bg-newTableHeader p-[16px] py-[40px] text-center">
+          <div>
+            <div className="text-[16px] font-semibold text-newTextColor">Want to view full analytics?</div>
+            <div className="mt-[4px] text-[13px] text-customColor18">
+              Open the detailed analytics page for trends, top posts, and performance breakdowns.
+            </div>
+          </div>
+          <a
+            href="/analytics"
+            className="inline-flex h-[40px] w-fit shrink-0 items-center justify-center self-center rounded-[8px] bg-[#8b5cf6] px-[14px] text-[13px] font-semibold text-white"
+          >
+            View analytics
+          </a>
+        </section>
       </div>
     </div>
   )

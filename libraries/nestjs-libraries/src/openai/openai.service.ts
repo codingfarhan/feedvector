@@ -54,6 +54,50 @@ const RepurposedLinkedinPostPrompt = z.object({
   angle: z.string(),
 });
 
+export const LINKEDIN_ANALYTICS_HOOK_STYLES = [
+  'Question-led',
+  'Contrarian statement',
+  'Problem diagnosis',
+  'Direct statement',
+  'Story-led',
+  'Personal observation',
+  'Result-led',
+  'Before / after',
+  'Process breakdown',
+  'List-led',
+  'Data/stat-led',
+  'Mistake/confession',
+  'Prediction/trend',
+  'Quote/borrowed insight',
+] as const;
+
+export const LINKEDIN_ANALYTICS_TOPICS = [
+  'Sales and revenue',
+  'Marketing and content',
+  'Product and service',
+  'Operations and systems',
+  'Leadership and management',
+  'Hiring and culture',
+  'Founder journey',
+  'Career and professional growth',
+  'Customer insights',
+  'Industry trends',
+  'Personal productivity',
+  'Case studies and proof',
+  'Opinion and commentary',
+] as const;
+
+const LinkedinAnalyticsPostClassificationPrompt = z.object({
+  classifications: z.array(
+    z.object({
+      id: z.string(),
+      hookStyle: z.enum(LINKEDIN_ANALYTICS_HOOK_STYLES),
+      topic: z.enum(LINKEDIN_ANALYTICS_TOPICS),
+      confidence: z.enum(['Low', 'Medium', 'High']),
+    })
+  ),
+});
+
 @Injectable()
 export class OpenaiService {
   async generateImage(prompt: string, isUrl: boolean, isVertical = false) {
@@ -335,6 +379,44 @@ export class OpenaiService {
         pillar: '',
         angle: '',
       }
+    );
+  }
+
+  async classifyLinkedinAnalyticsPosts(input: {
+    posts: Array<{
+      id: string;
+      text: string;
+    }>;
+  }) {
+    return (
+      (
+        await openai.chat.completions.parse({
+          model: 'gpt-4.1',
+          temperature: 0,
+          messages: [
+            {
+              role: 'system',
+              content:
+                'You classify LinkedIn posts for analytics. Return strict JSON only. For each post, choose exactly one hookStyle and exactly one topic from the allowed enum values. Use the hookStyle to describe how the opening of the post attracts attention. Use the topic to describe the main subject of the post. Do not invent categories.',
+            },
+            {
+              role: 'user',
+              content: JSON.stringify({
+                hookStyles: LINKEDIN_ANALYTICS_HOOK_STYLES,
+                topics: LINKEDIN_ANALYTICS_TOPICS,
+                posts: input.posts.map((post) => ({
+                  id: post.id,
+                  text: post.text.slice(0, 1800),
+                })),
+              }),
+            },
+          ],
+          response_format: zodResponseFormat(
+            LinkedinAnalyticsPostClassificationPrompt,
+            'linkedinAnalyticsPostClassification'
+          ),
+        })
+      ).choices[0].message.parsed?.classifications || []
     );
   }
 

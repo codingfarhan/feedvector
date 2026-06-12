@@ -52,12 +52,17 @@ export interface IAuthenticator {
 }
 
 export interface AnalyticsData {
+  key?: string;
   label: string;
   data: Array<{ total: string | number; date: string; label?: string }>;
   percentageChange: number;
   average?: boolean;
   chartType?: 'line' | 'bar' | 'horizontalBar' | 'doughnut';
   total?: string | number;
+  insight?: string;
+  recommendation?: string;
+  confidence?: 'Low' | 'Medium' | 'High';
+  meta?: Record<string, any>;
 }
 
 
