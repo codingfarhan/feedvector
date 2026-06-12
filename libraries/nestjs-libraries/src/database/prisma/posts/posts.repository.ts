@@ -171,6 +171,7 @@ export class PostsRepository {
         releaseURL: true,
         releaseId: true,
         state: true,
+        generationMetadata: true,
         intervalInDays: true,
         group: true,
         tags: {

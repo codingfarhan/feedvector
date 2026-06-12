@@ -120,6 +120,35 @@ const clearSuggestionsCache = () => {
   window.localStorage.removeItem(onboardingSuggestionsStorageKey)
 }
 
+const padDatePart = (value: number) => String(value).padStart(2, "0")
+
+const formatDateKey = (date: Date) => `${date.getFullYear()}-${padDatePart(date.getMonth() + 1)}-${padDatePart(date.getDate())}`
+
+const startOfDay = (date: Date) => {
+  const next = new Date(date)
+  next.setHours(0, 0, 0, 0)
+  return next
+}
+
+const addDays = (date: Date, days: number) => {
+  const next = new Date(date)
+  next.setDate(next.getDate() + days)
+  return next
+}
+
+const getMonday = (date: Date) => {
+  const day = date.getDay()
+  const diff = day === 0 ? -6 : 1 - day
+  return startOfDay(addDays(date, diff))
+}
+
+const getTargetCampaignStart = () => {
+  const today = new Date()
+  const monday = getMonday(today)
+  const day = today.getDay()
+  return day === 0 || day === 5 || day === 6 ? addDays(monday, 7) : monday
+}
+
 export const OnboardingModal: FC<OnboardingModalProps> = ({ onClose }) => {
   const fetch = useFetch()
   const router = useRouter()
@@ -309,12 +338,14 @@ export const OnboardingModal: FC<OnboardingModalProps> = ({ onClose }) => {
       }
 
       if (action !== "ignored") {
+        const campaignStart = getTargetCampaignStart()
+        const postDate = action === "schedule" && scheduleDate ? new Date(scheduleDate) : new Date()
         const response = await fetch("/posts", {
           method: "POST",
           body: JSON.stringify({
             type: action === "now" ? "now" : action,
             shortLink: false,
-            date: action === "schedule" && scheduleDate ? new Date(scheduleDate).toISOString() : new Date().toISOString(),
+            date: postDate.toISOString(),
             tags: [],
             posts: [
               {
@@ -324,6 +355,9 @@ export const OnboardingModal: FC<OnboardingModalProps> = ({ onClose }) => {
                 settings: {},
                 generationMetadata: {
                   source: "onboarding",
+                  campaignWeekStart: formatDateKey(campaignStart),
+                  campaignSlot: suggestionIndex + 1,
+                  recommendedDate: formatDateKey(postDate),
                   templateId: suggestion.templateId,
                   templateName: suggestion.templateName,
                   pillar: suggestion.pillar,

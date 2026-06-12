@@ -431,7 +431,7 @@ export class IntegrationService {
         );
         const defaultCacheTtlSeconds =
           !process.env.NODE_ENV || process.env.NODE_ENV === 'development'
-            ? 1
+            ? 24 * 60 * 60
             : 3600;
         const resolvedCacheTtlSeconds = cacheTtlSeconds
           ? Math.max(defaultCacheTtlSeconds, cacheTtlSeconds)

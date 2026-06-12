@@ -48,6 +48,12 @@ const OnboardingGeneratedPostsPrompt = z.object({
   posts: z.array(OnboardingGeneratedPostPrompt),
 });
 
+const RepurposedLinkedinPostPrompt = z.object({
+  content: z.string(),
+  pillar: z.string(),
+  angle: z.string(),
+});
+
 @Injectable()
 export class OpenaiService {
   async generateImage(prompt: string, isUrl: boolean, isVertical = false) {
@@ -283,6 +289,52 @@ export class OpenaiService {
           ),
         })
       ).choices[0].message.parsed?.posts || []
+    );
+  }
+
+  async generateRepurposedLinkedinPost(input: {
+    sourceType: 'website' | 'past_posts' | 'profile';
+    role: string;
+    audience: string;
+    goal: string;
+    allowedPillars: string[];
+    additionalContext?: string;
+    visualContext?: string;
+    websiteProfile?: any;
+    websitePages?: any[];
+    selectedPosts?: Array<{
+      label: string;
+      date?: string;
+      total?: number;
+    }>;
+    linkedinProfileContext?: any;
+    profileFocus?: string;
+  }) {
+    return (
+      (
+        await openai.chat.completions.parse({
+          model: 'gpt-4.1',
+          messages: [
+            {
+              role: 'system',
+              content:
+                'You write one concise LinkedIn post by repurposing user-provided source material. Return strict JSON only. Choose the best pillar from allowedPillars and include it in the pillar field. The post should feel like it was written by the user for their audience and goal. Do not invent metrics, clients, employers, testimonials, certifications, revenue, results, or proof. If the source is thin, write from the available context and keep claims conservative. Do not add hashtags. Use the optional visualContext only as creative context; do not say an image is attached. Keep the CTA contextual, low-friction, and aligned with the goal.',
+            },
+            {
+              role: 'user',
+              content: JSON.stringify(input),
+            },
+          ],
+          response_format: zodResponseFormat(
+            RepurposedLinkedinPostPrompt,
+            'repurposedLinkedinPost'
+          ),
+        })
+      ).choices[0].message.parsed || {
+        content: '',
+        pillar: '',
+        angle: '',
+      }
     );
   }
 

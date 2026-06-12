@@ -25,6 +25,7 @@ import { EmailNotificationsDto } from '@gitroom/nestjs-libraries/dtos/users/emai
 import {
   OnboardingCompleteDto,
   OnboardingSuggestionDto,
+  RepurposePostDto,
 } from '@gitroom/nestjs-libraries/dtos/users/onboarding.goal.dto';
 import { HttpForbiddenException } from '@gitroom/nestjs-libraries/services/exception.filter';
 import { RealIP } from 'nestjs-real-ip';
@@ -274,6 +275,98 @@ export class UsersController {
       onboardingRole,
       onboardingAudience
     );
+  }
+
+  @Post('/repurpose-post')
+  async generateRepurposedPost(
+    @GetOrgFromRequest() organization: Organization,
+    @Body() body: RepurposePostDto
+  ) {
+    const selectedIntegration = await this.getOnboardingLinkedInIntegration(
+      organization,
+      body.integrationId
+    );
+    const role = body.role.trim();
+    const audience = body.audience.trim();
+    const goal = body.goal.trim();
+    const allowedPillars = (body.pillars || [])
+      .map((pillar) => pillar.trim())
+      .filter(Boolean);
+
+    if (!role || !audience || !goal) {
+      throw new HttpException('Please complete your positioning first', 400);
+    }
+
+    const storedContext =
+      selectedIntegration as typeof selectedIntegration & {
+        linkedinProfileContext?: any;
+        onboardingWebsiteUrl?: string | null;
+        onboardingWebsiteProfile?: any;
+        onboardingWebsitePages?: any;
+      };
+    const linkedinProfileContext =
+      storedContext.linkedinProfileContext ||
+      (body.sourceType === 'profile'
+        ? await this._onboardingEnrichmentService.enrichLinkedinProfile(
+            selectedIntegration.profile
+          )
+        : undefined);
+
+    let websiteContext:
+      | {
+          normalizedUrl: string;
+          pages: any;
+          profile: any;
+        }
+      | undefined;
+
+    if (body.sourceType === 'website') {
+      const websiteUrl = body.websiteUrl?.trim();
+      if (!websiteUrl) {
+        throw new HttpException('Please enter a website URL', 400);
+      }
+
+      const normalizedWebsite =
+        this._onboardingEnrichmentService.normalizeWebsiteUrl(websiteUrl);
+      const canReuseWebsiteContext =
+        storedContext.onboardingWebsiteUrl === normalizedWebsite.normalizedUrl &&
+        !!storedContext.onboardingWebsiteProfile;
+
+      websiteContext = canReuseWebsiteContext
+        ? {
+            normalizedUrl: normalizedWebsite.normalizedUrl,
+            pages: storedContext.onboardingWebsitePages || [],
+            profile: storedContext.onboardingWebsiteProfile,
+          }
+        : await this._onboardingEnrichmentService.scrapeWebsite(websiteUrl);
+    }
+
+    if (
+      body.sourceType === 'past_posts' &&
+      !(body.selectedPosts || []).some((post) => post.label?.trim())
+    ) {
+      throw new HttpException('Select at least one past post', 400);
+    }
+
+    const generated =
+      await this._onboardingPostSuggestionService.generateRepurposedPost({
+        sourceType: body.sourceType,
+        role,
+        audience,
+        goal,
+        allowedPillars,
+        additionalContext: body.additionalContext?.trim(),
+        visualContext: body.visualContext?.trim(),
+        websiteProfile: websiteContext?.profile,
+        websitePages: websiteContext?.pages,
+        selectedPosts: (body.selectedPosts || [])
+          .filter((post) => post.label?.trim())
+          .slice(0, 4),
+        linkedinProfileContext,
+        profileFocus: body.profileFocus?.trim(),
+      });
+
+    return generated;
   }
 
   private async getOnboardingLinkedInIntegration(

@@ -101,6 +101,25 @@ type OnboardingSuggestionInput = {
   websiteProfile?: any;
 };
 
+type RepurposePostInput = {
+  sourceType: 'website' | 'past_posts' | 'profile';
+  role: string;
+  audience: string;
+  goal: string;
+  allowedPillars: string[];
+  additionalContext?: string;
+  visualContext?: string;
+  websiteProfile?: any;
+  websitePages?: any[];
+  selectedPosts?: Array<{
+    label: string;
+    date?: string;
+    total?: number;
+  }>;
+  linkedinProfileContext?: any;
+  profileFocus?: string;
+};
+
 @Injectable()
 export class OnboardingPostSuggestionService {
   constructor(private _openaiService: OpenaiService) {}
@@ -195,6 +214,31 @@ export class OnboardingPostSuggestionService {
         content,
       };
     });
+  }
+
+  async generateRepurposedPost(input: RepurposePostInput) {
+    const generated =
+      await this._openaiService.generateRepurposedLinkedinPost({
+        ...input,
+        allowedPillars: input.allowedPillars.length
+          ? input.allowedPillars
+          : this.assignPillars(input.role, input.goal, true),
+        linkedinProfileContext: input.linkedinProfileContext
+          ? this.compactLinkedinContext(input.linkedinProfileContext)
+          : undefined,
+        websitePages: (input.websitePages || []).slice(0, 5),
+      });
+    const content = this.cleanGeneratedContent(generated.content || '');
+
+    if (!content) {
+      throw new Error('Could not generate a post from this source');
+    }
+
+    return {
+      content,
+      pillar: generated.pillar || input.allowedPillars[0] || '',
+      angle: generated.angle || '',
+    };
   }
 
   private selectTemplates(

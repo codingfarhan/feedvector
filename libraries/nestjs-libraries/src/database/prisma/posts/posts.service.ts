@@ -226,7 +226,7 @@ export class PostsService {
         JSON.stringify(loadAnalytics),
         'EX',
         !process.env.NODE_ENV || process.env.NODE_ENV === 'development'
-          ? 1
+          ? 24 * 60 * 60
           : 3600
       );
       return loadAnalytics;
