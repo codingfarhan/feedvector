@@ -1,10 +1,11 @@
 "use client"
 
-import { FC, useEffect, useMemo, useRef } from "react"
+import { FC, useEffect, useMemo, useRef, useState } from "react"
 import DrawChart from "chart.js/auto"
 import { TotalList } from "@gitroom/frontend/components/analytics/stars.and.forks.interface"
 import { chunk } from "lodash"
 import useCookie from "react-use-cookie"
+import { modeEmitter } from "@gitroom/frontend/components/layout/mode.component"
 
 function mergeDataPoints(data: TotalList[], numPoints: number): TotalList[] {
   const res = chunk(data, Math.ceil(data.length / numPoints))
@@ -21,9 +22,11 @@ export const ChartSocial: FC<{
   color?: "purple" | "green" | "blue"
   type?: "line" | "bar" | "horizontalBar" | "doughnut"
   labelLimit?: number
+  hideXAxisLabels?: boolean
 }> = (props) => {
-  const { data, color = "purple", type = "line", labelLimit } = props
+  const { data, color = "purple", type = "line", labelLimit, hideXAxisLabels = false } = props
   const [mode] = useCookie("mode", "light")
+  const [activeMode, setActiveMode] = useState(mode)
   const list = useMemo(() => {
     if (type !== "line") {
       return data
@@ -54,6 +57,20 @@ export const ChartSocial: FC<{
   const colors = colorSchemes[color]
 
   useEffect(() => {
+    const currentMode = document.body.classList.contains("dark") ? "dark" : mode === "dark" ? "dark" : "light"
+    setActiveMode(currentMode)
+
+    const handleModeChange = (nextMode: string) => {
+      setActiveMode(nextMode === "dark" ? "dark" : "light")
+    }
+
+    modeEmitter.on("mode", handleModeChange)
+    return () => {
+      modeEmitter.off("mode", handleModeChange)
+    }
+  }, [mode])
+
+  useEffect(() => {
     const ctx = ref.current.getContext("2d")
     const gradient = ctx.createLinearGradient(0, 0, 0, ref.current.height)
     gradient.addColorStop(0, colors.start)
@@ -82,6 +99,9 @@ export const ChartSocial: FC<{
       "rgb(132, 204, 22)",
       "rgb(99, 102, 241)",
     ]
+    const isDarkMode = activeMode === "dark"
+    const axisTextColor = isDarkMode ? "rgba(255,255,255,0.78)" : "rgba(29,41,57,0.86)"
+    const gridColor = isDarkMode ? "rgba(255,255,255,0.08)" : "rgba(71,84,103,0.14)"
 
     chart.current = new DrawChart(ref.current!, {
       type: isDoughnut ? "doughnut" : isLine ? "line" : "bar",
@@ -111,22 +131,31 @@ export const ChartSocial: FC<{
             beginAtZero: true,
             display: !isDoughnut && !isLine,
             ticks: {
+              color: axisTextColor,
               callback: isHorizontalBar ? categoryLabel : undefined,
               autoSkip: false,
               font: {
                 size: 11,
               },
             },
+            grid: {
+              color: gridColor,
+            },
           },
           x: {
             display: !isDoughnut && !isLine,
             ticks: {
+              display: !hideXAxisLabels || isHorizontalBar,
+              color: axisTextColor,
               callback: isHorizontalBar ? undefined : categoryLabel,
               stepSize: 10,
               maxTicksLimit: 7,
               font: {
                 size: 11,
               },
+            },
+            grid: {
+              color: gridColor,
             },
           },
         },
@@ -139,10 +168,10 @@ export const ChartSocial: FC<{
             mode: isHorizontalBar ? "nearest" : "index",
             intersect: false,
             axis: isHorizontalBar ? "y" : "x",
-            backgroundColor: mode === "dark" ? "#1e1d1d" : "#fff",
-            titleColor: mode === "dark" ? "#fff" : "#000",
-            bodyColor: mode === "dark" ? "#9c9c9c" : "#777",
-            borderColor: mode === "dark" ? "#2b2b2b" : "#e7e9eb",
+            backgroundColor: isDarkMode ? "#1e1d1d" : "#fff",
+            titleColor: isDarkMode ? "#fff" : "#101828",
+            bodyColor: isDarkMode ? "#d0d0d0" : "#344054",
+            borderColor: isDarkMode ? "#2b2b2b" : "#d0d5dd",
             borderWidth: 1,
             padding: 10,
             cornerRadius: 8,
@@ -179,14 +208,14 @@ export const ChartSocial: FC<{
             fill: isLine,
             data: list.map((row) => Number(row.total) || 0),
             hoverBorderWidth: isLine ? 2 : 1,
-            hoverBorderColor: mode === "dark" ? "#fff" : "#1e1d1d",
+            hoverBorderColor: isDarkMode ? "#fff" : "#1e1d1d",
             ...(isLine
               ? {
                   tension: 0.4,
                   pointRadius: 0,
                   pointHoverRadius: 6,
                   pointHoverBackgroundColor: colors.border,
-                  pointHoverBorderColor: mode === "dark" ? "#1e1d1d" : "#fff",
+                  pointHoverBorderColor: isDarkMode ? "#1e1d1d" : "#fff",
                   pointHoverBorderWidth: 2,
                 }
               : {}),
@@ -197,7 +226,7 @@ export const ChartSocial: FC<{
     return () => {
       chart?.current?.destroy()
     }
-  }, [colors.border, colors.end, colors.start, labelLimit, list, mode, type])
+  }, [activeMode, colors.border, colors.end, colors.start, hideXAxisLabels, labelLimit, list, type])
 
   return <canvas className="w-full h-full" ref={ref} />
 }

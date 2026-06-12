@@ -1,4 +1,4 @@
-import { FC, useCallback, useMemo, useState } from "react"
+import { FC, ReactNode, useCallback, useMemo, useState } from "react"
 import { Integration } from "@prisma/client"
 import useSWR from "swr"
 import { useFetch } from "@gitroom/helpers/utils/custom.fetch"
@@ -51,11 +51,136 @@ const formatPostFormat = (value?: string) => {
     .join(" ")} post`
 }
 
+const formatPatternLabel = (value?: string) => {
+  if (!value) {
+    return "Not enough data"
+  }
+
+  if (["image", "text", "article", "document", "video", "multi-image"].includes(value)) {
+    return formatPostFormat(value) || value
+  }
+
+  return value
+}
+
+const LINKEDIN_REACTION_LABELS: Record<string, string> = {
+  Likes: "👍 Like",
+  Like: "👍 Like",
+  Praise: "👏 Celebrate",
+  Celebrate: "👏 Celebrate",
+  Empathy: "🤝 Support",
+  Support: "🤝 Support",
+  Appreciation: "❤️ Love",
+  Love: "❤️ Love",
+  Interest: "💡 Insightful",
+  Insightful: "💡 Insightful",
+  Entertainment: "😂 Funny",
+  Funny: "😂 Funny",
+  Maybe: "🤔 Maybe",
+}
+
+const formatLinkedinReactionLabel = (value?: string) => {
+  if (!value) {
+    return "Reaction"
+  }
+
+  return LINKEDIN_REACTION_LABELS[value] || value
+}
+
+const withLinkedinReactionLabels = (item?: AnalyticsDataItem) =>
+  item
+    ? {
+        ...item,
+        data: item.data.map((row) => {
+          const label = formatLinkedinReactionLabel(row.label || row.date)
+          return {
+            ...row,
+            label,
+            date: label,
+          }
+        }),
+      }
+    : undefined
+
 const normalizeChartData = (data: AnalyticsDataItem["data"]) =>
   data.map((row) => ({
     ...row,
     total: toNumber(row.total),
   }))
+
+const patternConclusion = (item: AnalyticsDataItem | undefined, fallback: string) => {
+  const rows = (item?.data || []).filter((row) => toNumber(row.total) > 0)
+  const top = rows[0]
+  const second = rows[1]
+
+  if (!top) {
+    return fallback
+  }
+
+  if (second && toNumber(top.total) > toNumber(second.total)) {
+    return `${formatPatternLabel(top.label || top.date)} outperforms ${formatPatternLabel(second.label || second.date)}`
+  }
+
+  return `${formatPatternLabel(top.label || top.date)} performs best`
+}
+
+const totalSamples = (item?: AnalyticsDataItem) => (item?.data || []).reduce((sum, row) => sum + toNumber(row.count), 0)
+
+const periodComparisonSparklineData = (data?: AnalyticsDataItem["data"]) => {
+  const points = normalizeChartData(data || [])
+
+  if (points.length < 2) {
+    return points
+  }
+
+  const firstHalf = points.slice(0, Math.max(1, Math.floor(points.length / 2)))
+  const secondHalf = points.slice(Math.max(1, Math.floor(points.length / 2)))
+  const average = (items: typeof points) => items.reduce((sum, point) => sum + toNumber(point.total), 0) / Math.max(items.length, 1)
+
+  return [
+    { date: "Earlier period", total: average(firstHalf) },
+    { date: "Recent period", total: average(secondHalf) },
+  ]
+}
+
+const MiniSparkline: FC<{ data?: AnalyticsDataItem["data"]; accent?: "purple" | "green" | "blue" | "orange" | "red" | "gray" }> = ({
+  data = [],
+  accent = "purple",
+}) => {
+  const points = normalizeChartData(data).slice(-12)
+
+  if (points.length < 2) {
+    return null
+  }
+
+  const values = points.map((point) => toNumber(point.total))
+  const min = Math.min(...values)
+  const max = Math.max(...values)
+  const range = max - min || 1
+  const width = 112
+  const height = 34
+  const color = {
+    purple: "#612bd3",
+    green: "#32d583",
+    blue: "#1d9bf0",
+    orange: "#f79009",
+    red: "#f04438",
+    gray: "#98a2b3",
+  }[accent]
+  const path = values
+    .map((value, index) => {
+      const x = (index / Math.max(values.length - 1, 1)) * width
+      const y = height - ((value - min) / range) * height
+      return `${index === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`
+    })
+    .join(" ")
+
+  return (
+    <svg className="h-[34px] w-[112px] shrink-0 overflow-visible" viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Trend sparkline">
+      <path d={path} fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
 
 const TrendIndicator: FC<{ value: number; average?: boolean }> = ({ value, average }) => {
   if (value === 0) return null
@@ -91,20 +216,20 @@ const OriginalResharedSummary: FC<{ item: AnalyticsDataItem }> = ({ item }) => {
       </div>
       <div className="mt-[16px] grid grid-cols-2 divide-x divide-newTableBorder border-t border-newTableBorder pt-[14px]">
         <div className="pe-[14px]">
-          <div className="flex items-center gap-[6px] text-[12px] text-textItemBlur">
+          <div className="flex items-center gap-[6px] text-[12px] text-newTableText/70">
             <span className="w-[7px] h-[7px] rounded-full bg-[#612bd3]" />
             Original
           </div>
           <div className="mt-[4px] text-[28px] leading-[32px] font-semibold">{formatNumber(original)}</div>
-          <div className="mt-[2px] text-[12px] text-textItemBlur">{originalPercent.toFixed(0)}%</div>
+          <div className="mt-[2px] text-[12px] text-newTableText/70">{originalPercent.toFixed(0)}%</div>
         </div>
         <div className="ps-[14px]">
-          <div className="flex items-center gap-[6px] text-[12px] text-textItemBlur">
+          <div className="flex items-center gap-[6px] text-[12px] text-newTableText/70">
             <span className="w-[7px] h-[7px] rounded-full bg-[#32d583]" />
             Reshared
           </div>
           <div className="mt-[4px] text-[28px] leading-[32px] font-semibold">{formatNumber(reshared)}</div>
-          <div className="mt-[2px] text-[12px] text-textItemBlur">{resharedPercent.toFixed(0)}%</div>
+          <div className="mt-[2px] text-[12px] text-newTableText/70">{resharedPercent.toFixed(0)}%</div>
         </div>
       </div>
     </div>
@@ -196,28 +321,36 @@ const InsightCard: FC<{
   label: string
   value: string | number
   detail?: string
-  accent?: "purple" | "green" | "blue" | "orange"
-}> = ({ label, value, detail, accent = "purple" }) => {
+  accent?: "purple" | "green" | "blue" | "orange" | "red" | "gray"
+  sparklineData?: AnalyticsDataItem["data"]
+}> = ({ label, value, detail, accent = "purple", sparklineData }) => {
   const accentClass = {
     purple: "bg-[#612bd3]",
     green: "bg-[#32d583]",
     blue: "bg-[#1d9bf0]",
     orange: "bg-[#f79009]",
+    red: "bg-[#f04438]",
+    gray: "bg-[#98a2b3]",
   }[accent]
 
   return (
-    <div className="rounded-[12px] border border-newTableBorder bg-newTableHeader p-[16px]">
-      <div className="flex items-center gap-[8px] text-[13px] font-medium text-customColor18">
-        <span className={clsx("h-[7px] w-[7px] rounded-full", accentClass)} />
-        {label}
+    <div className="rounded-[12px] border border-newTableBorder bg-newTableHeader p-[18px]">
+      <div className="flex items-start justify-between gap-[12px]">
+        <div>
+          <div className="flex items-center gap-[8px] text-[13px] font-medium text-newTableText/75">
+            <span className={clsx("h-[7px] w-[7px] rounded-full", accentClass)} />
+            {label}
+          </div>
+          <div className="mt-[10px] text-[28px] leading-[34px] font-semibold text-newTableText">{value}</div>
+        </div>
+        <MiniSparkline data={sparklineData} accent={accent} />
       </div>
-      <div className="mt-[10px] text-[28px] leading-[34px] font-semibold text-newTableText">{value}</div>
-      {detail && <div className="mt-[6px] text-[12px] leading-[18px] text-customColor18">{detail}</div>}
+      {detail && <div className="mt-[8px] text-[12px] leading-[19px] text-newTableText/70">{detail}</div>}
     </div>
   )
 }
 
-const ConfidenceBadge: FC<{ value?: string }> = ({ value }) => {
+const ConfidenceBadge: FC<{ value?: string; samples?: number }> = ({ value, samples }) => {
   if (!value) {
     return null
   }
@@ -227,60 +360,79 @@ const ConfidenceBadge: FC<{ value?: string }> = ({ value }) => {
       ? "border-[#32d583]/25 bg-[#32d583]/10 text-[#0f9f5f]"
       : value === "Medium"
       ? "border-[#f79009]/20 bg-[#fff7ed] text-[#b54708]"
-      : "border-newTableBorder bg-newBgColorInner text-customColor18"
+      : "border-newTableBorder bg-newBgColorInner text-newTableText/70"
 
   return (
     <span
       className={clsx("inline-flex h-[24px] shrink-0 items-center rounded-full border px-[9px] text-[11px] font-semibold leading-none", className)}
     >
-      {value} confidence
+      {value} confidence{samples ? ` · ${samples} samples` : ""}
     </span>
   )
 }
 
 const PatternCard: FC<{ item?: AnalyticsDataItem; title: string; type?: "bar" | "horizontalBar" }> = ({ item, title, type = "bar" }) => {
+  const [showDetails, setShowDetails] = useState(true)
+
   if (!item) {
     return null
   }
 
   const topRows = (item.data || []).slice(0, 3)
+  const samples = totalSamples(item)
 
   return (
-    <div className="rounded-[12px] border border-newTableBorder bg-newTableHeader p-[16px]">
-      <div className="flex items-start justify-between gap-[12px]">
-        <div>
-          <div className="text-[15px] font-semibold text-newTableText">{title}</div>
-          {item.insight && <div className="mt-[5px] text-[13px] leading-[19px] text-customColor18">{item.insight}</div>}
+    <div className="flex h-full flex-col rounded-[12px] border border-newTableBorder bg-newTableHeader p-[18px]">
+      <div className="flex min-h-[80px] items-start justify-between gap-[16px] xl:min-h-[118px]">
+        <div className="min-w-0">
+          <div className="text-[15px] font-semibold leading-[22px] text-newTableText">{title}</div>
         </div>
-        <ConfidenceBadge value={item.confidence} />
+        <ConfidenceBadge value={item.confidence} samples={samples} />
       </div>
-      <div className="mt-[14px] h-[170px]">
-        <ChartSocial data={normalizeChartData(item.data)} type={type} color="purple" labelLimit={type === "horizontalBar" ? 34 : 22} />
+      <div className="h-[168px]">
+        <ChartSocial
+          data={normalizeChartData(item.data)}
+          type={type}
+          color="purple"
+          labelLimit={type === "horizontalBar" ? 34 : 22}
+          hideXAxisLabels={type === "bar"}
+        />
       </div>
-      <div className="mt-[12px] grid gap-[7px]">
-        {topRows.map((row) => (
-          <div
-            key={row.label || row.date}
-            className="flex items-center justify-between gap-[10px] rounded-[8px] bg-newBgColorInner px-[10px] py-[7px]"
-          >
-            <div className="min-w-0">
-              <div className="truncate text-[12px] font-semibold text-newTableText">{row.label || row.date}</div>
-              <div className="text-[11px] text-customColor18">{row.count ? `Total ${row.count} posts` : "Posts analyzed"}</div>
+      <div className="mt-[16px] flex items-center justify-between gap-[12px]">
+        {item.recommendation && (
+          <div className="rounded-[8px] bg-[#612bd3]/10 px-[12px] py-[9px] text-[12px] leading-[19px] text-newTableText">{item.recommendation}</div>
+        )}
+        <button
+          type="button"
+          onClick={() => setShowDetails((current) => !current)}
+          className="ml-auto shrink-0 rounded-[7px] border border-newTableBorder bg-newBgColorInner px-[9px] py-[6px] text-[12px] font-semibold text-newTableText/75 hover:text-newTableText"
+        >
+          {showDetails ? "Hide details" : "View details"}
+        </button>
+      </div>
+      {showDetails && (
+        <div className="mt-[14px] grid gap-[9px]">
+          {topRows.map((row) => (
+            <div
+              key={row.label || row.date}
+              className="flex items-center justify-between gap-[12px] rounded-[8px] bg-newBgColorInner px-[12px] py-[9px]"
+            >
+              <div className="min-w-0">
+                <div className="truncate text-[12px] font-semibold text-newTableText">{row.label || row.date}</div>
+                <div className="text-[11px] text-newTableText/65">{row.count ? `${row.count} samples` : "Posts analyzed"}</div>
+              </div>
+              <div className="shrink-0 text-right">
+                <div className="text-[12px] font-semibold tabular-nums">{formatNumber(row.total)}</div>
+                {typeof row.vsAverage === "number" && (
+                  <div className={clsx("text-[11px]", row.vsAverage >= 0 ? "text-[#32d583]" : "text-[#f04438]")}>
+                    {row.vsAverage >= 0 ? "+" : ""}
+                    {row.vsAverage}%
+                  </div>
+                )}
+              </div>
             </div>
-            <div className="shrink-0 text-right">
-              <div className="text-[12px] font-semibold">{formatNumber(row.total)}</div>
-              {typeof row.vsAverage === "number" && (
-                <div className={clsx("text-[11px]", row.vsAverage >= 0 ? "text-[#32d583]" : "text-[#f97066]")}>
-                  {row.vsAverage >= 0 ? "+" : ""}
-                  {row.vsAverage}%
-                </div>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
-      {item.recommendation && (
-        <div className="mt-[12px] rounded-[8px] bg-[#612bd3]/10 p-[10px] text-[12px] leading-[18px] text-newTableText">{item.recommendation}</div>
+          ))}
+        </div>
       )}
     </div>
   )
@@ -306,11 +458,11 @@ const TopPostsTable: FC<{ item?: AnalyticsDataItem }> = ({ item }) => {
   }
 
   return (
-    <div className="rounded-[12px] border border-newTableBorder bg-newTableHeader p-[16px]">
-      <div className="flex flex-col gap-[12px] lg:flex-row lg:items-center lg:justify-between">
+    <div className="rounded-[12px] border border-newTableBorder bg-newTableHeader p-[18px]">
+      <div className="flex flex-col gap-[14px] lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <div className="text-[17px] font-semibold text-white">Top posts by engagement</div>
-          <div className="mt-[5px] text-[13px] text-customColor18">{item.insight}</div>
+          <div className="text-[17px] font-semibold text-newTableText dark:text-white">Top posts by engagement</div>
+          <div className="mt-[8px] text-[13px] leading-[20px] text-newTableText/70">{item.insight}</div>
         </div>
         <div className="flex flex-wrap gap-[6px]">
           {[
@@ -326,7 +478,7 @@ const TopPostsTable: FC<{ item?: AnalyticsDataItem }> = ({ item }) => {
               onClick={() => setSortBy(value as any)}
               className={clsx(
                 "rounded-[7px] border px-[9px] py-[5px] text-[12px] font-semibold",
-                sortBy === value ? "border-[#612bd3] bg-[#612bd3] text-white" : "border-newTableBorder bg-newBgColorInner text-customColor18",
+                sortBy === value ? "border-[#612bd3] bg-[#612bd3] text-white" : "border-newTableBorder bg-newBgColorInner text-newTableText/70",
               )}
             >
               {label}
@@ -334,8 +486,8 @@ const TopPostsTable: FC<{ item?: AnalyticsDataItem }> = ({ item }) => {
           ))}
         </div>
       </div>
-      <div className="mt-[14px] overflow-hidden rounded-[10px] border border-newTableBorder">
-        <div className="grid grid-cols-[minmax(0,1fr)_88px_88px_80px_96px] gap-[10px] bg-newBgColorInner px-[12px] py-[9px] text-[11px] font-semibold uppercase tracking-[0.06em] text-customColor18">
+      <div className="mt-[18px] overflow-hidden rounded-[10px] border border-newTableBorder">
+        <div className="grid grid-cols-[minmax(0,1fr)_96px_96px_88px_104px] gap-[14px] bg-newBgColorInner px-[16px] py-[12px] text-[11px] font-semibold uppercase tracking-[0.06em] text-newTableText/70">
           <div>Post</div>
           <div className="text-right">Eng.</div>
           <div className="text-right">Comments</div>
@@ -345,24 +497,65 @@ const TopPostsTable: FC<{ item?: AnalyticsDataItem }> = ({ item }) => {
         {rows.map((row, index) => (
           <div
             key={`${row.label}-${index}`}
-            className="grid grid-cols-[minmax(0,1fr)_88px_88px_80px_96px] gap-[10px] border-t border-newTableBorder px-[12px] py-[10px] text-[13px]"
+            className={clsx(
+              "grid grid-cols-[minmax(0,1fr)_96px_96px_88px_104px] gap-[14px] border-t border-newTableBorder px-[16px] py-[16px] text-[13px] transition-colors hover:bg-[#612bd3]/5",
+              index % 2 === 1 && "bg-newBgColorInner/50",
+            )}
           >
             <div className="min-w-0">
-              <div className="truncate font-semibold text-newTableText">{row.label}</div>
-              <div className="mt-[3px] truncate text-[12px] text-customColor18">
+              <div className="truncate text-[13px] font-semibold leading-[18px] text-newTableText">{row.label}</div>
+              <div className="mt-[7px] truncate text-[12px] leading-[17px] text-newTableText/65">
                 {row.hookStyle} · {row.publishedAt}
               </div>
             </div>
-            <div className="text-right font-semibold">{formatNumber(row.total)}</div>
-            <div className="text-right">{formatNumber(row.comments)}</div>
-            <div className="text-right">{formatNumber(row.reposts)}</div>
-            <div className="capitalize text-customColor18">{row.format}</div>
+            <div className="text-right font-semibold tabular-nums text-newTableText">{formatNumber(row.total)}</div>
+            <div className="text-right tabular-nums text-newTableText/75">{formatNumber(row.comments)}</div>
+            <div className="text-right tabular-nums text-newTableText/75">{formatNumber(row.reposts)}</div>
+            <div className="capitalize text-newTableText/70">{row.format}</div>
           </div>
         ))}
       </div>
       {item.recommendation && (
-        <div className="mt-[12px] rounded-[8px] bg-[#612bd3]/10 p-[10px] text-[12px] leading-[18px] text-newTableText">{item.recommendation}</div>
+        <div className="mt-[16px] rounded-[8px] bg-[#612bd3]/10 p-[12px] text-[12px] leading-[19px] text-newTableText">{item.recommendation}</div>
       )}
+    </div>
+  )
+}
+
+const AnalyticsSection: FC<{ title: string; children: ReactNode }> = ({ title, children }) => (
+  <section className="flex flex-col gap-[16px]">
+    <div className="flex items-center gap-[10px]">
+      <div className="h-[1px] flex-1 bg-newTableBorder" />
+      <h2 className="shrink-0 text-[13px] font-semibold uppercase tracking-[0.08em] text-newTableText/75">{title}</h2>
+      <div className="h-[1px] flex-1 bg-newTableBorder" />
+    </div>
+    {children}
+  </section>
+)
+
+const KeyTakeawaysBar: FC<{
+  averageEngagement?: string | number
+  bestFormat?: string
+  bestTime?: string
+  recommendedTopic?: string
+}> = ({ averageEngagement, bestFormat, bestTime, recommendedTopic }) => {
+  const items = [
+    ["Avg engagement", averageEngagement || "0"],
+    ["Best format", formatPatternLabel(bestFormat)],
+    ["Best time", bestTime || "Not enough data"],
+    ["Recommended topic", recommendedTopic || "Not enough data"],
+  ]
+
+  return (
+    <div className="sticky top-0 z-20 rounded-[12px] border border-[#612bd3]/25 bg-newTableHeader/95 p-[12px] shadow-[0_10px_28px_rgba(0,0,0,0.18)] backdrop-blur">
+      <div className="grid grid-cols-2 gap-[10px] lg:grid-cols-4">
+        {items.map(([label, value]) => (
+          <div key={label} className="rounded-[8px] bg-newBgColorInner px-[12px] py-[10px]">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.06em] text-newTableText/65">{label}</div>
+            <div className="mt-[3px] truncate text-[13px] font-semibold text-newTableText">{value}</div>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
@@ -378,107 +571,154 @@ const LinkedinAnalyticsView: FC<{ data: AnalyticsDataItem[] }> = ({ data }) => {
   const comments = item("total_comments")
   const reposts = item("total_reposts")
   const reactions = item("total_reactions")
+  const mediaPerformance = item("media_type_performance")
+  const lengthPerformance = item("post_length_performance")
+  const postingTimePerformance = item("posting_day_time_performance")
+  const topicPerformance = item("topic_performance")
+  const hookPerformance = item("hook_style_performance")
+  const ctaPerformance = item("cta_style_performance")
+  const originalResharedPerformance = item("original_vs_reshared_performance")
+  const reactionTypeBreakdown = withLinkedinReactionLabels(item("reaction_type_breakdown"))
+  const bestFormat = mediaPerformance?.data?.[0]?.label || mediaPerformance?.data?.[0]?.date
+  const bestTime = postingTimePerformance?.data?.[0]?.label || postingTimePerformance?.data?.[0]?.date
+  const recommendedTopic = topicPerformance?.data?.[0]?.label || topicPerformance?.data?.[0]?.date
+  const trendIsPositive = (trend?.percentageChange || 0) >= 0
+  const trendSparklineData = useMemo(() => periodComparisonSparklineData(trend?.data), [trend?.data])
 
   return (
-    <div className="flex flex-col gap-[16px]">
-      <div className="grid grid-cols-1 gap-[16px] md:grid-cols-2 xl:grid-cols-4">
-        <InsightCard
-          label="Avg engagement/post"
-          value={overview?.meta?.averageEngagement ?? overview?.total ?? "0"}
-          detail={`${overview?.meta?.postsAnalyzed || 0} posts analyzed`}
-          accent="purple"
-        />
-        <InsightCard
-          label="Engagement trend"
-          value={(trend?.percentageChange || 0) >= 0 ? "Improving" : "Declining"}
-          detail={`${trend?.percentageChange || 0}% between period halves`}
-          accent={(trend?.percentageChange || 0) >= 0 ? "green" : "orange"}
-        />
-        <InsightCard
-          label="Best post"
-          value={`${bestPost?.total || 0} engagements`}
-          detail={
-            bestPost?.meta?.vsAverage
-              ? `${bestPost.meta.vsAverage}x your average · Format: ${formatPostFormat(bestPost.meta.format)}`
-              : bestPost?.meta?.format
-              ? `Format: ${formatPostFormat(bestPost.meta.format)}`
-              : undefined
-          }
-          accent="blue"
-        />
-        <InsightCard
-          label="Posting consistency"
-          value={`${postsPerWeek?.total || "0"} / week`}
-          detail={
-            postsPerWeek?.meta?.period
-              ? `Based on ${postsPerWeek.meta.postsAnalyzed || 0} posts from ${postsPerWeek.meta.period}`
-              : "Recent publishing pace"
-          }
-          accent="orange"
-        />
-      </div>
+    <div className="flex flex-col gap-[26px]">
+      <KeyTakeawaysBar
+        averageEngagement={overview?.meta?.averageEngagement ?? overview?.total ?? "0"}
+        bestFormat={bestFormat}
+        bestTime={bestTime}
+        recommendedTopic={recommendedTopic}
+      />
 
-      {nextDecision && (
-        <div className="rounded-[12px] border border-[#612bd3]/30 bg-[#612bd3]/10 p-[18px]">
-          <div className="flex flex-col gap-[12px] lg:flex-row lg:items-start lg:justify-between">
-            <div>
-              <div className="text-[18px] font-semibold text-white">🧠 Based on our analysis, you next post should be..</div>
-              <div className="mt-[8px] max-w-[820px] text-[15px] leading-[23px] text-newTableText">{nextDecision.recommendation}</div>
-              <div className="mt-[8px] text-[13px] text-customColor18">{nextDecision.meta?.why}</div>
-            </div>
-            <ConfidenceBadge value={nextDecision.confidence} />
-          </div>
+      <AnalyticsSection title="Overview">
+        <div className="grid grid-cols-1 gap-[18px] md:grid-cols-2 xl:grid-cols-4">
+          <InsightCard
+            label="Average engagement"
+            value={`${overview?.meta?.averageEngagement ?? overview?.total ?? "0"} / post`}
+            detail={`${overview?.meta?.postsAnalyzed || 0} posts analyzed`}
+            accent="blue"
+          />
+          <InsightCard
+            label={trendIsPositive ? "Engagement is improving" : "Engagement is declining"}
+            value={`${trend?.percentageChange || 0}%`}
+            detail="Change between period halves"
+            accent={trendIsPositive ? "green" : "red"}
+            sparklineData={trendSparklineData}
+          />
+          <InsightCard
+            label="Top post beat your average"
+            value={`${bestPost?.total || 0} engagements`}
+            detail={
+              bestPost?.meta?.vsAverage
+                ? `${bestPost.meta.vsAverage}x your average · Format: ${formatPostFormat(bestPost.meta.format)}`
+                : bestPost?.meta?.format
+                ? `Format: ${formatPostFormat(bestPost.meta.format)}`
+                : undefined
+            }
+            accent="green"
+          />
+          <InsightCard
+            label="Posting pace"
+            value={`${postsPerWeek?.total || "0"} / week`}
+            detail={
+              postsPerWeek?.meta?.period
+                ? `Based on ${postsPerWeek.meta.postsAnalyzed || 0} posts from ${postsPerWeek.meta.period}`
+                : "Recent publishing pace"
+            }
+            accent="orange"
+          />
         </div>
-      )}
 
-      <TopPostsTable item={item("top_posts_by_engagement", "Top 10 posts by engagement")} />
-
-      <div className="grid grid-cols-1 gap-[16px] xl:grid-cols-3">
-        <PatternCard title="Media type performance" item={item("media_type_performance")} />
-        <PatternCard title="Post length performance" item={item("post_length_performance")} />
-        <PatternCard title="Posting day/time performance" item={item("posting_day_time_performance")} type="horizontalBar" />
-      </div>
-
-      <div className="grid grid-cols-1 gap-[16px] xl:grid-cols-3">
-        <PatternCard title="Best topic / pillar" item={item("topic_performance")} />
-        <PatternCard title="Best hook style" item={item("hook_style_performance")} />
-        <PatternCard title="Best CTA style" item={item("cta_style_performance")} />
-      </div>
-
-      <div className="grid grid-cols-1 gap-[16px] xl:grid-cols-3">
-        <InsightCard
-          label="Conversation"
-          value={`${comments?.total || 0} comments`}
-          detail={`Avg ${((responseMix?.meta?.averageComments || 0) as number).toFixed(1)} comments/post`}
-          accent="green"
-        />
-        <InsightCard
-          label="Amplification"
-          value={`${reposts?.total || 0} reposts`}
-          detail={`Avg ${((responseMix?.meta?.averageReposts || 0) as number).toFixed(1)} reposts/post`}
-          accent="blue"
-        />
-        <InsightCard
-          label="Reactions"
-          value={`${reactions?.total || 0} reactions`}
-          detail={`Avg ${((responseMix?.meta?.averageReactions || 0) as number).toFixed(1)} reactions/post`}
-          accent="purple"
-        />
-      </div>
-
-      <div className="grid grid-cols-1 gap-[16px] xl:grid-cols-2">
-        <PatternCard title="Original vs reshared performance" item={item("original_vs_reshared_performance")} />
-        {item("reaction_type_breakdown") && (
-          <div className="flex min-h-[360px] flex-col rounded-[12px] border border-newTableBorder bg-newTableHeader p-[16px]">
-            <div className="text-[15px] font-semibold text-newTableText">Detailed reaction breakdown</div>
-            <div className="flex flex-1 items-center justify-center py-[24px]">
-              <div className="h-[230px] w-full">
-                <ChartSocial data={normalizeChartData(item("reaction_type_breakdown")!.data)} type="doughnut" color="blue" />
+        {nextDecision && (
+          <div className="rounded-[12px] border border-[#612bd3]/30 bg-[#612bd3]/10 p-[20px]">
+            <div className="flex flex-col gap-[14px] lg:flex-row lg:items-start lg:justify-between">
+              <div>
+                <div className="text-[18px] font-semibold text-newTableText dark:text-white">
+                  🧠 Based on our analysis, your next post should be...
+                </div>
+                <div className="mt-[10px] max-w-[820px] text-[15px] leading-[24px] text-newTableText">{nextDecision.recommendation}</div>
+                <div className="mt-[10px] text-[13px] leading-[20px] text-newTableText/70">{nextDecision.meta?.why}</div>
               </div>
+              <ConfidenceBadge value={nextDecision.confidence} />
             </div>
           </div>
         )}
-      </div>
+      </AnalyticsSection>
+
+      <AnalyticsSection title="Top Performing Content">
+        <TopPostsTable item={item("top_posts_by_engagement", "Top 10 posts by engagement")} />
+      </AnalyticsSection>
+
+      <AnalyticsSection title="Optimization Opportunities">
+        <div className="grid grid-cols-1 gap-[18px] xl:grid-cols-3">
+          <PatternCard title={patternConclusion(mediaPerformance, "Best format needs more data")} item={mediaPerformance} />
+          <PatternCard title={patternConclusion(lengthPerformance, "Best length needs more data")} item={lengthPerformance} />
+          <PatternCard
+            title={patternConclusion(postingTimePerformance, "Best posting time needs more data")}
+            item={postingTimePerformance}
+            type="horizontalBar"
+          />
+        </div>
+
+        <div className="grid grid-cols-1 gap-[18px] xl:grid-cols-3">
+          <PatternCard title={patternConclusion(topicPerformance, "Best topic needs more data")} item={topicPerformance} />
+          <PatternCard title={patternConclusion(hookPerformance, "Best hook needs more data")} item={hookPerformance} />
+          <PatternCard title={patternConclusion(ctaPerformance, "Best CTA needs more data")} item={ctaPerformance} />
+        </div>
+      </AnalyticsSection>
+
+      <AnalyticsSection title="Audience Engagement">
+        <div className="grid grid-cols-1 gap-[18px] xl:grid-cols-3">
+          <InsightCard
+            label="Conversation depth"
+            value={`${comments?.total || 0} comments`}
+            detail={`Avg ${((responseMix?.meta?.averageComments || 0) as number).toFixed(1)} comments/post`}
+            accent="green"
+          />
+          <InsightCard
+            label="Audience amplification"
+            value={`${reposts?.total || 0} reposts`}
+            detail={`Avg ${((responseMix?.meta?.averageReposts || 0) as number).toFixed(1)} reposts/post`}
+            accent="blue"
+          />
+          <InsightCard
+            label="Reaction volume"
+            value={`${reactions?.total || 0} reactions`}
+            detail={`Avg ${((responseMix?.meta?.averageReactions || 0) as number).toFixed(1)} reactions/post`}
+            accent="purple"
+          />
+        </div>
+
+        <div className="grid grid-cols-1 gap-[18px] xl:grid-cols-2">
+          <PatternCard title="Original vs reshared avg engagement" item={originalResharedPerformance} />
+          {reactionTypeBreakdown && (
+            <div className="flex min-h-[360px] flex-col rounded-[12px] border border-newTableBorder bg-newTableHeader p-[18px]">
+              <div className="text-[15px] font-semibold text-newTableText">Detailed reaction breakdown</div>
+              <div className="mt-[8px] text-[13px] leading-[20px] text-newTableText/70">Reaction mix across your analyzed posts.</div>
+              <div className="flex flex-1 items-center justify-center py-[24px]">
+                <div className="h-[230px] w-full">
+                  <ChartSocial data={normalizeChartData(reactionTypeBreakdown.data)} type="doughnut" color="blue" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-[8px] border-t border-newTableBorder pt-[14px] sm:grid-cols-3">
+                {reactionTypeBreakdown.data.map((row) => (
+                  <div
+                    key={row.label || row.date}
+                    className="flex items-center justify-between gap-[8px] rounded-[8px] bg-newBgColorInner px-[10px] py-[8px]"
+                  >
+                    <span className="truncate text-[12px] font-semibold text-newTableText">{row.label || row.date}</span>
+                    <span className="shrink-0 text-[12px] tabular-nums text-newTableText/70">{formatNumber(row.total)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </AnalyticsSection>
     </div>
   )
 }
