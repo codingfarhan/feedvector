@@ -135,9 +135,11 @@ export function RegisterAfter({ token, provider }: { token: string; provider: st
     <FormProvider {...form}>
       <form className="flex-1 flex" onSubmit={form.handleSubmit(onSubmit)}>
         <div className="flex flex-col flex-1">
-          <div>
-            <h1 className="text-[40px] font-[500] -tracking-[0.8px] text-start cursor-pointer mb-4">{t("sign_up", "Sign Up")}</h1>
-          </div>
+          {!isAfterProvider && (
+            <div>
+              <h1 className="text-[40px] font-[500] -tracking-[0.8px] text-start cursor-pointer mb-4">{t("sign_up", "Sign Up")}</h1>
+            </div>
+          )}
           {!isAfterProvider && <div className="text-[14px] mt-[32px] mb-[12px]">{t("continue_with", "Continue With")}</div>}
           <div className="flex flex-col">
             {!isAfterProvider &&
@@ -179,28 +181,23 @@ export function RegisterAfter({ token, provider }: { token: string; provider: st
                     />
                   </>
                 )}
-                <Input
-                  label="Company"
-                  translationKey="label_company"
-                  {...form.register("company")}
-                  autoComplete="off"
-                  type="text"
-                  placeholder={t("label_company", "Company")}
-                />
+                <Input label="Workspace Name" {...form.register("company")} autoComplete="off" type="text" placeholder={"Jack's Workspace"} />
               </div>
-              <div className={clsx("text-[12px]")}>
-                {t("by_registering_you_agree_to_our", "By registering you agree to our")}
-                &nbsp;
-                <a href={`https://postiz.com/terms`} className="underline hover:font-bold" rel="nofollow">
-                  {t("terms_of_service", "Terms of Service")}
-                </a>
-                &nbsp;
-                {t("and", "and")}&nbsp;
-                <a href={`https://postiz.com/privacy`} rel="nofollow" className="underline hover:font-bold">
-                  {t("privacy_policy", "Privacy Policy")}
-                </a>
-                &nbsp;
-              </div>
+              {!isAfterProvider && (
+                <div className={clsx("text-[12px]")}>
+                  {t("by_registering_you_agree_to_our", "By registering you agree to our")}
+                  &nbsp;
+                  <a href={`https://postiz.com/terms`} className="underline hover:font-bold" rel="nofollow">
+                    {t("terms_of_service", "Terms of Service")}
+                  </a>
+                  &nbsp;
+                  {t("and", "and")}&nbsp;
+                  <a href={`https://postiz.com/privacy`} rel="nofollow" className="underline hover:font-bold">
+                    {t("privacy_policy", "Privacy Policy")}
+                  </a>
+                  &nbsp;
+                </div>
+              )}
               <div className="text-center mt-6">
                 <div className="w-full flex">
                   <Button type="submit" className="flex-1 rounded-[10px] !h-[52px]" loading={loading}>
