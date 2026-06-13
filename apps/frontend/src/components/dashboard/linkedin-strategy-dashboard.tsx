@@ -15,9 +15,12 @@ import { deleteDialog } from "@gitroom/react/helpers/delete.dialog"
 import { ChevronDownIcon, TrashIcon } from "@gitroom/frontend/components/ui/icons"
 
 type AnalyticsDataItem = {
+  key?: string
   label: string
   total?: string | number
   data?: Array<{ total: number; date: string; label?: string }>
+  recommendation?: string
+  meta?: Record<string, any>
 }
 
 type OnboardingSuggestion = {
@@ -376,6 +379,34 @@ const getAnalyticsValue = (analytics: AnalyticsDataItem[] | undefined, label: st
   }
   const total = item.data?.reduce((sum, point) => sum + point.total, 0) || 0
   return total ? new Intl.NumberFormat().format(total) : "Not enough data yet"
+}
+
+const getAnalyticsItem = (analytics: AnalyticsDataItem[] | undefined, key: string, label?: string) =>
+  analytics?.find((row) => row.key === key || (label && row.label === label))
+
+const formatDashboardPatternValue = (value: unknown) => {
+  if (typeof value === "undefined" || value === null || value === "") {
+    return "Not enough data yet"
+  }
+
+  const text = String(value)
+  if (text === "Not enough data") {
+    return "Not enough data yet"
+  }
+
+  if (["image", "text", "article", "document", "video", "multi-image"].includes(text)) {
+    return `${text
+      .split("-")
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(" ")} post`
+  }
+
+  return text
+}
+
+const getAnalyticsPatternValue = (analytics: AnalyticsDataItem[] | undefined, key: string, label?: string) => {
+  const item = getAnalyticsItem(analytics, key, label)
+  return formatDashboardPatternValue(item?.total ?? item?.data?.[0]?.label ?? item?.data?.[0]?.date)
 }
 
 const pad = (value: number) => String(value).padStart(2, "0")
@@ -876,19 +907,29 @@ export const LinkedinStrategyDashboard = () => {
     toaster,
   ])
 
-  const analyticsSummary = useMemo(
-    () => ({
-      bestTopic: "Sales process breakdowns",
-      bestHook: "Contrarian one-liners",
-      bestFormat: "Problem diagnosis posts",
-      bestCta: "Specific peer questions",
-      bestTime: "Thursday morning",
-      weakestArea: "Product education posts",
+  const analyticsSummary = useMemo(() => {
+    const bestTopic = getAnalyticsPatternValue(analytics, "topic_performance", "Best topic / pillar")
+    const bestHook = getAnalyticsPatternValue(analytics, "hook_style_performance", "Best hook style")
+    const bestFormat = getAnalyticsPatternValue(analytics, "media_type_performance", "Media type performance")
+    const bestCta = getAnalyticsPatternValue(analytics, "cta_style_performance", "Best CTA style")
+    const nextDecision = getAnalyticsItem(analytics, "next_content_decision", "Your next content decision")
+    const hasNextDecision = nextDecision?.recommendation && nextDecision.recommendation !== "Not enough data"
+    const hasEnoughPatterns = [bestTopic, bestHook, bestFormat, bestCta].some((value) => value !== "Not enough data yet")
+
+    return {
+      bestTopic,
+      bestHook,
+      bestFormat,
+      bestCta,
       totalEngagement: getAnalyticsValue(analytics, "Total engagement"),
       averageEngagement: getAnalyticsValue(analytics, "Average engagement per post"),
-    }),
-    [analytics],
-  )
+      nextAction: hasNextDecision
+        ? nextDecision.recommendation!
+        : hasEnoughPatterns
+        ? `Use the strongest detected pattern for your next post: ${bestTopic} topic, ${bestHook} hook, ${bestFormat} format, and ${bestCta} CTA.`
+        : "Connect LinkedIn and publish more posts to unlock a reliable next action.",
+    }
+  }, [analytics])
 
   const topEngagementPosts = useMemo(
     () =>
@@ -1373,29 +1414,31 @@ export const LinkedinStrategyDashboard = () => {
           </div>
         </div>
 
-        {/* <div className="grid gap-[16px] xl:grid-cols-[minmax(0,0.85fr)_minmax(0,0.85fr)_minmax(0,1.3fr)]">
-          <DashboardCard title="What's working">
-            <div className="mt-[12px] grid grid-cols-2 gap-[8px] text-[13px]">
-              {[
-                ["Best topic", analyticsSummary.bestTopic],
-                ["Best hook", analyticsSummary.bestHook],
-                ["Best format", analyticsSummary.bestFormat],
-                ["Best CTA", analyticsSummary.bestCta],
-                ["Engagement", analyticsSummary.totalEngagement],
-                ["Avg/post", analyticsSummary.averageEngagement],
-              ].map(([label, value]) => (
-                <div key={label} className="rounded-[9px] bg-newBgColorInner p-[10px]">
-                  <div className="text-[11px] text-customColor18">{label}</div>
-                  <div className="mt-[4px] font-semibold">{value}</div>
+        <DashboardCard title="What's working so far" className="p-[18px]">
+          <div className="mt-[16px] grid grid-cols-1 gap-[14px] sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
+            {[
+              ["Best topic", analyticsSummary.bestTopic, "Subject area to repeat", "text-[#8b5cf6]", "bg-[#8b5cf6]/10"],
+              ["Best hook", analyticsSummary.bestHook, "Opening style to use", "text-[#8b5cf6]", "bg-[#8b5cf6]/10"],
+              ["Best format", analyticsSummary.bestFormat, "Post format to favor", "text-[#0a66c2]", "bg-[#0a66c2]/10"],
+              ["Best CTA", analyticsSummary.bestCta, "Closing style to test", "text-[#f59e0b]", "bg-[#f59e0b]/10"],
+              ["Engagement", analyticsSummary.totalEngagement, "Total recent signal", "text-[#22c55e]", "bg-[#22c55e]/10"],
+              ["Avg/post", analyticsSummary.averageEngagement, "Baseline per post", "text-[#22c55e]", "bg-[#22c55e]/10"],
+            ].map(([label, value, helper, accentText, accentBg]) => (
+              <div key={label} className="min-h-[118px] rounded-[12px] border border-newTableBorder bg-newBgColorInner p-[14px]">
+                <div className={`inline-flex rounded-full px-[8px] py-[3px] text-[11px] font-semibold uppercase tracking-[0.08em] ${accentText} ${accentBg}`}>
+                  {label}
                 </div>
-              ))}
-            </div>
-            <div className="mt-[10px] rounded-[9px] bg-newBgColorInner p-[10px] text-[13px] leading-[19px] text-customColor18">
-              Next action: make product posts more story-led and less feature-led.
-            </div>
-          </DashboardCard>
+                <div className={`mt-[12px] line-clamp-2 text-[16px] font-semibold leading-[22px] ${accentText}`}>{value}</div>
+                <div className="mt-[8px] text-[12px] leading-[17px] text-customColor18">{helper}</div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-[14px] rounded-[12px] border border-[#8b5cf6]/20 bg-[#8b5cf6]/10 p-[13px] text-[13px] leading-[19px] text-newTextColor">
+            <span className="font-semibold text-[#8b5cf6]">💡 Remember this for your next post:</span> {analyticsSummary.nextAction}
+          </div>
+        </DashboardCard>
 
-          <DashboardCard title="Voice and positioning">
+        {/* <DashboardCard title="Voice and positioning">
             <div className="mt-[12px] grid gap-[8px]">
               {[
                 ["Voice match", "82%"],
@@ -1420,8 +1463,7 @@ export const LinkedinStrategyDashboard = () => {
                 </div>
               ))}
             </div>
-          </DashboardCard>
-        </div> */}
+          </DashboardCard> */}
 
         {!linkedinIntegration && (
           <div className="rounded-[12px] border border-[#f59e0b]/30 bg-[#f59e0b]/10 p-[14px] text-[14px] text-newTextColor">
