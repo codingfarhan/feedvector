@@ -1,5 +1,6 @@
 import {
   IsArray,
+  IsBoolean,
   IsIn,
   IsNumber,
   IsOptional,
@@ -55,6 +56,19 @@ export class OnboardingSuggestionDto {
     message: 'Please enter a valid website URL',
   })
   websiteUrl?: string;
+}
+
+export class OnboardingWorkspaceSetupDto {
+  @IsString()
+  integrationId!: string;
+
+  @IsOptional()
+  @IsBoolean()
+  refreshLinkedin?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  refreshWebsite?: boolean;
 }
 
 export class OnboardingReviewedSuggestionDto {

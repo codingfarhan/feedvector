@@ -103,6 +103,18 @@ export class IntegrationService {
     return this._integrationRepository.updateOnboardingProfile(org, id, data);
   }
 
+  getLatestOnboardingProfile(
+    org: string,
+    excludeIntegrationId?: string,
+    rootInternalId?: string | null
+  ) {
+    return this._integrationRepository.getLatestOnboardingProfile(
+      org,
+      excludeIntegrationId,
+      rootInternalId
+    );
+  }
+
   checkPreviousConnections(org: string, id: string) {
     return this._integrationRepository.checkPreviousConnections(org, id);
   }

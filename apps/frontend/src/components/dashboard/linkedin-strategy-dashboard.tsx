@@ -2,7 +2,7 @@
 
 import useSWR from "swr"
 import dayjs from "dayjs"
-import { ReactNode, useCallback, useMemo, useState } from "react"
+import { ReactNode, useCallback, useEffect, useMemo, useState } from "react"
 import { useFetch } from "@gitroom/helpers/utils/custom.fetch"
 import { LoadingComponent } from "@gitroom/frontend/components/layout/loading"
 import { expandPosts } from "@gitroom/helpers/utils/posts.list.minify"
@@ -92,6 +92,7 @@ type RepurposeGenerateInput = {
 const LATEST_LINKEDIN_POSTS_KEY = -1
 const WEEKLY_CAMPAIGN_SOURCE = "weekly_dashboard_campaign"
 const ONBOARDING_CAMPAIGN_SOURCE = "onboarding"
+const CONTENT_CONTEXT_STALE_MS = 15 * 24 * 60 * 60 * 1000
 
 const repurposeSources: RepurposeSourceConfig[] = [
   {
@@ -167,6 +168,12 @@ const ROLE_PILLAR_BOOSTS: Record<string, string[]> = {
 }
 
 const uniqueValues = (values: string[]) => values.filter((value, index) => value && values.indexOf(value) === index)
+
+const isOlderThan = (date?: string | Date | null, ttlMs = CONTENT_CONTEXT_STALE_MS) => {
+  if (!date) return false
+  const value = new Date(date).getTime()
+  return Number.isFinite(value) && Date.now() - value > ttlMs
+}
 
 const getDashboardPillars = (role?: string, goal?: string) =>
   uniqueValues([...(GOAL_PILLARS[goal || ""] || GOAL_PILLARS["Build authority"]), ...(ROLE_PILLAR_BOOSTS[role || ""] || [])]).slice(0, 4)
@@ -654,6 +661,10 @@ export const LinkedinStrategyDashboard = () => {
   const [buildingCampaign, setBuildingCampaign] = useState(false)
   const [postView, setPostView] = useState<"suggested" | "all">("suggested")
   const [nextWeekExpandedOverride, setNextWeekExpandedOverride] = useState<boolean | null>(null)
+  const [workspaceSetupRunning, setWorkspaceSetupRunning] = useState(false)
+  const [workspaceSetupError, setWorkspaceSetupError] = useState("")
+  const [skipWorkspaceSetup, setSkipWorkspaceSetup] = useState(false)
+  const [refreshingContentContext, setRefreshingContentContext] = useState(false)
   const today = useMemo(() => new Date(), [])
   const currentWeekStart = useMemo(() => getMonday(today), [today])
   const currentWeekStartKey = useMemo(() => formatDateKey(currentWeekStart), [currentWeekStart])
@@ -696,16 +707,29 @@ export const LinkedinStrategyDashboard = () => {
     () => integrations.find((integration: any) => integration.identifier === "linkedin" && !integration.inBetweenSteps),
     [integrations],
   )
+  const needsWorkspaceSetup =
+    !!linkedinIntegration &&
+    !!user?.onboardingCompletedAt &&
+    linkedinIntegration.onboardingProfileReady === false &&
+    !skipWorkspaceSetup
+  const linkedinProfileStale = !!linkedinIntegration?.onboardingProfileReady && isOlderThan(linkedinIntegration.linkedinProfileFetchedAt)
+  const websiteProfileStale =
+    !!linkedinIntegration?.onboardingWebsiteUrl && isOlderThan(linkedinIntegration.onboardingWebsiteScrapedAt)
+  const hasStaleContentContext = linkedinProfileStale || websiteProfileStale
+  const staleContextLabels = [
+    linkedinProfileStale ? "LinkedIn profile" : "",
+    websiteProfileStale ? "website" : "",
+  ].filter(Boolean)
 
   const loadAnalytics = useCallback(async () => {
-    if (!linkedinIntegration || isFreeAnalyticsLocked) {
+    if (!linkedinIntegration || isFreeAnalyticsLocked || needsWorkspaceSetup) {
       return []
     }
     return (await fetch(`/analytics/${linkedinIntegration.id}?date=${LATEST_LINKEDIN_POSTS_KEY}`)).json()
-  }, [fetch, isFreeAnalyticsLocked, linkedinIntegration])
+  }, [fetch, isFreeAnalyticsLocked, linkedinIntegration, needsWorkspaceSetup])
 
   const { data: analytics = [] } = useSWR(
-    linkedinIntegration && !isFreeAnalyticsLocked ? `/analytics-${linkedinIntegration.id}-${LATEST_LINKEDIN_POSTS_KEY}` : null,
+    linkedinIntegration && !isFreeAnalyticsLocked && !needsWorkspaceSetup ? `/analytics-${linkedinIntegration.id}-${LATEST_LINKEDIN_POSTS_KEY}` : null,
     loadAnalytics,
     {
       revalidateOnFocus: false,
@@ -729,7 +753,7 @@ export const LinkedinStrategyDashboard = () => {
     isLoading: weeklyPostsLoading,
     mutate: mutateWeeklyPosts,
   } = useSWR(
-    linkedinIntegration ? `/dashboard-weekly-campaign-${linkedinIntegration.id}-${currentWeekStartKey}-${nextWeekStartKey}` : null,
+    linkedinIntegration && !needsWorkspaceSetup ? `/dashboard-weekly-campaign-${linkedinIntegration.id}-${currentWeekStartKey}-${nextWeekStartKey}` : null,
     loadWeeklyPosts,
     {
       revalidateOnFocus: false,
@@ -799,6 +823,76 @@ export const LinkedinStrategyDashboard = () => {
   const isNextWeekCampaign = campaignStartKey === nextWeekStartKey
   const canBuildCampaign =
     !!linkedinIntegration && !!onboardingRole && !!onboardingAudience && !!onboardingGoal && !hasCampaignPosts && !buildingCampaign
+  const setupWorkspace = useCallback(async (options?: { refreshLinkedin?: boolean; refreshWebsite?: boolean }) => {
+    if (!linkedinIntegration || workspaceSetupRunning) {
+      return false
+    }
+
+    setWorkspaceSetupRunning(true)
+    setWorkspaceSetupError("")
+    try {
+      const response = await fetch("/user/onboarding/setup-workspace", {
+        method: "POST",
+        body: JSON.stringify({
+          integrationId: linkedinIntegration.id,
+          refreshLinkedin: !!options?.refreshLinkedin,
+          refreshWebsite: !!options?.refreshWebsite,
+        }),
+      })
+
+      if (!response.ok) {
+        const text = await response.text().catch(() => "")
+        throw new Error(text || "Could not set up your workspace")
+      }
+
+      await mutateIntegrations()
+      return true
+    } catch (error: any) {
+      setWorkspaceSetupError(error?.message || "Could not set up your workspace")
+      return false
+    } finally {
+      setWorkspaceSetupRunning(false)
+    }
+  }, [fetch, linkedinIntegration, mutateIntegrations, workspaceSetupRunning])
+
+  useEffect(() => {
+    if (!needsWorkspaceSetup || workspaceSetupRunning || workspaceSetupError) {
+      return
+    }
+
+    setupWorkspace()
+  }, [needsWorkspaceSetup, setupWorkspace, workspaceSetupError, workspaceSetupRunning])
+
+  const refreshStaleContentContext = useCallback(async () => {
+    if (!hasStaleContentContext || refreshingContentContext) {
+      return
+    }
+
+    setRefreshingContentContext(true)
+    try {
+      const refreshed = await setupWorkspace({
+        refreshLinkedin: linkedinProfileStale,
+        refreshWebsite: websiteProfileStale,
+      })
+      if (refreshed) {
+        await mutateIntegrations()
+        toaster.show("Workspace context refreshed", "success")
+      } else {
+        setWorkspaceSetupError("")
+        toaster.show("Could not refresh workspace context", "warning")
+      }
+    } finally {
+      setRefreshingContentContext(false)
+    }
+  }, [
+    hasStaleContentContext,
+    linkedinProfileStale,
+    mutateIntegrations,
+    refreshingContentContext,
+    setupWorkspace,
+    toaster,
+    websiteProfileStale,
+  ])
 
   const buildWeeklyCampaign = useCallback(async () => {
     if (!linkedinIntegration) {
@@ -1231,6 +1325,58 @@ export const LinkedinStrategyDashboard = () => {
     )
   }
 
+  if (needsWorkspaceSetup) {
+    return (
+      <div className="flex flex-1 flex-col overflow-auto bg-newBgColorInner p-[18px] text-newTextColor">
+        <div className="mx-auto flex min-h-[calc(100dvh-120px)] w-full max-w-[920px] items-center justify-center">
+          <section className="w-full rounded-[16px] border border-newTableBorder bg-newTableHeader p-[24px] text-center shadow-[0_18px_50px_rgba(0,0,0,0.08)]">
+            <div className="mx-auto flex h-[56px] w-[56px] items-center justify-center rounded-full bg-[#8b5cf6]/10 text-[#8b5cf6]">
+              {workspaceSetupRunning ? (
+                <span className="h-[22px] w-[22px] animate-spin rounded-full border-2 border-[#8b5cf6]/20 border-t-[#8b5cf6]" />
+              ) : (
+                "in"
+              )}
+            </div>
+            <h1 className="mt-[18px] text-[26px] font-semibold leading-[32px]">Setting up your workspace</h1>
+            <p className="mx-auto mt-[10px] max-w-[620px] text-[14px] leading-[21px] text-customColor18">
+              We’re refreshing your LinkedIn profile context and restoring your content strategy from your completed onboarding setup.
+            </p>
+
+            {workspaceSetupError && (
+              <div className="mx-auto mt-[16px] max-w-[620px] rounded-[12px] border border-[#ef4444]/30 bg-[#ef4444]/10 p-[13px] text-[13px] leading-[19px] text-newTextColor">
+                {workspaceSetupError}
+              </div>
+            )}
+
+            <div className="mt-[20px] flex flex-col items-center justify-center gap-[10px] sm:flex-row">
+              {workspaceSetupError ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setupWorkspace()}
+                    className="inline-flex h-[42px] items-center justify-center rounded-[9px] bg-[#8b5cf6] px-[16px] text-[14px] font-semibold text-white disabled:opacity-60"
+                    disabled={workspaceSetupRunning}
+                  >
+                    Retry setup
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSkipWorkspaceSetup(true)}
+                    className="inline-flex h-[42px] items-center justify-center rounded-[9px] border border-newTableBorder bg-newBgColorInner px-[16px] text-[14px] font-semibold text-newTextColor"
+                  >
+                    Continue with limited dashboard
+                  </button>
+                </>
+              ) : (
+                <div className="text-[13px] font-medium text-customColor18">This usually takes a few seconds.</div>
+              )}
+            </div>
+          </section>
+        </div>
+      </div>
+    )
+  }
+
   if (!linkedinIntegration) {
     const hasAnyConnectedChannel = activeIntegrations.length > 0
     const canConnectLinkedin = !freeChannelLimitReached
@@ -1330,6 +1476,25 @@ export const LinkedinStrategyDashboard = () => {
             </div>
           </div>
         </section>
+
+        {hasStaleContentContext && (
+          <section className="flex flex-col gap-[12px] rounded-[12px] border border-[#f59e0b]/30 bg-[#f59e0b]/10 p-[14px] sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <div className="text-[14px] font-semibold text-newTextColor">Refresh your workspace context</div>
+              <p className="mt-[4px] text-[13px] leading-[19px] text-customColor18">
+                Your {staleContextLabels.join(" and ")} data is more than 15 days old. Refresh it so FeedVector can keep your strategy and post ideas current.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={refreshStaleContentContext}
+              disabled={refreshingContentContext || workspaceSetupRunning}
+              className="inline-flex h-[40px] shrink-0 items-center justify-center rounded-[9px] border border-[#f59e0b]/40 bg-newTableHeader px-[14px] text-[13px] font-semibold text-newTextColor disabled:opacity-60"
+            >
+              {refreshingContentContext || workspaceSetupRunning ? "Refreshing..." : "Refresh outdated data"}
+            </button>
+          </section>
+        )}
 
         <div className="grid gap-[16px] xl:grid-cols-[minmax(0,1fr)_360px]">
           <DashboardCard

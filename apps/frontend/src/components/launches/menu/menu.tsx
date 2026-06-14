@@ -597,7 +597,8 @@ export const Menu: FC<{
             </div>
           )}
 
-          {canDisable && (
+          {/* Disable channel is intentionally hidden for now. */}
+          {false && canDisable && (
             <div
               className="flex gap-[12px] items-center py-[8px] px-[10px]"
               onClick={disableChannel}

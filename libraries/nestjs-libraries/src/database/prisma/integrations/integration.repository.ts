@@ -155,6 +155,56 @@ export class IntegrationRepository {
     });
   }
 
+  async getLatestOnboardingProfile(
+    org: string,
+    excludeIntegrationId?: string,
+    rootInternalId?: string | null
+  ) {
+    const profiles = await this._integration.model.integration.findMany({
+      where: {
+        organizationId: org,
+        providerIdentifier: 'linkedin',
+        ...(excludeIntegrationId ? { id: { not: excludeIntegrationId } } : {}),
+        ...(rootInternalId
+          ? {
+              OR: [
+                { rootInternalId },
+                { internalId: rootInternalId },
+                { internalId: { endsWith: `_${rootInternalId}` } },
+              ],
+            }
+          : {}),
+      },
+      orderBy: [{ updatedAt: 'desc' }, { createdAt: 'desc' }],
+      take: 10,
+      select: {
+        id: true,
+        onboardingRole: true,
+        onboardingAudience: true,
+        onboardingGoal: true,
+        onboardingWebsiteUrl: true,
+        linkedinProfileContext: true,
+        linkedinProfileFetchedAt: true,
+        onboardingWebsiteProfile: true,
+        onboardingWebsitePages: true,
+        onboardingWebsiteScrapeStatus: true,
+        onboardingWebsiteScrapeError: true,
+        onboardingWebsiteScrapedAt: true,
+        onboardingContentPillars: true,
+      } as any,
+    });
+
+    return profiles.find(
+      (profile) =>
+        profile.onboardingRole ||
+        profile.onboardingAudience ||
+        profile.onboardingGoal ||
+        profile.linkedinProfileContext ||
+        profile.onboardingWebsiteProfile ||
+        profile.onboardingContentPillars
+    );
+  }
+
   async setTimes(org: string, id: string, times: IntegrationTimeDto) {
     return this._integration.model.integration.update({
       select: {
@@ -208,12 +258,11 @@ export class IntegrationRepository {
       params.picture = await this.storage.uploadSimple(params.picture);
     }
 
-    const existing = await this._integration.model.integration.findUnique({
+    const existing = await this._integration.model.integration.findFirst({
       where: {
-        organizationId_internalId: {
-          organizationId: params.organizationId!,
-          internalId: params.internalId,
-        },
+        organizationId: params.organizationId!,
+        internalId: params.internalId,
+        deletedAt: null,
       },
     });
 
@@ -284,60 +333,74 @@ export class IntegrationRepository {
           ]),
         }
       : {};
-    const upsert = await this._integration.model.integration.upsert({
-      where: {
-        organizationId_internalId: {
+    const rootInternalId = internalId.split('_').pop();
+    const activeIntegration =
+      await this._integration.model.integration.findFirst({
+        where: {
           internalId,
           organizationId: org,
+          deletedAt: null,
         },
-      },
-      create: {
-        type: type as any,
-        name,
-        providerIdentifier: provider,
-        token,
-        profile: username,
-        ...(picture ? { picture } : {}),
-        inBetweenSteps: isBetweenSteps,
-        refreshToken,
-        ...(expiresIn
-          ? { tokenExpiration: new Date(Date.now() + expiresIn * 1000) }
-          : {}),
-        internalId,
-        ...postTimes,
-        organizationId: org,
-        refreshNeeded: false,
-        rootInternalId: internalId.split('_').pop(),
-        ...(customInstanceDetails ? { customInstanceDetails } : {}),
-        additionalSettings: additionalSettings
-          ? JSON.stringify(additionalSettings)
-          : '[]',
-      },
-      update: {
-        ...(additionalSettings
-          ? { additionalSettings: JSON.stringify(additionalSettings) }
-          : {}),
-        ...(customInstanceDetails ? { customInstanceDetails } : {}),
-        type: type as any,
-        ...(!refresh
-          ? {
-              inBetweenSteps: isBetweenSteps,
-            }
-          : {}),
-        ...(picture ? { picture } : {}),
-        profile: username,
-        providerIdentifier: provider,
-        token,
-        refreshToken,
-        ...(expiresIn
-          ? { tokenExpiration: new Date(Date.now() + expiresIn * 1000) }
-          : {}),
-        internalId,
-        organizationId: org,
-        deletedAt: null,
-        refreshNeeded: false,
-      },
-    });
+        orderBy: {
+          updatedAt: 'desc',
+        },
+      });
+    const integrationData: any = {
+      ...(additionalSettings
+        ? { additionalSettings: JSON.stringify(additionalSettings) }
+        : {}),
+      ...(customInstanceDetails ? { customInstanceDetails } : {}),
+      type: type as any,
+      ...(!refresh
+        ? {
+            inBetweenSteps: isBetweenSteps,
+          }
+        : {}),
+      ...(picture ? { picture } : {}),
+      profile: username,
+      providerIdentifier: provider,
+      token,
+      refreshToken,
+      ...(expiresIn
+        ? { tokenExpiration: new Date(Date.now() + expiresIn * 1000) }
+        : {}),
+      internalId,
+      organizationId: org,
+      rootInternalId,
+      deletedAt: null,
+      refreshNeeded: false,
+    };
+    const upsert = activeIntegration
+      ? await this._integration.model.integration.update({
+          where: {
+            id: activeIntegration.id,
+          },
+          data: integrationData,
+        })
+      : await this._integration.model.integration.create({
+          data: {
+            type: type as any,
+            name,
+            providerIdentifier: provider,
+            token,
+            profile: username,
+            ...(picture ? { picture } : {}),
+            inBetweenSteps: isBetweenSteps,
+            refreshToken,
+            ...(expiresIn
+              ? { tokenExpiration: new Date(Date.now() + expiresIn * 1000) }
+              : {}),
+            internalId,
+            ...postTimes,
+            organizationId: org,
+            refreshNeeded: false,
+            rootInternalId,
+            ...(customInstanceDetails ? { customInstanceDetails } : {}),
+            additionalSettings: additionalSettings
+              ? JSON.stringify(additionalSettings)
+              : '[]',
+          },
+        });
 
     if (oneTimeToken) {
       const rootId =
@@ -356,6 +419,7 @@ export class IntegrationRepository {
             not: upsert.id,
           },
           rootInternalId: rootId,
+          deletedAt: null,
         },
         data: {
           token,

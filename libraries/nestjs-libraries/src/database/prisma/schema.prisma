@@ -360,7 +360,7 @@ model Integration {
   plugs                         Plugs[]
   posts                         Post[]
 
-  @@unique([organizationId, internalId])
+  @@index([organizationId, internalId])
   @@index([rootInternalId])
   @@index([organizationId])
   @@index([providerIdentifier])

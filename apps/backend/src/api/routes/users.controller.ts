@@ -25,6 +25,7 @@ import { EmailNotificationsDto } from '@gitroom/nestjs-libraries/dtos/users/emai
 import {
   OnboardingCompleteDto,
   OnboardingSuggestionDto,
+  OnboardingWorkspaceSetupDto,
   RepurposePostDto,
 } from '@gitroom/nestjs-libraries/dtos/users/onboarding.goal.dto';
 import { HttpForbiddenException } from '@gitroom/nestjs-libraries/services/exception.filter';
@@ -275,6 +276,178 @@ export class UsersController {
       onboardingRole,
       onboardingAudience
     );
+  }
+
+  @Post('/onboarding/setup-workspace')
+  async setupOnboardingWorkspace(
+    @GetOrgFromRequest() organization: Organization,
+    @Body() body: OnboardingWorkspaceSetupDto
+  ) {
+    const selectedIntegration = await this.getOnboardingLinkedInIntegration(
+      organization,
+      body.integrationId
+    );
+    const onboardingState = await this._orgService.getOnboardingState(
+      organization.id
+    );
+    const onboardingRole = String(
+      onboardingState?.onboardingPersonaOther ||
+        onboardingState?.onboardingPersona ||
+        ''
+    ).trim();
+    const onboardingAudience = String(
+      onboardingState?.onboardingAudience || ''
+    ).trim();
+    const onboardingGoal = String(onboardingState?.onboardingGoal || '').trim();
+
+    if (!onboardingState?.onboardingCompletedAt) {
+      throw new HttpException('Please complete onboarding first', 400);
+    }
+
+    if (!onboardingRole || !onboardingAudience || !onboardingGoal) {
+      throw new HttpException(
+        'Your onboarding context is incomplete. Please complete onboarding again.',
+        400
+      );
+    }
+
+    const currentContext = selectedIntegration as typeof selectedIntegration & {
+      linkedinProfileContext?: any;
+      onboardingRole?: string | null;
+      onboardingAudience?: string | null;
+      onboardingGoal?: string | null;
+      onboardingWebsiteUrl?: string | null;
+      onboardingWebsiteProfile?: any;
+      onboardingWebsitePages?: any;
+      onboardingWebsiteScrapeStatus?: string | null;
+      onboardingWebsiteScrapeError?: string | null;
+      onboardingWebsiteScrapedAt?: Date | null;
+      onboardingContentPillars?: any;
+    };
+
+    const hasCurrentContext =
+      !!currentContext.linkedinProfileContext &&
+      !!currentContext.onboardingRole &&
+      !!currentContext.onboardingAudience &&
+      !!currentContext.onboardingGoal;
+
+    if (hasCurrentContext && !body.refreshLinkedin && !body.refreshWebsite) {
+      return {
+        ready: true,
+        integrationId: selectedIntegration.id,
+        reusedExistingContext: true,
+      };
+    }
+
+    const previousContext =
+      (await this._integrationService.getLatestOnboardingProfile(
+        organization.id,
+        selectedIntegration.id,
+        selectedIntegration.rootInternalId ||
+          selectedIntegration.internalId.split('_').pop()
+      )) as
+        | {
+            onboardingRole?: string | null;
+            onboardingAudience?: string | null;
+            onboardingGoal?: string | null;
+            onboardingWebsiteUrl?: string | null;
+            onboardingWebsiteProfile?: any;
+            onboardingWebsitePages?: any;
+            onboardingWebsiteScrapeStatus?: string | null;
+            onboardingWebsiteScrapeError?: string | null;
+            onboardingWebsiteScrapedAt?: Date | null;
+            onboardingContentPillars?: any;
+          }
+        | undefined;
+
+    const linkedinProfileContext =
+      !body.refreshLinkedin && currentContext.linkedinProfileContext
+        ? currentContext.linkedinProfileContext
+        : await this._onboardingEnrichmentService.enrichLinkedinProfile(
+            selectedIntegration.profile
+          );
+    const previousPillars =
+      previousContext?.onboardingRole === onboardingRole &&
+      previousContext?.onboardingGoal === onboardingGoal &&
+      Array.isArray(previousContext?.onboardingContentPillars)
+        ? previousContext.onboardingContentPillars
+        : undefined;
+    const contentPillars: string[] =
+      previousPillars && previousPillars.length > 0
+        ? previousPillars
+        : this._onboardingPostSuggestionService.assignPillars(
+            onboardingRole,
+            onboardingGoal,
+            true
+          );
+    const existingWebsiteUrl =
+      currentContext.onboardingWebsiteUrl ||
+      previousContext?.onboardingWebsiteUrl ||
+      undefined;
+    const refreshedWebsiteContext =
+      body.refreshWebsite && existingWebsiteUrl
+        ? await this._onboardingEnrichmentService.scrapeWebsite(
+            existingWebsiteUrl
+          )
+        : undefined;
+    const websiteUrl =
+      refreshedWebsiteContext?.normalizedUrl || existingWebsiteUrl;
+    const websiteProfile =
+      refreshedWebsiteContext?.profile ||
+      currentContext.onboardingWebsiteProfile ||
+      previousContext?.onboardingWebsiteProfile ||
+      null;
+    const websitePages =
+      refreshedWebsiteContext?.pages ||
+      currentContext.onboardingWebsitePages ||
+      previousContext?.onboardingWebsitePages ||
+      null;
+    const websiteScrapeStatus = websiteUrl
+      ? refreshedWebsiteContext
+        ? 'success'
+        : currentContext.onboardingWebsiteScrapeStatus ||
+          previousContext?.onboardingWebsiteScrapeStatus ||
+          'success'
+      : null;
+    const websiteScrapeError = websiteUrl
+      ? refreshedWebsiteContext
+        ? null
+        : currentContext.onboardingWebsiteScrapeError ||
+          previousContext?.onboardingWebsiteScrapeError ||
+          null
+      : null;
+    const websiteScrapedAt = websiteUrl
+      ? refreshedWebsiteContext
+        ? new Date()
+        : currentContext.onboardingWebsiteScrapedAt ||
+          previousContext?.onboardingWebsiteScrapedAt ||
+          null
+      : null;
+
+    await this._integrationService.updateOnboardingProfile(
+      organization.id,
+      selectedIntegration.id,
+      {
+        role: onboardingRole,
+        audience: onboardingAudience,
+        goal: onboardingGoal,
+        websiteUrl,
+        linkedinProfileContext,
+        websiteProfile,
+        websitePages,
+        websiteScrapeStatus,
+        websiteScrapeError,
+        websiteScrapedAt,
+        contentPillars,
+      }
+    );
+
+    return {
+      ready: true,
+      integrationId: selectedIntegration.id,
+      reusedWebsiteContext: !!websiteProfile,
+      contentPillars,
+    };
   }
 
   @Post('/repurpose-post')
