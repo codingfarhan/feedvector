@@ -13,6 +13,7 @@ import { AddEditModal } from "@gitroom/frontend/components/new-launch/add.edit.m
 import { ExistingDataContextProvider } from "@gitroom/frontend/components/launches/helpers/use.existing.data"
 import { deleteDialog } from "@gitroom/react/helpers/delete.dialog"
 import { ChevronDownIcon, TrashIcon } from "@gitroom/frontend/components/ui/icons"
+import { useAddProvider } from "@gitroom/frontend/components/launches/add.provider.component"
 
 type AnalyticsDataItem = {
   key?: string
@@ -672,11 +673,24 @@ export const LinkedinStrategyDashboard = () => {
     return integrations
   }, [fetch])
 
-  const { data: integrations = [], isLoading: integrationsLoading } = useSWR("analytics-list", loadIntegrations, {
+  const {
+    data: integrations = [],
+    isLoading: integrationsLoading,
+    mutate: mutateIntegrations,
+  } = useSWR("analytics-list", loadIntegrations, {
     revalidateOnFocus: false,
     revalidateOnReconnect: false,
     revalidateIfStale: false,
   })
+
+  const openAddProvider = useAddProvider(() => mutateIntegrations())
+  const isFreeAnalyticsLocked = user?.tier?.current === "FREE" && !user?.trialActive
+  const activeIntegrations = useMemo(
+    () => integrations.filter((integration: any) => !integration.disabled && !integration.inBetweenSteps),
+    [integrations],
+  )
+  const channelLimit = user?.totalChannels || 1
+  const freeChannelLimitReached = user?.tier?.current === "FREE" && activeIntegrations.length >= channelLimit
 
   const linkedinIntegration = useMemo(
     () => integrations.find((integration: any) => integration.identifier === "linkedin" && !integration.inBetweenSteps),
@@ -684,14 +698,14 @@ export const LinkedinStrategyDashboard = () => {
   )
 
   const loadAnalytics = useCallback(async () => {
-    if (!linkedinIntegration) {
+    if (!linkedinIntegration || isFreeAnalyticsLocked) {
       return []
     }
     return (await fetch(`/analytics/${linkedinIntegration.id}?date=${LATEST_LINKEDIN_POSTS_KEY}`)).json()
-  }, [fetch, linkedinIntegration])
+  }, [fetch, isFreeAnalyticsLocked, linkedinIntegration])
 
   const { data: analytics = [] } = useSWR(
-    linkedinIntegration ? `/analytics-${linkedinIntegration.id}-${LATEST_LINKEDIN_POSTS_KEY}` : null,
+    linkedinIntegration && !isFreeAnalyticsLocked ? `/analytics-${linkedinIntegration.id}-${LATEST_LINKEDIN_POSTS_KEY}` : null,
     loadAnalytics,
     {
       revalidateOnFocus: false,
@@ -908,6 +922,18 @@ export const LinkedinStrategyDashboard = () => {
   ])
 
   const analyticsSummary = useMemo(() => {
+    if (isFreeAnalyticsLocked) {
+      return {
+        bestTopic: "Upgrade required",
+        bestHook: "Upgrade required",
+        bestFormat: "Upgrade required",
+        bestCta: "Upgrade required",
+        totalEngagement: "Locked",
+        averageEngagement: "Locked",
+        nextAction: "Upgrade to Pro to see what is working from your LinkedIn posts and get analytics-backed content recommendations.",
+      }
+    }
+
     const bestTopic = getAnalyticsPatternValue(analytics, "topic_performance", "Best topic / pillar")
     const bestHook = getAnalyticsPatternValue(analytics, "hook_style_performance", "Best hook style")
     const bestFormat = getAnalyticsPatternValue(analytics, "media_type_performance", "Media type performance")
@@ -929,7 +955,7 @@ export const LinkedinStrategyDashboard = () => {
         ? `Use the strongest detected pattern for your next post: ${bestTopic} topic, ${bestHook} hook, ${bestFormat} format, and ${bestCta} CTA.`
         : "Connect LinkedIn and publish more posts to unlock a reliable next action.",
     }
-  }, [analytics])
+  }, [analytics, isFreeAnalyticsLocked])
 
   const topEngagementPosts = useMemo(
     () =>
@@ -1205,6 +1231,58 @@ export const LinkedinStrategyDashboard = () => {
     )
   }
 
+  if (!linkedinIntegration) {
+    const hasAnyConnectedChannel = activeIntegrations.length > 0
+    const canConnectLinkedin = !freeChannelLimitReached
+
+    return (
+      <div className="flex flex-1 flex-col overflow-auto bg-newBgColorInner p-[18px] text-newTextColor">
+        <div className="mx-auto flex min-h-[calc(100dvh-120px)] w-full max-w-[920px] items-center justify-center">
+          <section className="w-full rounded-[16px] border border-newTableBorder bg-newTableHeader p-[24px] text-center shadow-[0_18px_50px_rgba(0,0,0,0.08)]">
+            <div className="mx-auto flex h-[54px] w-[54px] items-center justify-center rounded-full bg-[#0a66c2]/10 text-[#0a66c2]">
+              in
+            </div>
+            <h1 className="mt-[18px] text-[26px] font-semibold leading-[32px]">Connect LinkedIn to build your dashboard</h1>
+            <p className="mx-auto mt-[10px] max-w-[620px] text-[14px] leading-[21px] text-customColor18">
+              Your dashboard strategy, suggested posts, repurposing ideas, and “what’s working” insights are based on a connected personal LinkedIn profile.
+            </p>
+            {hasAnyConnectedChannel && freeChannelLimitReached && (
+              <div className="mx-auto mt-[16px] max-w-[620px] rounded-[12px] border border-[#f59e0b]/30 bg-[#f59e0b]/10 p-[13px] text-[13px] leading-[19px] text-newTextColor">
+                Your free plan already has its allowed channel connected. You can keep it, but you’ll need to disconnect a channel or upgrade before adding LinkedIn.
+              </div>
+            )}
+            <div className="mt-[20px] flex flex-col items-center justify-center gap-[10px] sm:flex-row">
+              {canConnectLinkedin ? (
+                <button
+                  type="button"
+                  onClick={openAddProvider}
+                  className="inline-flex h-[42px] items-center justify-center rounded-[9px] bg-[#8b5cf6] px-[16px] text-[14px] font-semibold text-white"
+                >
+                  Connect LinkedIn
+                </button>
+              ) : (
+                <a
+                  href="/billing"
+                  className="inline-flex h-[42px] items-center justify-center rounded-[9px] bg-[#8b5cf6] px-[16px] text-[14px] font-semibold text-white"
+                >
+                  Upgrade to add LinkedIn
+                </a>
+              )}
+              {hasAnyConnectedChannel && (
+                <a
+                  href="/calendar"
+                  className="inline-flex h-[42px] items-center justify-center rounded-[9px] border border-newTableBorder bg-newBgColorInner px-[16px] text-[14px] font-semibold text-newTextColor"
+                >
+                  Manage existing channels
+                </a>
+              )}
+            </div>
+          </section>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="flex flex-1 flex-col overflow-auto bg-newBgColorInner p-[18px] text-newTextColor">
       <div className="mx-auto flex w-full max-w-[1320px] flex-col gap-[16px]">
@@ -1464,12 +1542,6 @@ export const LinkedinStrategyDashboard = () => {
               ))}
             </div>
           </DashboardCard> */}
-
-        {!linkedinIntegration && (
-          <div className="rounded-[12px] border border-[#f59e0b]/30 bg-[#f59e0b]/10 p-[14px] text-[14px] text-newTextColor">
-            Connect a personal LinkedIn profile to replace the mocked strategy inputs with account-specific recommendations.
-          </div>
-        )}
 
         <section className="flex flex-col gap-[12px] rounded-[12px] border border-newTableBorder bg-newTableHeader p-[16px] py-[40px] text-center">
           <div>

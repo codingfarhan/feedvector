@@ -232,6 +232,15 @@ export class OrganizationRepository {
       where: {
         id,
       },
+      include: {
+        subscription: {
+          select: {
+            totalChannels: true,
+            subscriptionTier: true,
+            deletedAt: true,
+          },
+        },
+      },
     });
   }
 

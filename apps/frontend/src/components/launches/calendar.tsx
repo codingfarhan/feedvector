@@ -581,6 +581,7 @@ export const CalendarColumn: FC<{
   } = useCalendar();
   const modal = useModals();
   const fetch = useFetch();
+  const toaster = useToaster();
 
   // Use shared post actions hook
   const { editPost, deletePost, openStatistics, openMissingRelease } = usePostActions();
@@ -802,6 +803,19 @@ export const CalendarColumn: FC<{
   }, [integrations, getDate, sets, signature]);
 
   const addProvider = useAddProvider();
+  const openAddProvider = useCallback(() => {
+    const activeIntegrations = (integrations || []).filter((integration: any) => !integration.disabled && !integration.inBetweenSteps);
+    const channelLimit = user?.totalChannels || 1;
+    const limitReached = user?.tier?.current === 'FREE' && activeIntegrations.length >= channelLimit;
+
+    if (limitReached) {
+      toaster.show('Free plan is limited to 1 channel. Upgrade to Pro to add more.', 'warning');
+      return;
+    }
+
+    addProvider();
+  }, [addProvider, integrations, toaster, user?.tier?.current, user?.totalChannels]);
+
   return (
     <div
       className={clsx(
@@ -880,7 +894,7 @@ export const CalendarColumn: FC<{
         {!isBeforeNow && (
           <div
             className="pb-[2.5px] px-[5px] flex-1 flex"
-            onClick={integrations.length ? addModal : addProvider}
+            onClick={integrations.length ? addModal : openAddProvider}
           >
             <div
               className={clsx(

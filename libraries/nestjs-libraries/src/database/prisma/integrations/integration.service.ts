@@ -26,6 +26,7 @@ import { AutopostRepository } from '@gitroom/nestjs-libraries/database/prisma/au
 import { RefreshIntegrationService } from '@gitroom/nestjs-libraries/integrations/refresh.integration.service';
 import { TemporalService } from 'nestjs-temporal-core';
 import { OrganizationService } from '@gitroom/nestjs-libraries/database/prisma/organizations/organization.service';
+import { pricing } from '@gitroom/nestjs-libraries/database/prisma/subscriptions/pricing';
 
 dayjs.extend(utc);
 
@@ -133,18 +134,30 @@ export class IntegrationService {
     customInstanceDetails?: string
   ) {
     const organization = await this._organizationService.getOrgById(org);
-    if (organization?.isTrailing) {
+    const shouldEnforceChannelLimit =
+      !!process.env.RAZORPAY_KEY_ID || !!process.env.STRIPE_PUBLISHABLE_KEY;
+    const totalChannels =
+      (organization as any)?.subscription?.deletedAt === null
+        ? (organization as any)?.subscription?.totalChannels
+        : undefined;
+    const channelLimit = totalChannels || pricing.FREE.channel;
+
+    if (shouldEnforceChannelLimit || organization?.isTrailing) {
       const integrations =
         await this._integrationRepository.getIntegrationsList(org);
       const hasExisting = integrations.some(
         (integration) =>
           !integration.deletedAt && integration.internalId === internalId
       );
-      const totalActive = integrations.filter((i) => !i.deletedAt).length;
-      if (!hasExisting && totalActive >= 2) {
+      const totalActive = integrations.filter(
+        (integration) => !integration.deletedAt && !integration.disabled
+      ).length;
+      if (!hasExisting && totalActive >= channelLimit) {
         throw new HttpException(
           {
-            msg: 'Trial accounts can connect up to 2 channels. Upgrade to Pro to add more.',
+            msg: `Your plan can connect up to ${channelLimit} ${
+              channelLimit === 1 ? 'channel' : 'channels'
+            }. Upgrade to Pro to add more.`,
           },
           HttpStatus.NOT_ACCEPTABLE
         );

@@ -723,8 +723,16 @@ const LinkedinAnalyticsView: FC<{ data: AnalyticsDataItem[] }> = ({ data }) => {
   )
 }
 
-const EmptyState: FC<{ onRefresh: () => void }> = ({ onRefresh }) => {
+const EmptyState: FC<{ integration: Integration; date: number; onRefresh: () => void }> = ({ integration, date, onRefresh }) => {
   const t = useT()
+  const identifier = (integration as any)?.identifier
+  const shouldShowNoPostData = ["linkedin", "linkedin-page", "x"].includes(identifier) && !(integration as any)?.refreshNeeded
+  const dateLabel =
+    date === -1
+      ? t("latest_50_posts", "latest 50 posts")
+      : t("last_n_days", "last {{days}} days", {
+          days: date,
+        })
 
   return (
     <div className="col-span-full flex flex-col items-center justify-center py-[48px] px-[24px] bg-newTableHeader border border-newTableBorder rounded-[12px]">
@@ -734,19 +742,32 @@ const EmptyState: FC<{ onRefresh: () => void }> = ({ onRefresh }) => {
           <path d="M12 8v4l2 2" />
         </svg>
       </div>
+      {shouldShowNoPostData && (
+        <div className="mb-[6px] text-[18px] font-semibold text-newTextColor">{t("no_post_data_available", "No post data available")}</div>
+      )}
       <p className="text-[15px] text-newTableText text-center mb-[12px]">
-        {t("this_channel_needs_to_be_refreshed", "This channel needs to be refreshed to display analytics")}
+        {shouldShowNoPostData
+          ? t("no_post_related_data_for_range", "No post-related data available for {{dateLabel}}.", {
+              dateLabel,
+            })
+          : t("this_channel_needs_to_be_refreshed", "This channel needs to be refreshed to display analytics")}
       </p>
-      <button
-        onClick={onRefresh}
-        className="inline-flex items-center gap-[6px] px-[16px] py-[8px] text-[14px] font-medium text-white bg-[#612bd3] hover:bg-[#5023b8] rounded-[8px] transition-colors"
-      >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M23 4v6h-6M1 20v-6h6" />
-          <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" />
-        </svg>
-        {t("refresh_channel", "Refresh Channel")}
-      </button>
+      {shouldShowNoPostData ? (
+        <div className="max-w-[520px] text-center text-[13px] leading-[19px] text-newTableText/70">
+          {t("try_wider_date_range_or_publish_more", "Try a wider date range or publish more posts to see analytics here.")}
+        </div>
+      ) : (
+        <button
+          onClick={onRefresh}
+          className="inline-flex items-center gap-[6px] px-[16px] py-[8px] text-[14px] font-medium text-white bg-[#612bd3] hover:bg-[#5023b8] rounded-[8px] transition-colors"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M23 4v6h-6M1 20v-6h6" />
+            <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" />
+          </svg>
+          {t("refresh_channel", "Refresh Channel")}
+        </button>
+      )}
     </div>
   )
 }
@@ -883,7 +904,9 @@ export const RenderAnalytics: FC<{
         <LinkedinAnalyticsView data={dataToRender} />
       ) : (
         <div className={clsx("grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-[16px]", onFreePlan && "blur-sm pointer-events-none select-none")}>
-          {!onFreePlan && dataToRender?.length === 0 && <EmptyState onRefresh={refreshChannel(integration as any)} />}
+          {!onFreePlan && dataToRender?.length === 0 && (
+            <EmptyState integration={integration} date={date} onRefresh={refreshChannel(integration as any)} />
+          )}
           {dataToRender?.map((item: AnalyticsDataItem, index: number) => (
             <AnalyticsCard key={`analytics-${index}`} item={item} total={totals?.[index]} index={index} />
           ))}

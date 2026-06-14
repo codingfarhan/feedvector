@@ -49,9 +49,11 @@ export const AddProviderButton: FC<{
   const toaster = useToaster()
   const { data: integrations } = useIntegrationList()
   const isFreePlan = user?.tier.current == "FREE"
-  const limitReached = isFreePlan && (integrations || []).length >= 2
+  const activeIntegrations = (integrations || []).filter((integration: any) => !integration.disabled && !integration.inBetweenSteps)
+  const channelLimit = user?.totalChannels || 1
+  const limitReached = isFreePlan && activeIntegrations.length >= channelLimit
 
-  const limitMessage = t("free_plan_channel_limit", "Free plan is limited to 2 channels. Upgrade to Pro to add more.")
+  const limitMessage = t("free_plan_channel_limit", "Free plan is limited to 1 channel. Upgrade to Pro to add more.")
 
   const handleAddClick = useCallback(() => {
     if (limitReached) {
