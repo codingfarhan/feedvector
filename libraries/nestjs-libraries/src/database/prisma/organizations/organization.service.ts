@@ -178,4 +178,18 @@ export class OrganizationService {
       personaOther
     );
   }
+
+  updateContentProfile(
+    orgId: string,
+    role: string,
+    audience: string,
+    goal: string
+  ) {
+    return this._organizationRepository.updateContentProfile(
+      orgId,
+      role,
+      audience,
+      goal
+    );
+  }
 }

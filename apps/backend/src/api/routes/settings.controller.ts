@@ -5,14 +5,17 @@ import { CheckPolicies } from '@gitroom/backend/services/auth/permissions/permis
 import { OrganizationService } from '@gitroom/nestjs-libraries/database/prisma/organizations/organization.service';
 import { AddTeamMemberDto } from '@gitroom/nestjs-libraries/dtos/settings/add.team.member.dto';
 import { ShortlinkPreferenceDto } from '@gitroom/nestjs-libraries/dtos/settings/shortlink-preference.dto';
+import { ContentProfileDto } from '@gitroom/nestjs-libraries/dtos/settings/content-profile.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { AuthorizationActions, Sections } from '@gitroom/backend/services/auth/permissions/permission.exception.class';
+import { IntegrationService } from '@gitroom/nestjs-libraries/database/prisma/integrations/integration.service';
 
 @ApiTags('Settings')
 @Controller('/settings')
 export class SettingsController {
   constructor(
-    private _organizationService: OrganizationService
+    private _organizationService: OrganizationService,
+    private _integrationService: IntegrationService
   ) {}
 
   @Get('/team')
@@ -63,5 +66,30 @@ export class SettingsController {
       org.id,
       body.shortlink
     );
+  }
+
+  @Post('/content-profile')
+  @CheckPolicies([AuthorizationActions.Create, Sections.ADMIN])
+  async updateContentProfile(
+    @GetOrgFromRequest() org: Organization,
+    @Body() body: ContentProfileDto
+  ) {
+    const role = body.role.trim();
+    const audience = body.audience.trim();
+    const goal = body.goal.trim();
+    const profile = await this._organizationService.updateContentProfile(
+      org.id,
+      role,
+      audience,
+      goal
+    );
+    await this._integrationService.updateContentProfile(
+      org.id,
+      role,
+      audience,
+      goal
+    );
+
+    return profile;
   }
 }

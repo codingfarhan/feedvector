@@ -579,6 +579,32 @@ export class OrganizationRepository {
     });
   }
 
+  updateContentProfile(
+    orgId: string,
+    role: string,
+    audience: string,
+    goal: string
+  ) {
+    return this._organization.model.organization.update({
+      where: {
+        id: orgId,
+      },
+      data: {
+        onboardingGoal: goal,
+        onboardingPersona: role,
+        onboardingPersonaOther: null,
+        onboardingAudience: audience,
+      } as any,
+      select: {
+        onboardingGoal: true,
+        onboardingPersona: true,
+        onboardingPersonaOther: true,
+        onboardingAudience: true,
+        onboardingCompletedAt: true,
+      } as any,
+    });
+  }
+
   async getOrganizationOwnerUserId(organizationId: string) {
     const org = await this._organization.model.organization.findUnique({
       where: {

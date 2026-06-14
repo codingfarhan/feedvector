@@ -205,6 +205,22 @@ export class IntegrationRepository {
     );
   }
 
+  updateContentProfile(org: string, role: string, audience: string, goal: string) {
+    return this._integration.model.integration.updateMany({
+      where: {
+        organizationId: org,
+        providerIdentifier: 'linkedin',
+        deletedAt: null,
+      },
+      data: {
+        onboardingRole: role,
+        onboardingAudience: audience,
+        onboardingGoal: goal,
+        onboardingContentPillars: null,
+      } as any,
+    });
+  }
+
   async setTimes(org: string, id: string, times: IntegrationTimeDto) {
     return this._integration.model.integration.update({
       select: {

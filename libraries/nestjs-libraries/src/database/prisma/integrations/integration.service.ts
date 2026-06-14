@@ -115,6 +115,15 @@ export class IntegrationService {
     );
   }
 
+  updateContentProfile(org: string, role: string, audience: string, goal: string) {
+    return this._integrationRepository.updateContentProfile(
+      org,
+      role,
+      audience,
+      goal
+    );
+  }
+
   checkPreviousConnections(org: string, id: string) {
     return this._integrationRepository.checkPreviousConnections(org, id);
   }
