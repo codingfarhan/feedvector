@@ -15,6 +15,7 @@ import { z } from 'zod';
 import { MediaService } from '@gitroom/nestjs-libraries/database/prisma/media/media.service';
 import { UploadFactory } from '@gitroom/nestjs-libraries/upload/upload.factory';
 import { GeneratorDto } from '@gitroom/nestjs-libraries/dtos/generator/generator.dto';
+import { LINKEDIN_HUMAN_WRITING_GUIDELINES } from '@gitroom/nestjs-libraries/openai/openai.service';
 
 const tools = !process.env.TAVILY_API_KEY
   ? []
@@ -225,6 +226,8 @@ export class AgentGraphService {
         - Use simple english
         - Make sure you add "\n" between the lines
         - Don't take the hook from "request of the user"
+        - Follow these writing guidelines:
+        {writingGuidelines}
 
         <!-- BEGIN request of the user -->
         {request}
@@ -245,6 +248,7 @@ export class AgentGraphService {
         request: state.messages[0].content,
         hooks: state.popularPosts!.map((p) => p.hook).join('\n'),
         text: state.fresearch,
+        writingGuidelines: LINKEDIN_HUMAN_WRITING_GUIDELINES,
       });
 
     return {
@@ -280,6 +284,8 @@ export class AgentGraphService {
         - Try to put some call to action at the end of the post
         - Make sure you add "\n" between the lines
         - Add "\n" after every "."
+        - Follow these writing guidelines:
+        {writingGuidelines}
         
         Hook:
         {hook}
@@ -296,6 +302,7 @@ export class AgentGraphService {
         hook: state.hook,
         request: state.messages[0].content,
         information: state.fresearch,
+        writingGuidelines: LINKEDIN_HUMAN_WRITING_GUIDELINES,
       });
 
     return {

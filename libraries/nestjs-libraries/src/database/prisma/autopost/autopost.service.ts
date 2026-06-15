@@ -19,6 +19,7 @@ import { TypedSearchAttributes } from '@temporalio/common';
 import {
   organizationId,
 } from '@gitroom/nestjs-libraries/temporal/temporal.search.attribute';
+import { LINKEDIN_HUMAN_WRITING_GUIDELINES } from '@gitroom/nestjs-libraries/openai/openai.service';
 const parser = new Parser();
 
 interface WorkflowChannelsState {
@@ -225,6 +226,8 @@ export class AutopostService {
         - Add line breaks between sentences (\\n) 
         - Don't add hashtags
         - Add emojis when needed
+        - Follow these writing guidelines:
+        {writingGuidelines}
         
         'description':
         {content}
@@ -233,6 +236,7 @@ export class AutopostService {
       .pipe(structuredOutput)
       .invoke({
         content: description,
+        writingGuidelines: LINKEDIN_HUMAN_WRITING_GUIDELINES,
       });
 
     return {

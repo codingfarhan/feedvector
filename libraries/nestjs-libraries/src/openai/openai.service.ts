@@ -54,6 +54,34 @@ const RepurposedLinkedinPostPrompt = z.object({
   angle: z.string(),
 });
 
+export const LINKEDIN_HUMAN_WRITING_GUIDELINES = `
+Write in clear, natural language. Never use em dashes.
+
+Avoid AI cliches, corporate jargon, vague hype, exaggerated claims, generic metaphors, fake drama, and unnecessary rhetorical questions.
+
+Avoid words and phrases such as: unlock, unleash, elevate, delve, deep dive, navigate, robust, seamless, cutting-edge, game-changer, supercharge, revolutionize, harness, foster, crucial, compelling, resonate, secret sauce, scroll-stopper, moves the needle, here's the truth, here's the deal, here's the kicker, picture this, in today's fast-paced world, in today's era, in the era of, in the digital age, and let's dive in.
+
+Avoid templated sentence patterns such as:
+- "It's not about X. It's about Y."
+- "It's not just X. It's Y."
+- "That's not X. That's Y."
+- "Not because X. But because Y."
+- "Not by doing X, but by doing Y."
+- "No X. No Y. Just Z."
+- "Focused. Simple. Effective."
+- "The result? Higher engagement."
+- "And the solution? Better content."
+- Repeated one- or two-word sentences used for artificial emphasis.
+
+Do not use unnecessary analogies such as calling marketing a battlefield, chess match, journey, engine, secret weapon, or perfect storm.
+
+Prefer plain words, concrete details, varied sentence lengths, normal paragraph structure, specific examples, and direct opinions.
+
+Do not invent personal stories, customer quotes, results, numbers, lessons, or experiences. Every factual or personal claim must come from the provided context.
+
+Write like an informed person explaining something clearly, not like a motivational speaker or marketing template.
+`.trim();
+
 export const LINKEDIN_ANALYTICS_HOOK_STYLES = [
   'Question-led',
   'Contrarian statement',
@@ -294,12 +322,18 @@ export class OpenaiService {
     role: string;
     audience: string;
     goal: string;
+    campaignInstructions?: string[];
     linkedinProfileContext: any;
     websiteProfile?: any;
     templates: Array<{
       id: string;
       name: string;
       pillar: string;
+      archetype?: string;
+      hookStyles?: string[];
+      tensionPattern?: string;
+      intents?: string[];
+      openingPattern?: string;
       template: string;
       variables: string[];
       ctaOptions: Array<{
@@ -309,6 +343,7 @@ export class OpenaiService {
         text: string;
       }>;
       proofRequirement: string;
+      generationInstructions?: string[];
       antiPatterns: string[];
     }>;
   }) {
@@ -319,8 +354,12 @@ export class OpenaiService {
           messages: [
             {
               role: 'system',
-              content:
-                'You write concise LinkedIn posts for onboarding. Fill each supplied template with specific, believable details from the provided profile/context. Return strict JSON only. Do not invent metrics, clients, revenue, employers, job offers, or proof. Do not leave placeholders like [audience] in the output. Do not add hashtags. Each template includes CTA options with id, action, intensity, and text. Choose one CTA option and lightly adapt its wording so it relates to the post topic and audience. Preserve the selected CTA action exactly: comment CTAs must ask for a comment, dm CTAs must ask for a DM, connect CTAs must ask to connect, follow CTAs must ask to follow or keep an eye on future work, apply CTAs must invite applying or reaching out, view_product CTAs must point to the product/service, request_resource CTAs must ask for a resource request, share_example CTAs must ask for an example, and reflect CTAs must stay reflective. Do not make the CTA stronger than its intensity allows. Keep the adapted CTA to one sentence. Do not invent a resource, demo, product, or offer unless it is present in the CTA text or supplied context.',
+              content: [
+                'You write concise LinkedIn posts for onboarding. Use each supplied template as a structural guide for the angle, pillar, and rough flow, but do not copy awkward template phrasing verbatim when it conflicts with the writing guidelines. Fill the post with specific, believable details from the provided profile/context. Return strict JSON only. Do not invent metrics, clients, revenue, employers, job offers, or proof. Do not leave placeholders like [audience] in the output. Do not add hashtags. Each template includes CTA options with id, action, intensity, and text. Choose one CTA option and lightly adapt its wording so it relates to the post topic and audience. Preserve the selected CTA action exactly: comment CTAs must ask for a comment, dm CTAs must ask for a DM, connect CTAs must ask to connect, follow CTAs must ask to follow or keep an eye on future work, apply CTAs must invite applying or reaching out, view_product CTAs must point to the product/service, request_resource CTAs must ask for a resource request, share_example CTAs must ask for an example, and reflect CTAs must stay reflective. Do not make the CTA stronger than its intensity allows. Keep the adapted CTA to one sentence. Do not invent a resource, demo, product, or offer unless it is present in the CTA text or supplied context.',
+                'The supplied posts are a set, not isolated drafts. Make the full set feel like a weekly campaign with varied structures. Do not reuse the same opening pattern, list format, hook style, sentence rhythm, or CTA style across the posts unless the template explicitly requires it.',
+                'Use each template metadata field to guide variety: archetype, hookStyles, tensionPattern, intents, openingPattern, and generationInstructions.',
+                LINKEDIN_HUMAN_WRITING_GUIDELINES,
+              ].join('\n\n'),
             },
             {
               role: 'user',
@@ -361,8 +400,10 @@ export class OpenaiService {
           messages: [
             {
               role: 'system',
-              content:
+              content: [
                 'You write one concise LinkedIn post by repurposing user-provided source material. Return strict JSON only. Choose the best pillar from allowedPillars and include it in the pillar field. The post should feel like it was written by the user for their audience and goal. Do not invent metrics, clients, employers, testimonials, certifications, revenue, results, or proof. If the source is thin, write from the available context and keep claims conservative. Do not add hashtags. Use the optional visualContext only as creative context; do not say an image is attached. Keep the CTA contextual, low-friction, and aligned with the goal.',
+                LINKEDIN_HUMAN_WRITING_GUIDELINES,
+              ].join('\n\n'),
             },
             {
               role: 'user',

@@ -167,6 +167,13 @@ export class OnboardingPostSuggestionService {
         role: input.role,
         audience: input.audience,
         goal: input.goal,
+        campaignInstructions: [
+          'These posts are part of one weekly LinkedIn campaign.',
+          'Keep the posts strategically related, but make their structures visibly different.',
+          'Do not reuse the same opening pattern across posts.',
+          'Do not reuse the same list format across posts.',
+          'Vary hook style, sentence rhythm, CTA style, and post shape across the set.',
+        ],
         linkedinProfileContext: this.compactLinkedinContext(
           input.linkedinProfileContext
         ),
@@ -175,6 +182,11 @@ export class OnboardingPostSuggestionService {
           id: template.id,
           name: template.name,
           pillar,
+          archetype: template.archetype,
+          hookStyles: template.hookStyles,
+          tensionPattern: template.tensionPattern,
+          intents: template.intents,
+          openingPattern: this.openingPattern(template),
           template: template.template,
           variables: template.variables,
           ctaOptions: getCTAOptionsForGoalAndRole(
@@ -189,6 +201,7 @@ export class OnboardingPostSuggestionService {
               text: cta.text,
             })),
           proofRequirement: template.proofRequirement,
+          generationInstructions: template.generationInstructions,
           antiPatterns: template.antiPatterns,
         })),
       }
@@ -217,17 +230,16 @@ export class OnboardingPostSuggestionService {
   }
 
   async generateRepurposedPost(input: RepurposePostInput) {
-    const generated =
-      await this._openaiService.generateRepurposedLinkedinPost({
-        ...input,
-        allowedPillars: input.allowedPillars.length
-          ? input.allowedPillars
-          : this.assignPillars(input.role, input.goal, true),
-        linkedinProfileContext: input.linkedinProfileContext
-          ? this.compactLinkedinContext(input.linkedinProfileContext)
-          : undefined,
-        websitePages: (input.websitePages || []).slice(0, 5),
-      });
+    const generated = await this._openaiService.generateRepurposedLinkedinPost({
+      ...input,
+      allowedPillars: input.allowedPillars.length
+        ? input.allowedPillars
+        : this.assignPillars(input.role, input.goal, true),
+      linkedinProfileContext: input.linkedinProfileContext
+        ? this.compactLinkedinContext(input.linkedinProfileContext)
+        : undefined,
+      websitePages: (input.websitePages || []).slice(0, 5),
+    });
     const content = this.cleanGeneratedContent(generated.content || '');
 
     if (!content) {
@@ -271,8 +283,20 @@ export class OnboardingPostSuggestionService {
 
         return true;
       }).sort((a, b) => {
-        const aScore = this.templateScore(a, role, goal, hasProof);
-        const bScore = this.templateScore(b, role, goal, hasProof);
+        const aScore = this.campaignTemplateScore(
+          a,
+          role,
+          goal,
+          hasProof,
+          selected
+        );
+        const bScore = this.campaignTemplateScore(
+          b,
+          role,
+          goal,
+          hasProof,
+          selected
+        );
         return bScore - aScore || a.id.localeCompare(b.id);
       });
 
@@ -291,8 +315,20 @@ export class OnboardingPostSuggestionService {
           (hasProof || template.proofRequirement !== 'required')
         );
       }).sort((a, b) => {
-        const aScore = this.templateScore(a, role, goal, hasProof);
-        const bScore = this.templateScore(b, role, goal, hasProof);
+        const aScore = this.campaignTemplateScore(
+          a,
+          role,
+          goal,
+          hasProof,
+          selected
+        );
+        const bScore = this.campaignTemplateScore(
+          b,
+          role,
+          goal,
+          hasProof,
+          selected
+        );
         return bScore - aScore || a.id.localeCompare(b.id);
       });
 
@@ -326,6 +362,130 @@ export class OnboardingPostSuggestionService {
     );
   }
 
+  private campaignTemplateScore(
+    template: PostTemplate,
+    role: string,
+    goal: string,
+    hasProof: boolean,
+    selected: Array<{ template: PostTemplate; pillar: PillarCategory }>
+  ) {
+    return (
+      this.templateScore(template, role, goal, hasProof) +
+      this.diversityBonus(template, selected) -
+      this.diversityPenalty(template, selected)
+    );
+  }
+
+  private diversityBonus(
+    template: PostTemplate,
+    selected: Array<{ template: PostTemplate; pillar: PillarCategory }>
+  ) {
+    if (selected.length === 0) {
+      return 0;
+    }
+
+    const usedIntents = new Set(
+      selected.flatMap((item) => item.template.intents)
+    );
+    const addsNewIntent = template.intents.some(
+      (intent) => !usedIntents.has(intent)
+    );
+
+    return addsNewIntent ? 3 : 0;
+  }
+
+  private diversityPenalty(
+    template: PostTemplate,
+    selected: Array<{ template: PostTemplate; pillar: PillarCategory }>
+  ) {
+    if (selected.length === 0) {
+      return 0;
+    }
+
+    let penalty = 0;
+    const usedArchetypes = new Set(
+      selected.map((item) => item.template.archetype)
+    );
+    const usedPrimaryHookStyles = new Set(
+      selected.map((item) => item.template.hookStyles[0]).filter(Boolean)
+    );
+    const usedHookStyles = new Set(
+      selected.flatMap((item) => item.template.hookStyles)
+    );
+    const usedTensionPatterns = new Set(
+      selected.map((item) => item.template.tensionPattern)
+    );
+    const usedOpeningPatterns = new Set(
+      selected.map((item) => this.openingPattern(item.template))
+    );
+    const usedListLikeCount = selected.filter((item) =>
+      this.isListLikeTemplate(item.template)
+    ).length;
+
+    if (usedArchetypes.has(template.archetype)) {
+      penalty += 8;
+    }
+
+    if (
+      template.hookStyles[0] &&
+      usedPrimaryHookStyles.has(template.hookStyles[0])
+    ) {
+      penalty += 6;
+    } else if (template.hookStyles.some((style) => usedHookStyles.has(style))) {
+      penalty += 3;
+    }
+
+    if (
+      template.tensionPattern !== 'none' &&
+      usedTensionPatterns.has(template.tensionPattern)
+    ) {
+      penalty += 3;
+    }
+
+    if (usedOpeningPatterns.has(this.openingPattern(template))) {
+      penalty += 7;
+    }
+
+    if (this.isListLikeTemplate(template) && usedListLikeCount >= 1) {
+      penalty += 5;
+    }
+
+    return penalty;
+  }
+
+  private openingPattern(template: PostTemplate) {
+    const firstLine = template.template
+      .trim()
+      .split('\n')
+      .find((line) => line.trim())
+      ?.trim()
+      .toLowerCase()
+      .replace(/[`"'“”]/g, '');
+
+    if (!firstLine) {
+      return 'empty';
+    }
+
+    if (firstLine.startsWith('before ')) return 'before';
+    if (firstLine.startsWith('when ')) return 'when';
+    if (firstLine.startsWith('if ')) return 'if';
+    if (firstLine.startsWith('why ')) return 'why';
+    if (firstLine.startsWith('how ')) return 'how';
+    if (firstLine.includes('mistake')) return 'mistake';
+    if (firstLine.includes('myth')) return 'myth';
+    if (firstLine.includes('everyone')) return 'everyone';
+    if (firstLine.includes('most people')) return 'most_people';
+
+    return firstLine.split(/\s+/).slice(0, 3).join(' ');
+  }
+
+  private isListLikeTemplate(template: PostTemplate) {
+    return (
+      template.hookStyles.includes('list_led') ||
+      /^\s*(?:1\.|- )/m.test(template.template)
+    );
+  }
+
   private hasProof(linkedinProfileContext: any, websiteProfile?: any) {
     return (
       (linkedinProfileContext?.credibilityPoints || []).length > 0 ||
@@ -334,10 +494,7 @@ export class OnboardingPostSuggestionService {
   }
 
   private ctaStyleForGoal(template: PostTemplate, goal: string, role: string) {
-    const ctaOptions = getCTAOptionsForGoalAndRole(
-      goal as Goal,
-      role as Role
-    );
+    const ctaOptions = getCTAOptionsForGoalAndRole(goal as Goal, role as Role);
 
     return (
       template.ctaStyles.find((style) =>
@@ -360,7 +517,11 @@ export class OnboardingPostSuggestionService {
   }
 
   private cleanGeneratedContent(content: string) {
-    const cleaned = content.trim();
+    const cleaned = content
+      .trim()
+      .replace(/\s*\u2014\s*/g, ', ')
+      .replace(/\.{2,}/g, '.')
+      .replace(/[ \t]{2,}/g, ' ');
     if (!cleaned || /\[[^\]]+\]/.test(cleaned)) {
       return '';
     }

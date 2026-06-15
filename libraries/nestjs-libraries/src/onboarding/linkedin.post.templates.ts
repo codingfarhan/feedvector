@@ -1,360 +1,2157 @@
 // linkedinPostTemplates.ts
 
-export type Role = "Founder" | "Agency owner" | "Consultant" | "Freelancer" | "Coach" | "Creator" | "Marketer" | "Job seeker / career professional"
+export type Role =
+  | 'Founder'
+  | 'Agency owner'
+  | 'Consultant'
+  | 'Freelancer'
+  | 'Coach'
+  | 'Creator'
+  | 'Marketer'
+  | 'Job seeker / career professional';
 
 export type Goal =
-  | "Get inbound leads"
-  | "Build authority"
-  | "Grow my audience"
-  | "Promote my product/service"
-  | "Get job opportunities"
-  | "Build network"
-  | "Recruit / hire talent"
+  | 'Get inbound leads'
+  | 'Build authority'
+  | 'Grow my audience'
+  | 'Promote my product/service'
+  | 'Get job opportunities'
+  | 'Build network'
+  | 'Recruit / hire talent';
 
 export const GOAL_ELIGIBILITY_BY_ROLE: Record<Role, Goal[]> = {
-  Founder: ["Get inbound leads", "Build authority", "Grow my audience", "Promote my product/service", "Build network", "Recruit / hire talent"],
-  "Agency owner": [
-    "Get inbound leads",
-    "Build authority",
-    "Grow my audience",
-    "Promote my product/service",
-    "Build network",
-    "Recruit / hire talent",
+  Founder: [
+    'Get inbound leads',
+    'Build authority',
+    'Grow my audience',
+    'Promote my product/service',
+    'Build network',
+    'Recruit / hire talent',
   ],
-  Consultant: ["Get inbound leads", "Build authority", "Grow my audience", "Promote my product/service", "Build network"],
-  Freelancer: ["Get inbound leads", "Build authority", "Grow my audience", "Promote my product/service", "Get job opportunities", "Build network"],
-  Coach: ["Get inbound leads", "Build authority", "Grow my audience", "Promote my product/service", "Build network"],
-  Creator: ["Build authority", "Grow my audience", "Promote my product/service", "Build network"],
-  Marketer: ["Get inbound leads", "Build authority", "Grow my audience", "Promote my product/service", "Get job opportunities", "Build network"],
-  "Job seeker / career professional": ["Build authority", "Grow my audience", "Get job opportunities", "Build network"],
-}
+  'Agency owner': [
+    'Get inbound leads',
+    'Build authority',
+    'Grow my audience',
+    'Promote my product/service',
+    'Build network',
+    'Recruit / hire talent',
+  ],
+  Consultant: [
+    'Get inbound leads',
+    'Build authority',
+    'Grow my audience',
+    'Promote my product/service',
+    'Build network',
+  ],
+  Freelancer: [
+    'Get inbound leads',
+    'Build authority',
+    'Grow my audience',
+    'Promote my product/service',
+    'Get job opportunities',
+    'Build network',
+  ],
+  Coach: [
+    'Get inbound leads',
+    'Build authority',
+    'Grow my audience',
+    'Promote my product/service',
+    'Build network',
+  ],
+  Creator: [
+    'Build authority',
+    'Grow my audience',
+    'Promote my product/service',
+    'Build network',
+  ],
+  Marketer: [
+    'Get inbound leads',
+    'Build authority',
+    'Grow my audience',
+    'Promote my product/service',
+    'Get job opportunities',
+    'Build network',
+  ],
+  'Job seeker / career professional': [
+    'Build authority',
+    'Grow my audience',
+    'Get job opportunities',
+    'Build network',
+  ],
+};
 
 export type PillarCategory =
-  | "Point of view"
-  | "Problem education"
-  | "Mistakes and misconceptions"
-  | "Process / how-I-work"
-  | "Proof / case study"
-  | "Personal story"
-  | "Behind the scenes"
-  | "Market / industry observation"
-  | "Product / service education"
-  | "Objection handling"
-  | "Audience belief shift"
-  | "Community / network conversation"
-  | "Values / philosophy"
-  | "Hiring / culture"
-  | "Career / credibility proof"
+  | 'Point of view'
+  | 'Problem education'
+  | 'Mistakes and misconceptions'
+  | 'Process / how-I-work'
+  | 'Proof / case study'
+  | 'Personal story'
+  | 'Behind the scenes'
+  | 'Market / industry observation'
+  | 'Product / service education'
+  | 'Objection handling'
+  | 'Audience belief shift'
+  | 'Community / network conversation'
+  | 'Values / philosophy'
+  | 'Hiring / culture'
+  | 'Career / credibility proof';
 
 export type CTAStyle =
-  | "soft_lead"
-  | "dm_problem"
-  | "diagnostic"
-  | "authority_reframe"
-  | "belief_statement"
-  | "industry_prompt"
-  | "conversation"
-  | "agree_disagree"
-  | "relatable"
-  | "specific_peer_question"
-  | "example_request"
-  | "operator_invite"
-  | "offer_bridge"
-  | "use_case"
-  | "problem_solution"
-  | "fit_check"
-  | "resource_offer"
-  | "demo_invite"
-  | "product_walkthrough"
-  | "career_signal"
-  | "work_style"
-  | "open_to_conversation"
-  | "peer_question"
-  | "shared_learning"
-  | "collaboration"
-  | "hiring_signal"
-  | "culture_invite"
-  | "role_invite"
-  | "apply_invite"
-  | "talent_network"
+  | 'soft_lead'
+  | 'dm_problem'
+  | 'diagnostic'
+  | 'authority_reframe'
+  | 'belief_statement'
+  | 'industry_prompt'
+  | 'conversation'
+  | 'agree_disagree'
+  | 'relatable'
+  | 'specific_peer_question'
+  | 'example_request'
+  | 'operator_invite'
+  | 'offer_bridge'
+  | 'use_case'
+  | 'problem_solution'
+  | 'fit_check'
+  | 'resource_offer'
+  | 'demo_invite'
+  | 'product_walkthrough'
+  | 'career_signal'
+  | 'work_style'
+  | 'open_to_conversation'
+  | 'peer_question'
+  | 'shared_learning'
+  | 'collaboration'
+  | 'hiring_signal'
+  | 'culture_invite'
+  | 'role_invite'
+  | 'apply_invite'
+  | 'talent_network';
 
-export type ProofRequirement = "none" | "optional" | "recommended" | "required"
+export type ProofRequirement = 'none' | 'optional' | 'recommended' | 'required';
 
-export type RoleGoalFit = "native" | "usable" | "avoid"
+export type PostArchetype =
+  | 'pain_diagnosis'
+  | 'checklist'
+  | 'contrarian_take'
+  | 'mini_case_study'
+  | 'before_after'
+  | 'mistake_lesson'
+  | 'process_breakdown'
+  | 'myth_buster'
+  | 'impossible_vs_possible'
+  | 'long_form_promotion'
+  | 'deeper_desire_contrast'
+  | 'transformation_story'
+  | 'villain_story'
+  | 'problem_solution'
+  | 'dont_do_this_do_this'
+  | 'launch_story'
+  | 'failure_to_recovery'
+  | 'beginner_to_expert'
+  | 'rule_or_wisdom'
+  | 'consistency_journey'
+  | 'unexpected_connection'
+  | 'no_secret_daily_action'
+  | 'expectation_reset'
+  | 'goal_to_daily_system'
+  | 'misconception_to_framework'
+  | 'research_led_explanation'
+  | 'brand_case_study';
 
-export type CTAAction = "comment" | "dm" | "connect" | "follow" | "apply" | "view_product" | "request_resource" | "share_example" | "reflect"
+export type HookStyle =
+  | 'question_led'
+  | 'contrarian_statement'
+  | 'problem_diagnosis'
+  | 'process_breakdown'
+  | 'before_after'
+  | 'personal_observation'
+  | 'direct_statement'
+  | 'story_led'
+  | 'result_led'
+  | 'list_led'
+  | 'data_led'
+  | 'mistake_confession'
+  | 'prediction_trend'
+  | 'borrowed_insight';
 
-export type CTAIntensity = "soft" | "medium" | "direct"
+export type PostIntent =
+  | 'educate'
+  | 'build_authority'
+  | 'share_proof'
+  | 'start_conversation'
+  | 'build_trust'
+  | 'promote_offer'
+  | 'recruit'
+  | 'nurture';
+
+export type TensionPattern =
+  | 'expectation_vs_reality'
+  | 'surface_vs_root'
+  | 'before_vs_after'
+  | 'common_advice_vs_better_advice'
+  | 'goal_vs_daily_action'
+  | 'success_vs_hidden_cost'
+  | 'failure_vs_recovery'
+  | 'old_belief_vs_new_belief'
+  | 'visible_result_vs_invisible_work'
+  | 'problem_vs_solution'
+  | 'status_quo_vs_change'
+  | 'none';
+
+export type CTARequirement = 'none' | 'optional' | 'recommended' | 'required';
+
+export interface TargetLength {
+  min: number;
+  ideal: number;
+  max: number;
+}
+
+export type TemplateBlockType =
+  | 'hook'
+  | 'context'
+  | 'tension'
+  | 'example'
+  | 'proof'
+  | 'list'
+  | 'reframe'
+  | 'lesson'
+  | 'cta';
+
+export interface TemplateBlock {
+  id: string;
+  type: TemplateBlockType;
+  required: boolean;
+}
+
+export type RoleGoalFit = 'native' | 'usable' | 'avoid';
+
+export type CTAAction =
+  | 'comment'
+  | 'dm'
+  | 'connect'
+  | 'follow'
+  | 'apply'
+  | 'view_product'
+  | 'request_resource'
+  | 'share_example'
+  | 'reflect';
+
+export type CTAIntensity = 'soft' | 'medium' | 'direct';
 
 export interface ClarifyingQuestion {
-  question: string
-  fills: string[]
+  question: string;
+  fills: string[];
 }
 
 export interface PostTemplate {
-  id: string
-  name: string
-  archetype: string
-  variant: string
-  bestForRoles: Role[]
-  bestForGoals: Goal[]
-  roleGoalFit?: Partial<Record<Role, Partial<Record<Goal, RoleGoalFit>>>>
-  bestForPillars: PillarCategory[]
-  template: string
-  variables: string[]
-  clarifyingQuestions: ClarifyingQuestion[]
-  ctaStyles: CTAStyle[]
-  proofRequirement: ProofRequirement
-  antiPatterns: string[]
+  id: string;
+  name: string;
+  archetype: PostArchetype;
+  variant: string;
+  bestForRoles: Role[];
+  bestForGoals: Goal[];
+  roleGoalFit?: Partial<Record<Role, Partial<Record<Goal, RoleGoalFit>>>>;
+  bestForPillars: PillarCategory[];
+  hookStyles: HookStyle[];
+  intents: PostIntent[];
+  tensionPattern: TensionPattern;
+  template: string;
+  variables: string[];
+  clarifyingQuestions: ClarifyingQuestion[];
+  blocks: TemplateBlock[];
+  targetLength: TargetLength;
+  generationInstructions: string[];
+  ctaRequirement: CTARequirement;
+  ctaStyles: CTAStyle[];
+  proofRequirement: ProofRequirement;
+  antiPatterns: string[];
 }
 
 export interface CTAOption {
-  id: CTAStyle
-  goals: Goal[]
-  roles?: Role[]
-  action: CTAAction
-  intensity: CTAIntensity
-  text: string
+  id: CTAStyle;
+  goals: Goal[];
+  roles?: Role[];
+  action: CTAAction;
+  intensity: CTAIntensity;
+  text: string;
 }
 
 export const CTA_LIBRARY: CTAOption[] = [
   {
-    id: "soft_lead",
-    goals: ["Get inbound leads"],
-    action: "dm",
-    intensity: "soft",
-    text: "If this is showing up in your world, send me a note with what you’re trying to untangle.",
+    id: 'soft_lead',
+    goals: ['Get inbound leads'],
+    action: 'dm',
+    intensity: 'soft',
+    text: 'If this is showing up in your world, send me a note with what you’re trying to untangle.',
   },
   {
-    id: "dm_problem",
-    goals: ["Get inbound leads"],
-    action: "dm",
-    intensity: "direct",
-    text: "DM me “problem” if you want help finding where this is actually breaking down.",
+    id: 'dm_problem',
+    goals: ['Get inbound leads'],
+    action: 'dm',
+    intensity: 'direct',
+    text: 'DM me “problem” if you want help finding where this is actually breaking down.',
   },
   {
-    id: "diagnostic",
-    goals: ["Get inbound leads", "Build authority"],
-    action: "reflect",
-    intensity: "medium",
-    text: "Usually, the first step is not doing more. It’s diagnosing the right problem.",
+    id: 'diagnostic',
+    goals: ['Get inbound leads', 'Build authority'],
+    action: 'reflect',
+    intensity: 'medium',
+    text: 'Usually, the first step is not doing more. It’s diagnosing the right problem.',
   },
   {
-    id: "authority_reframe",
-    goals: ["Build authority"],
-    action: "comment",
-    intensity: "soft",
-    text: "That’s the shift I think more people in this space need to talk about.",
+    id: 'authority_reframe',
+    goals: ['Build authority'],
+    action: 'comment',
+    intensity: 'soft',
+    text: 'That’s the shift I think more people in this space need to talk about.',
   },
   {
-    id: "belief_statement",
-    goals: ["Build authority"],
-    action: "reflect",
-    intensity: "soft",
-    text: "The people who understand this earlier tend to make better decisions later.",
+    id: 'belief_statement',
+    goals: ['Build authority'],
+    action: 'reflect',
+    intensity: 'soft',
+    text: 'The people who understand this earlier tend to make better decisions later.',
   },
   {
-    id: "industry_prompt",
-    goals: ["Build authority", "Build network"],
-    action: "comment",
-    intensity: "medium",
-    text: "If you work in this space, I’d be curious what you’re seeing from your side.",
+    id: 'industry_prompt',
+    goals: ['Build authority', 'Build network'],
+    action: 'comment',
+    intensity: 'medium',
+    text: 'If you work in this space, I’d be curious what you’re seeing from your side.',
   },
   {
-    id: "conversation",
-    goals: ["Grow my audience", "Build network"],
-    action: "comment",
-    intensity: "soft",
-    text: "Curious if others have noticed this too.",
+    id: 'conversation',
+    goals: ['Grow my audience', 'Build network'],
+    action: 'comment',
+    intensity: 'soft',
+    text: 'Curious if others have noticed this too.',
   },
   {
-    id: "agree_disagree",
-    goals: ["Grow my audience"],
-    action: "comment",
-    intensity: "medium",
-    text: "Which of these do you agree or disagree with?",
+    id: 'agree_disagree',
+    goals: ['Grow my audience'],
+    action: 'comment',
+    intensity: 'medium',
+    text: 'Which of these do you agree or disagree with?',
   },
   {
-    id: "relatable",
-    goals: ["Grow my audience"],
-    action: "reflect",
-    intensity: "soft",
-    text: "I don’t think I’m the only one who has had to learn this the hard way.",
+    id: 'relatable',
+    goals: ['Grow my audience'],
+    action: 'reflect',
+    intensity: 'soft',
+    text: 'I don’t think I’m the only one who has had to learn this the hard way.',
   },
   {
-    id: "specific_peer_question",
-    goals: ["Get inbound leads", "Build authority", "Build network"],
-    action: "comment",
-    intensity: "medium",
-    text: "If you’ve run into this, what was the first signal that made the problem obvious?",
+    id: 'specific_peer_question',
+    goals: ['Get inbound leads', 'Build authority', 'Build network'],
+    action: 'comment',
+    intensity: 'medium',
+    text: 'If you’ve run into this, what was the first signal that made the problem obvious?',
   },
   {
-    id: "example_request",
-    goals: ["Grow my audience", "Build network"],
-    action: "share_example",
-    intensity: "medium",
-    text: "If you’ve seen a strong example of this, share it. I’m collecting better references.",
+    id: 'example_request',
+    goals: ['Grow my audience', 'Build network'],
+    action: 'share_example',
+    intensity: 'medium',
+    text: 'If you’ve seen a strong example of this, share it. I’m collecting better references.',
   },
   {
-    id: "operator_invite",
-    goals: ["Build authority", "Build network"],
-    roles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Marketer"],
-    action: "connect",
-    intensity: "medium",
-    text: "If you’re actively working through this as an operator, I’d be glad to connect.",
+    id: 'operator_invite',
+    goals: ['Build authority', 'Build network'],
+    roles: ['Founder', 'Agency owner', 'Consultant', 'Freelancer', 'Marketer'],
+    action: 'connect',
+    intensity: 'medium',
+    text: 'If you’re actively working through this as an operator, I’d be glad to connect.',
   },
   {
-    id: "offer_bridge",
-    goals: ["Promote my product/service"],
-    action: "view_product",
-    intensity: "medium",
-    text: "That’s exactly why we built this around [specific problem], not just [surface feature].",
+    id: 'offer_bridge',
+    goals: ['Promote my product/service'],
+    action: 'view_product',
+    intensity: 'medium',
+    text: 'That’s exactly why we built this around [specific problem], not just [surface feature].',
   },
   {
-    id: "use_case",
-    goals: ["Promote my product/service"],
-    action: "view_product",
-    intensity: "medium",
-    text: "This is one of the situations where [product/service] is designed to help.",
+    id: 'use_case',
+    goals: ['Promote my product/service'],
+    action: 'view_product',
+    intensity: 'medium',
+    text: 'This is one of the situations where [product/service] is designed to help.',
   },
   {
-    id: "problem_solution",
-    goals: ["Promote my product/service", "Get inbound leads"],
-    action: "dm",
-    intensity: "medium",
-    text: "If [problem] is showing up repeatedly, the solution usually starts with [approach].",
+    id: 'problem_solution',
+    goals: ['Promote my product/service', 'Get inbound leads'],
+    action: 'dm',
+    intensity: 'medium',
+    text: 'If [problem] is showing up repeatedly, the solution usually starts with [approach].',
   },
   {
-    id: "fit_check",
-    goals: ["Promote my product/service", "Get inbound leads"],
-    action: "dm",
-    intensity: "direct",
-    text: "If you want to pressure-test whether this is the right fit, send me the situation and I’ll point you in the right direction.",
+    id: 'fit_check',
+    goals: ['Promote my product/service', 'Get inbound leads'],
+    action: 'dm',
+    intensity: 'direct',
+    text: 'If you want to pressure-test whether this is the right fit, send me the situation and I’ll point you in the right direction.',
   },
   {
-    id: "resource_offer",
-    goals: ["Get inbound leads", "Build authority", "Grow my audience"],
-    action: "request_resource",
-    intensity: "medium",
-    text: "Comment “resource” if you want the checklist I use to think through this.",
+    id: 'resource_offer',
+    goals: ['Get inbound leads', 'Build authority', 'Grow my audience'],
+    action: 'request_resource',
+    intensity: 'medium',
+    text: 'Comment “resource” if you want the checklist I use to think through this.',
   },
   {
-    id: "demo_invite",
-    goals: ["Promote my product/service"],
-    roles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Marketer"],
-    action: "view_product",
-    intensity: "direct",
-    text: "If this is a problem you’re trying to solve now, book a walkthrough and we’ll show how it works in practice.",
+    id: 'demo_invite',
+    goals: ['Promote my product/service'],
+    roles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Marketer',
+    ],
+    action: 'view_product',
+    intensity: 'direct',
+    text: 'If this is a problem you’re trying to solve now, book a walkthrough and we’ll show how it works in practice.',
   },
   {
-    id: "product_walkthrough",
-    goals: ["Promote my product/service"],
-    action: "view_product",
-    intensity: "medium",
-    text: "I can share a quick walkthrough of how this works if you want to see the mechanics.",
+    id: 'product_walkthrough',
+    goals: ['Promote my product/service'],
+    action: 'view_product',
+    intensity: 'medium',
+    text: 'I can share a quick walkthrough of how this works if you want to see the mechanics.',
   },
   {
-    id: "career_signal",
-    goals: ["Get job opportunities"],
-    action: "connect",
-    intensity: "medium",
-    text: "This is the kind of work I’d love to do more of.",
+    id: 'career_signal',
+    goals: ['Get job opportunities'],
+    action: 'connect',
+    intensity: 'medium',
+    text: 'This is the kind of work I’d love to do more of.',
   },
   {
-    id: "work_style",
-    goals: ["Get job opportunities"],
-    action: "reflect",
-    intensity: "soft",
-    text: "It’s also the kind of problem where I tend to do my best work.",
+    id: 'work_style',
+    goals: ['Get job opportunities'],
+    action: 'reflect',
+    intensity: 'soft',
+    text: 'It’s also the kind of problem where I tend to do my best work.',
   },
   {
-    id: "open_to_conversation",
-    goals: ["Get job opportunities", "Build network"],
-    action: "connect",
-    intensity: "medium",
-    text: "If you’re building around this kind of work, I’d be glad to connect.",
+    id: 'open_to_conversation',
+    goals: ['Get job opportunities', 'Build network'],
+    action: 'connect',
+    intensity: 'medium',
+    text: 'If you’re building around this kind of work, I’d be glad to connect.',
   },
   {
-    id: "peer_question",
-    goals: ["Build network"],
-    action: "comment",
-    intensity: "soft",
-    text: "Would love to hear how others are thinking about this.",
+    id: 'peer_question',
+    goals: ['Build network'],
+    action: 'comment',
+    intensity: 'soft',
+    text: 'Would love to hear how others are thinking about this.',
   },
   {
-    id: "shared_learning",
-    goals: ["Build network"],
-    action: "comment",
-    intensity: "soft",
-    text: "I’m still shaping my view on this, so I’d value other perspectives.",
+    id: 'shared_learning',
+    goals: ['Build network'],
+    action: 'comment',
+    intensity: 'soft',
+    text: 'I’m still shaping my view on this, so I’d value other perspectives.',
   },
   {
-    id: "collaboration",
-    goals: ["Build network"],
-    action: "connect",
-    intensity: "medium",
-    text: "Always interested in meeting people working on this from a different angle.",
+    id: 'collaboration',
+    goals: ['Build network'],
+    action: 'connect',
+    intensity: 'medium',
+    text: 'Always interested in meeting people working on this from a different angle.',
   },
   {
-    id: "hiring_signal",
-    goals: ["Recruit / hire talent"],
-    action: "apply",
-    intensity: "direct",
-    text: "If that sounds like the kind of environment where you’d do your best work, we should talk.",
+    id: 'hiring_signal',
+    goals: ['Recruit / hire talent'],
+    action: 'apply',
+    intensity: 'direct',
+    text: 'If that sounds like the kind of environment where you’d do your best work, we should talk.',
   },
   {
-    id: "culture_invite",
-    goals: ["Recruit / hire talent"],
-    action: "follow",
-    intensity: "soft",
-    text: "This is the kind of culture we’re trying to build, one decision at a time.",
+    id: 'culture_invite',
+    goals: ['Recruit / hire talent'],
+    action: 'follow',
+    intensity: 'soft',
+    text: 'This is the kind of culture we’re trying to build, one decision at a time.',
   },
   {
-    id: "role_invite",
-    goals: ["Recruit / hire talent"],
-    action: "follow",
-    intensity: "medium",
-    text: "If this way of working resonates, keep an eye on what we’re building.",
+    id: 'role_invite',
+    goals: ['Recruit / hire talent'],
+    action: 'follow',
+    intensity: 'medium',
+    text: 'If this way of working resonates, keep an eye on what we’re building.',
   },
   {
-    id: "apply_invite",
-    goals: ["Recruit / hire talent"],
-    action: "apply",
-    intensity: "direct",
-    text: "If this sounds like the kind of role where you would do strong work, apply or send me a note.",
+    id: 'apply_invite',
+    goals: ['Recruit / hire talent'],
+    action: 'apply',
+    intensity: 'direct',
+    text: 'If this sounds like the kind of role where you would do strong work, apply or send me a note.',
   },
   {
-    id: "talent_network",
-    goals: ["Recruit / hire talent", "Build network"],
-    action: "connect",
-    intensity: "medium",
-    text: "If this describes how you like to work, connect with me. I’d like to know more people with this mindset.",
+    id: 'talent_network',
+    goals: ['Recruit / hire talent', 'Build network'],
+    action: 'connect',
+    intensity: 'medium',
+    text: 'If this describes how you like to work, connect with me. I’d like to know more people with this mindset.',
   },
-]
+];
 
 const DEFAULT_ANTI_PATTERNS = [
-  "Do not add a generic motivational intro.",
+  'Do not add a generic motivational intro.',
   "Do not use phrases like 'game-changer', 'unlock success', or 'in today’s fast-paced world'.",
-  "Do not invent metrics, clients, revenue, company names, or results.",
-  "Do not add hashtags unless explicitly requested.",
-  "Do not add filler paragraphs outside the template structure.",
-  "Do not make the CTA more salesy than the selected goal allows.",
-]
+  'Do not invent metrics, clients, revenue, company names, or results.',
+  'Do not add hashtags unless explicitly requested.',
+  'Do not add filler paragraphs outside the template structure.',
+  'Do not make the CTA more salesy than the selected goal allows.',
+  'Do not use stock LinkedIn closing phrases.',
+];
 
-const t = (template: PostTemplate): PostTemplate => ({
-  ...template,
-  antiPatterns: [...DEFAULT_ANTI_PATTERNS, ...template.antiPatterns],
-})
+type LegacyPostArchetype =
+  | PostArchetype
+  | 'Pain Diagnosis'
+  | 'Checklist'
+  | 'Contrarian Take'
+  | 'Mini Case Study'
+  | 'Before / After'
+  | 'Mistake Lesson'
+  | 'Process Breakdown'
+  | 'Myth-Buster'
+  | 'Strong Opinion List'
+  | 'Objection Handling'
+  | 'Use Case Story'
+  | 'Honest Question'
+  | 'Hiring Philosophy'
+  | 'Career Proof'
+  | 'Trend Reframe'
+  | 'Customer / Client Pattern'
+  | 'Origin Story'
+  | 'Lessons Learned';
+
+type PostTemplateInput = Omit<
+  PostTemplate,
+  | 'archetype'
+  | 'hookStyles'
+  | 'intents'
+  | 'tensionPattern'
+  | 'blocks'
+  | 'targetLength'
+  | 'generationInstructions'
+  | 'ctaRequirement'
+> & {
+  archetype: LegacyPostArchetype;
+  hookStyles?: HookStyle[];
+  intents?: PostIntent[];
+  tensionPattern?: TensionPattern;
+  blocks?: TemplateBlock[];
+  targetLength?: TargetLength;
+  generationInstructions?: string[];
+  ctaRequirement?: CTARequirement;
+};
+
+const archetypeMap: Record<LegacyPostArchetype, PostArchetype> = {
+  pain_diagnosis: 'pain_diagnosis',
+  checklist: 'checklist',
+  contrarian_take: 'contrarian_take',
+  mini_case_study: 'mini_case_study',
+  before_after: 'before_after',
+  mistake_lesson: 'mistake_lesson',
+  process_breakdown: 'process_breakdown',
+  myth_buster: 'myth_buster',
+  impossible_vs_possible: 'impossible_vs_possible',
+  long_form_promotion: 'long_form_promotion',
+  deeper_desire_contrast: 'deeper_desire_contrast',
+  transformation_story: 'transformation_story',
+  villain_story: 'villain_story',
+  problem_solution: 'problem_solution',
+  dont_do_this_do_this: 'dont_do_this_do_this',
+  launch_story: 'launch_story',
+  failure_to_recovery: 'failure_to_recovery',
+  beginner_to_expert: 'beginner_to_expert',
+  rule_or_wisdom: 'rule_or_wisdom',
+  consistency_journey: 'consistency_journey',
+  unexpected_connection: 'unexpected_connection',
+  no_secret_daily_action: 'no_secret_daily_action',
+  expectation_reset: 'expectation_reset',
+  goal_to_daily_system: 'goal_to_daily_system',
+  misconception_to_framework: 'misconception_to_framework',
+  research_led_explanation: 'research_led_explanation',
+  brand_case_study: 'brand_case_study',
+  'Pain Diagnosis': 'pain_diagnosis',
+  Checklist: 'checklist',
+  'Contrarian Take': 'contrarian_take',
+  'Mini Case Study': 'mini_case_study',
+  'Before / After': 'before_after',
+  'Mistake Lesson': 'mistake_lesson',
+  'Process Breakdown': 'process_breakdown',
+  'Myth-Buster': 'myth_buster',
+  'Strong Opinion List': 'contrarian_take',
+  'Objection Handling': 'expectation_reset',
+  'Use Case Story': 'problem_solution',
+  'Honest Question': 'unexpected_connection',
+  'Hiring Philosophy': 'rule_or_wisdom',
+  'Career Proof': 'beginner_to_expert',
+  'Trend Reframe': 'research_led_explanation',
+  'Customer / Client Pattern': 'brand_case_study',
+  'Origin Story': 'transformation_story',
+  'Lessons Learned': 'rule_or_wisdom',
+};
+
+const targetLengthByArchetype: Record<PostArchetype, TargetLength> = {
+  pain_diagnosis: { min: 500, ideal: 800, max: 1200 },
+  checklist: { min: 500, ideal: 800, max: 1200 },
+  contrarian_take: { min: 400, ideal: 700, max: 1000 },
+  mini_case_study: { min: 700, ideal: 1100, max: 1600 },
+  before_after: { min: 700, ideal: 1100, max: 1600 },
+  mistake_lesson: { min: 700, ideal: 1200, max: 1800 },
+  process_breakdown: { min: 600, ideal: 900, max: 1400 },
+  myth_buster: { min: 500, ideal: 800, max: 1200 },
+  impossible_vs_possible: { min: 500, ideal: 800, max: 1200 },
+  long_form_promotion: { min: 600, ideal: 1000, max: 1500 },
+  deeper_desire_contrast: { min: 400, ideal: 700, max: 1000 },
+  transformation_story: { min: 700, ideal: 1200, max: 1800 },
+  villain_story: { min: 700, ideal: 1200, max: 1800 },
+  problem_solution: { min: 600, ideal: 900, max: 1400 },
+  dont_do_this_do_this: { min: 500, ideal: 800, max: 1200 },
+  launch_story: { min: 600, ideal: 1000, max: 1500 },
+  failure_to_recovery: { min: 700, ideal: 1200, max: 1800 },
+  beginner_to_expert: { min: 600, ideal: 900, max: 1400 },
+  rule_or_wisdom: { min: 500, ideal: 800, max: 1200 },
+  consistency_journey: { min: 700, ideal: 1200, max: 1800 },
+  unexpected_connection: { min: 700, ideal: 1200, max: 1800 },
+  no_secret_daily_action: { min: 600, ideal: 900, max: 1400 },
+  expectation_reset: { min: 500, ideal: 800, max: 1200 },
+  goal_to_daily_system: { min: 600, ideal: 900, max: 1400 },
+  misconception_to_framework: { min: 600, ideal: 900, max: 1400 },
+  research_led_explanation: { min: 800, ideal: 1300, max: 1800 },
+  brand_case_study: { min: 700, ideal: 1100, max: 1600 },
+};
+
+const hookStylesByArchetype: Record<PostArchetype, HookStyle[]> = {
+  pain_diagnosis: ['problem_diagnosis', 'direct_statement'],
+  checklist: ['list_led', 'direct_statement'],
+  contrarian_take: ['contrarian_statement', 'direct_statement'],
+  mini_case_study: ['story_led', 'result_led'],
+  before_after: ['before_after', 'result_led'],
+  mistake_lesson: ['mistake_confession', 'personal_observation'],
+  process_breakdown: ['process_breakdown', 'direct_statement'],
+  myth_buster: ['contrarian_statement', 'problem_diagnosis'],
+  impossible_vs_possible: ['contrarian_statement', 'direct_statement'],
+  long_form_promotion: ['borrowed_insight', 'list_led'],
+  deeper_desire_contrast: ['personal_observation', 'question_led'],
+  transformation_story: ['story_led', 'before_after'],
+  villain_story: ['story_led', 'personal_observation'],
+  problem_solution: ['problem_diagnosis', 'process_breakdown'],
+  dont_do_this_do_this: ['list_led', 'process_breakdown'],
+  launch_story: ['story_led', 'direct_statement'],
+  failure_to_recovery: ['story_led', 'mistake_confession'],
+  beginner_to_expert: ['process_breakdown', 'list_led'],
+  rule_or_wisdom: ['direct_statement', 'personal_observation'],
+  consistency_journey: ['story_led', 'personal_observation'],
+  unexpected_connection: ['story_led', 'personal_observation'],
+  no_secret_daily_action: ['direct_statement', 'process_breakdown'],
+  expectation_reset: ['contrarian_statement', 'problem_diagnosis'],
+  goal_to_daily_system: ['process_breakdown', 'direct_statement'],
+  misconception_to_framework: ['problem_diagnosis', 'process_breakdown'],
+  research_led_explanation: ['data_led', 'question_led'],
+  brand_case_study: ['result_led', 'story_led'],
+};
+
+const tensionByArchetype: Record<PostArchetype, TensionPattern> = {
+  pain_diagnosis: 'surface_vs_root',
+  checklist: 'problem_vs_solution',
+  contrarian_take: 'common_advice_vs_better_advice',
+  mini_case_study: 'visible_result_vs_invisible_work',
+  before_after: 'before_vs_after',
+  mistake_lesson: 'old_belief_vs_new_belief',
+  process_breakdown: 'problem_vs_solution',
+  myth_buster: 'common_advice_vs_better_advice',
+  impossible_vs_possible: 'expectation_vs_reality',
+  long_form_promotion: 'none',
+  deeper_desire_contrast: 'expectation_vs_reality',
+  transformation_story: 'before_vs_after',
+  villain_story: 'status_quo_vs_change',
+  problem_solution: 'problem_vs_solution',
+  dont_do_this_do_this: 'common_advice_vs_better_advice',
+  launch_story: 'status_quo_vs_change',
+  failure_to_recovery: 'failure_vs_recovery',
+  beginner_to_expert: 'before_vs_after',
+  rule_or_wisdom: 'none',
+  consistency_journey: 'goal_vs_daily_action',
+  unexpected_connection: 'none',
+  no_secret_daily_action: 'goal_vs_daily_action',
+  expectation_reset: 'expectation_vs_reality',
+  goal_to_daily_system: 'goal_vs_daily_action',
+  misconception_to_framework: 'common_advice_vs_better_advice',
+  research_led_explanation: 'expectation_vs_reality',
+  brand_case_study: 'status_quo_vs_change',
+};
+
+const defaultBlocks = (ctaRequirement: CTARequirement): TemplateBlock[] => [
+  { id: 'hook', type: 'hook', required: true },
+  { id: 'context', type: 'context', required: true },
+  { id: 'tension', type: 'tension', required: false },
+  { id: 'example', type: 'example', required: false },
+  { id: 'lesson', type: 'lesson', required: true },
+  { id: 'cta', type: 'cta', required: ctaRequirement === 'required' },
+];
+
+const deriveIntents = (
+  template: PostTemplateInput,
+  archetype: PostArchetype
+): PostIntent[] => {
+  const intents = new Set<PostIntent>();
+
+  if (
+    ['Product / service education', 'Objection handling'].some((pillar) =>
+      template.bestForPillars.includes(pillar as PillarCategory)
+    )
+  ) {
+    intents.add('promote_offer');
+  }
+
+  if (
+    ['Proof / case study', 'Career / credibility proof'].some((pillar) =>
+      template.bestForPillars.includes(pillar as PillarCategory)
+    )
+  ) {
+    intents.add('share_proof');
+    intents.add('build_trust');
+  }
+
+  if (
+    ['Community / network conversation'].some((pillar) =>
+      template.bestForPillars.includes(pillar as PillarCategory)
+    )
+  ) {
+    intents.add('start_conversation');
+  }
+
+  if (template.bestForPillars.includes('Hiring / culture')) {
+    intents.add('recruit');
+  }
+
+  if (
+    [
+      'contrarian_take',
+      'myth_buster',
+      'research_led_explanation',
+      'rule_or_wisdom',
+    ].includes(archetype)
+  ) {
+    intents.add('build_authority');
+  }
+
+  intents.add('educate');
+
+  return [...intents].slice(0, 3);
+};
+
+const deriveCTARequirement = (
+  template: PostTemplateInput,
+  archetype: PostArchetype
+): CTARequirement => {
+  if (template.ctaRequirement) {
+    return template.ctaRequirement;
+  }
+
+  if (
+    ['launch_story'].includes(archetype) ||
+    template.bestForPillars.includes('Product / service education') ||
+    template.bestForPillars.includes('Hiring / culture')
+  ) {
+    return 'required';
+  }
+
+  if (
+    [
+      'process_breakdown',
+      'pain_diagnosis',
+      'mini_case_study',
+      'brand_case_study',
+    ].includes(archetype) ||
+    template.bestForPillars.some((pillar) =>
+      [
+        'Problem education',
+        'Proof / case study',
+        'Process / how-I-work',
+      ].includes(pillar)
+    )
+  ) {
+    return 'recommended';
+  }
+
+  return 'optional';
+};
+
+const normalizeCTAToken = (
+  template: string,
+  ctaRequirement: CTARequirement
+) => {
+  if (ctaRequirement === 'optional') {
+    return template.replace(/\[cta\]/g, '[optional cta]');
+  }
+
+  if (ctaRequirement === 'none') {
+    return template
+      .replace(/\n?\[cta\]\n?/g, '\n')
+      .replace(/\n?\[optional cta\]\n?/g, '\n')
+      .trim();
+  }
+
+  return template.replace(
+    /\[optional cta\]/g,
+    ctaRequirement === 'required' ? '[required cta]' : '[cta]'
+  );
+};
+
+const removeCannedClosings = (template: string) =>
+  template
+    .replace(/That’s the shift\./g, '[concise reframe]')
+    .replace(/Start there\./g, '[practical takeaway]')
+    .replace(/That changes the whole conversation\./g, '[closing observation]')
+    .replace(/Simple lesson\.\n\nExpensive to ignore\./g, '[grounded lesson]')
+    .replace(/That’s the part people usually miss\./g, '[closing observation]');
+
+const defaultGenerationInstructions = (archetype: PostArchetype): string[] => {
+  const base = [
+    'Use the template as structure, not as exact copy.',
+    "Write the ending in the user's natural voice.",
+    'Do not use stock LinkedIn closing phrases.',
+    'Do not repeat the hook in the conclusion.',
+    'Keep paragraphs short.',
+  ];
+
+  if (
+    [
+      'mini_case_study',
+      'brand_case_study',
+      'transformation_story',
+      'failure_to_recovery',
+    ].includes(archetype)
+  ) {
+    return [
+      ...base,
+      'Use proof only when it is present in the supplied context.',
+      'Do not invent results or numbers.',
+    ];
+  }
+
+  if (
+    [
+      'process_breakdown',
+      'goal_to_daily_system',
+      'beginner_to_expert',
+    ].includes(archetype)
+  ) {
+    return [...base, 'Make the sequence practical and easy to follow.'];
+  }
+
+  return base;
+};
+
+const t = (template: PostTemplateInput): PostTemplate => {
+  const archetype = archetypeMap[template.archetype];
+  const ctaRequirement = deriveCTARequirement(template, archetype);
+
+  return {
+    ...template,
+    archetype,
+    hookStyles: template.hookStyles || hookStylesByArchetype[archetype],
+    intents: template.intents || deriveIntents(template, archetype),
+    tensionPattern: template.tensionPattern || tensionByArchetype[archetype],
+    template: normalizeCTAToken(
+      removeCannedClosings(template.template),
+      ctaRequirement
+    ),
+    variables: template.variables.filter(
+      (variable) => ctaRequirement !== 'optional' || variable !== 'cta'
+    ),
+    blocks: template.blocks || defaultBlocks(ctaRequirement),
+    targetLength: template.targetLength || targetLengthByArchetype[archetype],
+    generationInstructions:
+      template.generationInstructions ||
+      defaultGenerationInstructions(archetype),
+    ctaRequirement,
+    antiPatterns: [...DEFAULT_ANTI_PATTERNS, ...template.antiPatterns],
+  };
+};
+
+const ALL_ROLES: Role[] = [
+  'Founder',
+  'Agency owner',
+  'Consultant',
+  'Freelancer',
+  'Coach',
+  'Creator',
+  'Marketer',
+  'Job seeker / career professional',
+];
+
+const BUSINESS_ROLES: Role[] = [
+  'Founder',
+  'Agency owner',
+  'Consultant',
+  'Freelancer',
+  'Coach',
+  'Creator',
+  'Marketer',
+];
+
+const ARCHETYPE_PILLARS: Record<string, PillarCategory[]> = {
+  impossible_vs_possible: [
+    'Audience belief shift',
+    'Point of view',
+  ],
+  long_form_promotion: ['Market / industry observation'],
+  deeper_desire_contrast: [
+    'Point of view',
+    'Audience belief shift',
+  ],
+  transformation_story: [
+    'Personal story',
+    'Career / credibility proof',
+    'Values / philosophy',
+  ],
+  villain_story: ['Personal story', 'Values / philosophy'],
+  problem_solution: [
+    'Problem education',
+    'Product / service education',
+    'Process / how-I-work',
+  ],
+  dont_do_this_do_this: [
+    'Mistakes and misconceptions',
+    'Process / how-I-work',
+    'Problem education',
+  ],
+  launch_story: [
+    'Product / service education',
+    'Behind the scenes',
+  ],
+  failure_to_recovery: [
+    'Personal story',
+    'Career / credibility proof',
+    'Values / philosophy',
+  ],
+  beginner_to_expert: [
+    'Process / how-I-work',
+    'Career / credibility proof',
+  ],
+  common_mistake: ['Mistakes and misconceptions', 'Audience belief shift'],
+  rule_or_wisdom: ['Values / philosophy'],
+  consistency_journey: [
+    'Personal story',
+    'Career / credibility proof',
+  ],
+  unexpected_connection: [
+    'Personal story',
+    'Community / network conversation',
+  ],
+  no_secret_daily_action: [
+    'Process / how-I-work',
+    'Audience belief shift',
+  ],
+  expectation_reset: [
+    'Objection handling',
+    'Audience belief shift',
+  ],
+  goal_to_daily_system: ['Process / how-I-work', 'Audience belief shift'],
+  misconception_to_framework: [
+    'Audience belief shift',
+    'Problem education',
+    'Process / how-I-work',
+  ],
+  research_led_explanation: [
+    'Market / industry observation',
+    'Problem education',
+    'Audience belief shift',
+  ],
+  brand_case_study: ['Proof / case study'],
+};
+
+const IMPORTED_LINKEDIN_POST_TEMPLATES: PostTemplate[] = [
+  t({
+    id: 'impossible_vs_possible',
+    name: 'Impossible vs Possible',
+    archetype: 'impossible_vs_possible',
+    variant: 'Short-term expectation reset',
+    bestForRoles: ALL_ROLES,
+    bestForGoals: [
+      'Build authority',
+      'Grow my audience',
+      'Build network',
+      'Get inbound leads',
+    ],
+    bestForPillars: ARCHETYPE_PILLARS.impossible_vs_possible,
+    template: `[common goal] is not realistic in [short timeframe].
+
+What is realistic:
+
+- [specific action 1]
+- [specific action 2]
+- [specific action 3]
+
+Each action moves you toward [specific outcome].
+
+In [longer timeframe], that can create:
+
+- [desirable outcome 1]
+- [desirable outcome 2]
+- [desirable outcome 3]
+
+Stop measuring today by [large outcome].
+
+Measure it by [small repeatable action].
+
+[optional cta]`,
+    variables: [
+      'common goal',
+      'short timeframe',
+      'specific action 1',
+      'specific action 2',
+      'specific action 3',
+      'specific outcome',
+      'longer timeframe',
+      'large outcome',
+      'small repeatable action',
+    ],
+    clarifyingQuestions: [
+      {
+        question: 'What big outcome does your audience want too quickly?',
+        fills: ['common goal', 'short timeframe', 'longer timeframe'],
+      },
+      {
+        question: 'What small actions actually move them toward it?',
+        fills: [
+          'specific action 1',
+          'specific action 2',
+          'specific action 3',
+          'small repeatable action',
+        ],
+      },
+    ],
+    ctaStyles: ['conversation', 'authority_reframe', 'diagnostic'],
+    ctaRequirement: 'optional',
+    proofRequirement: 'none',
+    antiPatterns: [],
+  }),
+  t({
+    id: 'long_form_promotion',
+    name: 'Long-Form Promotion',
+    archetype: 'long_form_promotion',
+    variant: 'Useful resource breakdown',
+    bestForRoles: BUSINESS_ROLES,
+    bestForGoals: [
+      'Promote my product/service',
+      'Build authority',
+      'Build network',
+    ],
+    bestForPillars: ARCHETYPE_PILLARS.long_form_promotion,
+    template: `[person or source] shared a useful idea about [topic].
+
+Here are the parts worth paying attention to:
+
+1. [insight 1]
+2. [insight 2]
+3. [insight 3]
+4. [insight 4]
+
+The common thread:
+
+[summary lesson]
+
+[optional resource link]
+
+[optional cta]`,
+    variables: [
+      'person or source',
+      'topic',
+      'insight 1',
+      'insight 2',
+      'insight 3',
+      'summary lesson',
+    ],
+    clarifyingQuestions: [
+      {
+        question: 'What resource, post, or idea should this summarize?',
+        fills: ['person or source', 'topic'],
+      },
+      {
+        question: 'What are the most useful takeaways?',
+        fills: ['insight 1', 'insight 2', 'insight 3', 'summary lesson'],
+      },
+    ],
+    ctaStyles: ['resource_offer', 'industry_prompt', 'conversation'],
+    ctaRequirement: 'optional',
+    proofRequirement: 'recommended',
+    antiPatterns: ['Do not make the resource sound more important than it is.'],
+  }),
+  t({
+    id: 'deeper_desire_contrast',
+    name: 'Deeper Desire Contrast',
+    archetype: 'deeper_desire_contrast',
+    variant: 'Surface desire vs real desire',
+    bestForRoles: ALL_ROLES,
+    bestForGoals: ['Build authority', 'Grow my audience', 'Build network'],
+    bestForPillars: ARCHETYPE_PILLARS.deeper_desire_contrast,
+    template: `[surface desire] gives you [surface outcome].
+
+[deeper desire] gives you [deeper outcome].
+
+Most people say they want [surface desire].
+
+What they usually want is [deeper desire].
+
+But [common behavior] keeps them focused on the surface.
+
+The better question:
+
+What would [desirable state] actually look like?
+
+[personal observation or example]
+
+[optional cta]`,
+    variables: [
+      'surface desire',
+      'surface outcome',
+      'deeper desire',
+      'deeper outcome',
+      'common behavior',
+      'desirable state',
+    ],
+    clarifyingQuestions: [
+      {
+        question:
+          'What does your audience say they want, and what do they actually want underneath?',
+        fills: ['surface desire', 'deeper desire'],
+      },
+      {
+        question: 'What behavior keeps them focused on the surface?',
+        fills: ['common behavior', 'desirable state'],
+      },
+    ],
+    ctaStyles: ['belief_statement', 'conversation', 'relatable'],
+    ctaRequirement: 'optional',
+    proofRequirement: 'optional',
+    antiPatterns: [],
+  }),
+  t({
+    id: 'transformation_story',
+    name: 'Transformation Story',
+    archetype: 'transformation_story',
+    variant: 'Starting point to change',
+    bestForRoles: ALL_ROLES,
+    bestForGoals: [
+      'Build authority',
+      'Grow my audience',
+      'Get job opportunities',
+      'Get inbound leads',
+    ],
+    bestForPillars: ARCHETYPE_PILLARS.transformation_story,
+    template: `I started from [starting point].
+
+At the time:
+
+- [constraint 1]
+- [constraint 2]
+- [constraint 3]
+
+Then I decided to [goal or change].
+
+I began by [specific action].
+
+Over time, that led to [result].
+
+The part people usually miss:
+
+[deeper lesson]
+
+You may not control [starting condition].
+
+You can still control [next action].
+
+[optional cta]`,
+    variables: [
+      'starting point',
+      'constraint 1',
+      'constraint 2',
+      'goal or change',
+      'specific action',
+      'result',
+      'deeper lesson',
+    ],
+    clarifyingQuestions: [
+      {
+        question: 'What real change or growth can you honestly talk about?',
+        fills: ['starting point', 'goal or change', 'result'],
+      },
+      {
+        question: 'What action created the change?',
+        fills: ['specific action', 'deeper lesson', 'next action'],
+      },
+    ],
+    ctaStyles: ['relatable', 'career_signal', 'soft_lead'],
+    ctaRequirement: 'optional',
+    proofRequirement: 'recommended',
+    antiPatterns: ['Do not turn the story into a motivational speech.'],
+  }),
+  t({
+    id: 'villain_story',
+    name: 'Villain Story',
+    archetype: 'villain_story',
+    variant: 'Naming a harmful pattern',
+    bestForRoles: ALL_ROLES,
+    bestForGoals: [
+      'Build authority',
+      'Grow my audience',
+      'Recruit / hire talent',
+      'Build network',
+    ],
+    bestForPillars: ARCHETYPE_PILLARS.villain_story,
+    template: `I once experienced [difficult situation].
+
+What made it difficult was not only [surface problem].
+
+It was:
+
+- [behavior or issue 1]
+- [behavior or issue 2]
+- [behavior or issue 3]
+
+Some friction is normal in [context].
+
+But [specific harmful behavior] should not be.
+
+The real problem was [deeper issue].
+
+[lesson or standard]
+
+[optional cta]`,
+    variables: [
+      'difficult situation',
+      'surface problem',
+      'behavior or issue 1',
+      'behavior or issue 2',
+      'context',
+      'specific harmful behavior',
+      'deeper issue',
+    ],
+    clarifyingQuestions: [
+      {
+        question:
+          'What difficult situation or harmful pattern can you discuss responsibly?',
+        fills: ['difficult situation', 'surface problem', 'deeper issue'],
+      },
+      {
+        question: 'What behavior made it unacceptable?',
+        fills: [
+          'behavior or issue 1',
+          'behavior or issue 2',
+          'specific harmful behavior',
+        ],
+      },
+    ],
+    ctaStyles: ['relatable', 'belief_statement', 'culture_invite'],
+    ctaRequirement: 'optional',
+    proofRequirement: 'recommended',
+    antiPatterns: ['Do not attack a specific person.'],
+  }),
+  t({
+    id: 'problem_solution',
+    name: 'Problem and Solution',
+    archetype: 'problem_solution',
+    variant: 'Observation to practical steps',
+    bestForRoles: BUSINESS_ROLES,
+    bestForGoals: [
+      'Get inbound leads',
+      'Build authority',
+      'Promote my product/service',
+    ],
+    bestForPillars: ARCHETYPE_PILLARS.problem_solution,
+    template: `[relevant fact or observation].
+
+[second fact or supporting observation].
+
+Together, they explain why [problem] keeps happening.
+
+The consequence is [negative outcome].
+
+The better approach is [solution].
+
+Start with:
+
+1. [step 1]
+2. [step 2]
+3. [step 3]
+4. [step 4]
+
+The goal is not [surface fix].
+
+It is [real outcome].
+
+[optional cta]`,
+    variables: [
+      'relevant fact or observation',
+      'problem',
+      'negative outcome',
+      'solution',
+      'step 1',
+      'step 2',
+      'real outcome',
+    ],
+    clarifyingQuestions: [
+      {
+        question: 'What problem should this explain?',
+        fills: ['problem', 'negative outcome', 'solution'],
+      },
+      {
+        question: 'What first steps should the audience take?',
+        fills: ['step 1', 'step 2', 'step 3', 'real outcome'],
+      },
+    ],
+    ctaStyles: ['problem_solution', 'diagnostic', 'soft_lead'],
+    ctaRequirement: 'optional',
+    proofRequirement: 'optional',
+    antiPatterns: [],
+  }),
+  t({
+    id: 'dont_do_this_do_this',
+    name: "Don't Do This, Do This Instead",
+    archetype: 'dont_do_this_do_this',
+    variant: 'Bad approach vs better approach',
+    bestForRoles: ALL_ROLES,
+    bestForGoals: ['Build authority', 'Get inbound leads', 'Grow my audience'],
+    bestForPillars: ARCHETYPE_PILLARS.dont_do_this_do_this,
+    template: `A few ways not to [goal]:
+
+1. [bad approach 1]
+   [why it fails]
+
+2. [bad approach 2]
+   [why it fails]
+
+3. [bad approach 3]
+   [why it fails]
+
+A better approach:
+
+1. [better action 1]
+2. [better action 2]
+3. [better action 3]
+
+The difference is [core principle].
+
+[optional cta]`,
+    variables: [
+      'goal',
+      'bad approach 1',
+      'bad approach 2',
+      'why it fails',
+      'better action 1',
+      'better action 2',
+      'core principle',
+    ],
+    clarifyingQuestions: [
+      {
+        question: 'What goal does your audience approach the wrong way?',
+        fills: ['goal', 'bad approach 1', 'bad approach 2'],
+      },
+      {
+        question: 'What better actions should replace the bad approaches?',
+        fills: ['better action 1', 'better action 2', 'core principle'],
+      },
+    ],
+    ctaStyles: ['agree_disagree', 'diagnostic', 'conversation'],
+    ctaRequirement: 'optional',
+    proofRequirement: 'optional',
+    antiPatterns: ['Do not shame the audience.'],
+  }),
+  t({
+    id: 'launch_story',
+    name: 'Launch Story',
+    archetype: 'launch_story',
+    variant: 'Behind the launch',
+    bestForRoles: BUSINESS_ROLES,
+    bestForGoals: [
+      'Promote my product/service',
+      'Get inbound leads',
+      'Build authority',
+    ],
+    bestForPillars: ARCHETYPE_PILLARS.launch_story,
+    template: `We are launching [product or service] on [date].
+
+Getting here was not straightforward.
+
+We had to work through:
+
+- [challenge 1]
+- [challenge 2]
+- [challenge 3]
+
+The reason we kept going:
+
+[problem the product solves]
+
+It is designed to help [audience] achieve:
+
+- [benefit 1]
+- [benefit 2]
+- [benefit 3]
+
+[launch details]
+
+[required cta]`,
+    variables: [
+      'product or service',
+      'date',
+      'challenge 1',
+      'challenge 2',
+      'problem the product solves',
+      'audience',
+      'benefit 1',
+      'launch details',
+      'cta',
+    ],
+    clarifyingQuestions: [
+      {
+        question: 'What are you launching, and when?',
+        fills: ['product or service', 'date', 'launch details'],
+      },
+      {
+        question: 'What problem does it solve and for whom?',
+        fills: ['problem the product solves', 'audience', 'benefit 1'],
+      },
+    ],
+    ctaStyles: ['demo_invite', 'product_walkthrough', 'offer_bridge'],
+    ctaRequirement: 'required',
+    proofRequirement: 'required',
+    antiPatterns: ['Do not overstate launch demand or traction.'],
+  }),
+  t({
+    id: 'failure_to_recovery',
+    name: 'Failure to Recovery',
+    archetype: 'failure_to_recovery',
+    variant: 'Setback to grounded lesson',
+    bestForRoles: ALL_ROLES,
+    bestForGoals: [
+      'Grow my audience',
+      'Build authority',
+      'Get job opportunities',
+      'Build network',
+    ],
+    bestForPillars: ARCHETYPE_PILLARS.failure_to_recovery,
+    template: `[timeframe] ago, [attempt or venture] failed.
+
+Before that, I had [effort or sacrifice].
+
+The failure led to [consequence].
+
+For a while, I dealt with:
+
+- [difficulty 1]
+- [difficulty 2]
+- [difficulty 3]
+
+Then [turning point].
+
+What changed was [specific change].
+
+Visible success rarely shows the full path.
+
+If you are dealing with [related hardship], remember:
+
+[grounded lesson]
+
+[optional cta]`,
+    variables: [
+      'timeframe',
+      'attempt or venture',
+      'effort or sacrifice',
+      'consequence',
+      'turning point',
+      'specific change',
+      'grounded lesson',
+    ],
+    clarifyingQuestions: [
+      {
+        question: 'What setback can you honestly discuss?',
+        fills: ['timeframe', 'attempt or venture', 'consequence'],
+      },
+      {
+        question: 'What changed after the setback?',
+        fills: ['turning point', 'specific change', 'grounded lesson'],
+      },
+    ],
+    ctaStyles: ['relatable', 'shared_learning', 'career_signal'],
+    ctaRequirement: 'optional',
+    proofRequirement: 'required',
+    antiPatterns: ['Do not romanticize failure.'],
+  }),
+  t({
+    id: 'beginner_to_expert',
+    name: 'Beginner to Expert',
+    archetype: 'beginner_to_expert',
+    variant: 'Maturity ladder',
+    bestForRoles: ALL_ROLES,
+    bestForGoals: [
+      'Build authority',
+      'Get job opportunities',
+      'Get inbound leads',
+    ],
+    bestForPillars: ARCHETYPE_PILLARS.beginner_to_expert,
+    template: `Beginner:
+
+[basic behavior]
+
+Intermediate:
+
+[basic behavior plus improvement]
+
+Advanced:
+
+[more complete behavior]
+
+Expert:
+
+[full system or deeper practice]
+
+The point:
+
+[goal] requires more than [basic activity].
+
+It requires [deeper principle].
+
+[optional cta]`,
+    variables: [
+      'basic behavior',
+      'basic behavior plus improvement',
+      'more complete behavior',
+      'full system or deeper practice',
+      'goal',
+      'basic activity',
+      'deeper principle',
+    ],
+    clarifyingQuestions: [
+      {
+        question:
+          'What skill, system, or behavior should this maturity ladder explain?',
+        fills: ['goal', 'basic activity', 'deeper principle'],
+      },
+      {
+        question: 'What changes from beginner to expert?',
+        fills: [
+          'basic behavior',
+          'more complete behavior',
+          'full system or deeper practice',
+        ],
+      },
+    ],
+    ctaStyles: ['belief_statement', 'work_style', 'diagnostic'],
+    ctaRequirement: 'optional',
+    proofRequirement: 'optional',
+    antiPatterns: [],
+  }),
+  t({
+    id: 'common_mistake',
+    name: 'Common Mistake',
+    archetype: 'mistake_lesson',
+    variant: 'Mistake to reframe',
+    bestForRoles: ALL_ROLES,
+    bestForGoals: ['Build authority', 'Grow my audience', 'Get inbound leads'],
+    bestForPillars: ARCHETYPE_PILLARS.common_mistake,
+    template: `A common mistake in [topic]:
+
+[mistake]
+
+It seems reasonable because [why it seems reasonable].
+
+But it creates [negative outcome].
+
+A better way to think about it:
+
+- [reframe 1]
+- [reframe 2]
+- [reframe 3]
+
+The goal is [desired outcome], not [wrong outcome].
+
+[optional cta]`,
+    variables: [
+      'topic',
+      'mistake',
+      'why it seems reasonable',
+      'negative outcome',
+      'reframe 1',
+      'reframe 2',
+      'desired outcome',
+    ],
+    clarifyingQuestions: [
+      {
+        question: 'What mistake does your audience often make?',
+        fills: ['topic', 'mistake', 'negative outcome'],
+      },
+      {
+        question: 'What reframe helps them think better?',
+        fills: ['reframe 1', 'reframe 2', 'desired outcome'],
+      },
+    ],
+    ctaStyles: ['diagnostic', 'conversation', 'belief_statement'],
+    ctaRequirement: 'optional',
+    proofRequirement: 'optional',
+    antiPatterns: ['Do not make the audience feel stupid.'],
+  }),
+  t({
+    id: 'rule_or_wisdom',
+    name: 'Rule or Wisdom',
+    archetype: 'rule_or_wisdom',
+    variant: 'Principle under pressure',
+    bestForRoles: ALL_ROLES,
+    bestForGoals: ['Build authority', 'Grow my audience', 'Build network'],
+    bestForPillars: ARCHETYPE_PILLARS.rule_or_wisdom,
+    template: `[rule or principle]:
+
+[setback or difficulty] will happen.
+
+The next move should still align with [goal].
+
+- If [setback 1], [constructive response 1]
+- If [setback 2], [constructive response 2]
+- If [setback 3], [constructive response 3]
+
+The principle is simple:
+
+[practical interpretation]
+
+[optional cta]`,
+    variables: [
+      'rule or principle',
+      'setback or difficulty',
+      'goal',
+      'setback 1',
+      'constructive response 1',
+      'practical interpretation',
+    ],
+    clarifyingQuestions: [
+      {
+        question: 'What principle do you want to share?',
+        fills: ['rule or principle', 'goal', 'practical interpretation'],
+      },
+      {
+        question: 'What setbacks test this principle?',
+        fills: ['setback 1', 'constructive response 1'],
+      },
+    ],
+    ctaStyles: ['belief_statement', 'relatable', 'shared_learning'],
+    ctaRequirement: 'optional',
+    proofRequirement: 'optional',
+    antiPatterns: [],
+  }),
+  t({
+    id: 'consistency_journey',
+    name: 'Consistency Journey',
+    archetype: 'consistency_journey',
+    variant: 'Repeated action over time',
+    bestForRoles: ALL_ROLES,
+    bestForGoals: [
+      'Grow my audience',
+      'Build authority',
+      'Get job opportunities',
+    ],
+    bestForPillars: ARCHETYPE_PILLARS.consistency_journey,
+    template: `I started [activity] in [timeframe].
+
+At first:
+
+- [early struggle 1]
+- [early struggle 2]
+- [early struggle 3]
+
+Since then, I have [consistent action].
+
+That has led to:
+
+- [result 1]
+- [result 2]
+- [result 3]
+
+The biggest lesson:
+
+[lesson about consistency]
+
+For anyone starting now:
+
+[practical advice]
+
+[optional cta]`,
+    variables: [
+      'activity',
+      'timeframe',
+      'early struggle 1',
+      'consistent action',
+      'result 1',
+      'lesson about consistency',
+      'practical advice',
+    ],
+    clarifyingQuestions: [
+      {
+        question: 'What activity have you practiced consistently?',
+        fills: ['activity', 'timeframe', 'consistent action'],
+      },
+      {
+        question: 'What changed because of that consistency?',
+        fills: ['result 1', 'lesson about consistency', 'practical advice'],
+      },
+    ],
+    ctaStyles: ['relatable', 'career_signal', 'conversation'],
+    ctaRequirement: 'optional',
+    proofRequirement: 'recommended',
+    antiPatterns: ['Do not invent streaks or timeframes.'],
+  }),
+  t({
+    id: 'unexpected_connection',
+    name: 'Unexpected Connection',
+    archetype: 'unexpected_connection',
+    variant: 'Small connection to larger outcome',
+    bestForRoles: ALL_ROLES,
+    bestForGoals: ['Build network', 'Grow my audience', 'Build authority'],
+    bestForPillars: ARCHETYPE_PILLARS.unexpected_connection,
+    template: `[unexpected result] started with [small event or connection].
+
+At the time, [context].
+
+Later, I reached out because:
+
+- [reason 1]
+- [reason 2]
+- [reason 3]
+
+That led to:
+
+- [outcome 1]
+- [outcome 2]
+- [outcome 3]
+
+And eventually, [larger outcome].
+
+The lesson:
+
+[connection or network insight]
+
+[optional cta]`,
+    variables: [
+      'unexpected result',
+      'small event or connection',
+      'context',
+      'reason 1',
+      'outcome 1',
+      'larger outcome',
+      'connection or network insight',
+    ],
+    clarifyingQuestions: [
+      {
+        question:
+          'What unexpected connection or opportunity can you honestly describe?',
+        fills: [
+          'unexpected result',
+          'small event or connection',
+          'larger outcome',
+        ],
+      },
+      {
+        question: 'What made the connection meaningful?',
+        fills: ['reason 1', 'outcome 1', 'connection or network insight'],
+      },
+    ],
+    ctaStyles: ['open_to_conversation', 'collaboration', 'shared_learning'],
+    ctaRequirement: 'optional',
+    proofRequirement: 'recommended',
+    antiPatterns: ['Do not invent a relationship or opportunity.'],
+  }),
+  t({
+    id: 'no_secret_daily_action',
+    name: 'No Secret Daily Action',
+    archetype: 'no_secret_daily_action',
+    variant: 'Repeatable action beats shortcut',
+    bestForRoles: ALL_ROLES,
+    bestForGoals: ['Build authority', 'Grow my audience', 'Get inbound leads'],
+    bestForPillars: ARCHETYPE_PILLARS.no_secret_daily_action,
+    template: `People ask how I [outcome].
+
+My answer:
+
+[repeatable daily action].
+
+They ask how I [second outcome].
+
+Same answer:
+
+[repeatable daily action].
+
+There is no hidden shortcut.
+
+The real advantage is [core principle].
+
+Start with:
+
+1. [step 1]
+2. [step 2]
+3. [step 3]
+4. [step 4]
+
+Consistency makes the difference.
+
+[optional cta]`,
+    variables: [
+      'outcome',
+      'repeatable daily action',
+      'second outcome',
+      'core principle',
+      'step 1',
+      'step 2',
+    ],
+    clarifyingQuestions: [
+      {
+        question: 'What outcome do people ask you about?',
+        fills: ['outcome', 'second outcome'],
+      },
+      {
+        question: 'What repeatable action creates progress?',
+        fills: ['repeatable daily action', 'core principle', 'step 1'],
+      },
+    ],
+    ctaStyles: ['belief_statement', 'conversation', 'work_style'],
+    ctaRequirement: 'optional',
+    proofRequirement: 'recommended',
+    antiPatterns: [],
+  }),
+  t({
+    id: 'expectation_reset',
+    name: 'Expectation Reset',
+    archetype: 'expectation_reset',
+    variant: 'What the work can and cannot fix',
+    bestForRoles: BUSINESS_ROLES,
+    bestForGoals: [
+      'Promote my product/service',
+      'Get inbound leads',
+      'Build authority',
+    ],
+    bestForPillars: ARCHETYPE_PILLARS.expectation_reset,
+    template: `[role or industry] cannot fix everything.
+
+It cannot fix:
+
+1. [unrealistic expectation 1]
+2. [unrealistic expectation 2]
+3. [unrealistic expectation 3]
+
+It can help with [realistic outcome].
+
+But only when [condition].
+
+The point is not to lower expectations.
+
+It is to set the right ones.
+
+[optional cta]`,
+    variables: [
+      'role or industry',
+      'unrealistic expectation 1',
+      'unrealistic expectation 2',
+      'realistic outcome',
+      'condition',
+    ],
+    clarifyingQuestions: [
+      {
+        question: 'What does your audience expect too much from?',
+        fills: [
+          'role or industry',
+          'unrealistic expectation 1',
+          'unrealistic expectation 2',
+        ],
+      },
+      {
+        question: 'What can it realistically help with?',
+        fills: ['realistic outcome', 'condition'],
+      },
+    ],
+    ctaStyles: ['fit_check', 'offer_bridge', 'diagnostic'],
+    ctaRequirement: 'optional',
+    proofRequirement: 'optional',
+    antiPatterns: ['Do not make the offer sound weak or defensive.'],
+  }),
+  t({
+    id: 'goal_to_daily_system',
+    name: 'Goal to Daily System',
+    archetype: 'goal_to_daily_system',
+    variant: 'Outcome to repeatable operating system',
+    bestForRoles: ALL_ROLES,
+    bestForGoals: [
+      'Build authority',
+      'Get inbound leads',
+      'Get job opportunities',
+    ],
+    bestForPillars: ARCHETYPE_PILLARS.goal_to_daily_system,
+    template: `[small repeatable result] over [timeframe] leads to [larger result].
+
+That is the target.
+
+The daily system:
+
+- [daily action 1]
+- [daily action 2]
+- [daily action 3]
+
+In practice:
+
+1. [specific example 1]
+2. [specific example 2]
+3. [specific example 3]
+
+As the system matures, add:
+
+- [less frequent action 1]
+- [less frequent action 2]
+- [less frequent action 3]
+
+The goal is not intensity.
+
+It is repeatability.
+
+[optional cta]`,
+    variables: [
+      'small repeatable result',
+      'timeframe',
+      'larger result',
+      'daily action 1',
+      'daily action 2',
+      'specific example 1',
+    ],
+    clarifyingQuestions: [
+      {
+        question: 'What larger result comes from repeatable smaller results?',
+        fills: ['small repeatable result', 'timeframe', 'larger result'],
+      },
+      {
+        question: 'What daily system creates it?',
+        fills: ['daily action 1', 'daily action 2', 'specific example 1'],
+      },
+    ],
+    ctaStyles: ['diagnostic', 'work_style', 'soft_lead'],
+    ctaRequirement: 'optional',
+    proofRequirement: 'optional',
+    antiPatterns: [],
+  }),
+  t({
+    id: 'misconception_to_framework',
+    name: 'Misconception to Framework',
+    archetype: 'misconception_to_framework',
+    variant: 'Belief correction with practical model',
+    bestForRoles: ALL_ROLES,
+    bestForGoals: ['Build authority', 'Get inbound leads', 'Grow my audience'],
+    bestForPillars: ARCHETYPE_PILLARS.misconception_to_framework,
+    template: `Why does [audience] struggle with [problem]?
+
+Because many believe [misconception].
+
+The reality:
+
+[reframe]
+
+A better approach is [framework or strategy].
+
+It works because:
+
+1. [benefit 1]
+2. [benefit 2]
+
+Think about it this way:
+
+- [mental model 1]
+- [mental model 2]
+- [mental model 3]
+
+Instead of [common approach], try:
+
+- [better action 1]
+- [better action 2]
+- [better action 3]
+
+[optional cta]`,
+    variables: [
+      'audience',
+      'problem',
+      'misconception',
+      'reframe',
+      'framework or strategy',
+      'benefit 1',
+      'better action 1',
+    ],
+    clarifyingQuestions: [
+      {
+        question: 'What misconception creates the problem?',
+        fills: ['audience', 'problem', 'misconception'],
+      },
+      {
+        question: 'What framework or better action should replace it?',
+        fills: ['framework or strategy', 'reframe', 'better action 1'],
+      },
+    ],
+    ctaStyles: ['authority_reframe', 'diagnostic', 'conversation'],
+    ctaRequirement: 'optional',
+    proofRequirement: 'optional',
+    antiPatterns: [],
+  }),
+  t({
+    id: 'research_led_explanation',
+    name: 'Research-Led Explanation',
+    archetype: 'research_led_explanation',
+    variant: 'Evidence to practical explanation',
+    bestForRoles: ALL_ROLES,
+    bestForGoals: ['Build authority', 'Build network', 'Get inbound leads'],
+    bestForPillars: ARCHETYPE_PILLARS.research_led_explanation,
+    template: `[fact, data point, or observation].
+
+Why does this happen?
+
+[concept or phenomenon]
+
+Research or evidence suggests:
+
+[summary of findings]
+
+The practical reason is [plain-language explanation].
+
+A useful example:
+
+[relatable example]
+
+The response is not [wrong response].
+
+It is [better response].
+
+Next time [situation] happens, remember [key lesson].
+
+[optional cta]`,
+    variables: [
+      'fact, data point, or observation',
+      'concept or phenomenon',
+      'summary of findings',
+      'plain-language explanation',
+      'relatable example',
+      'better response',
+      'key lesson',
+    ],
+    clarifyingQuestions: [
+      {
+        question: 'What fact, data point, or observation is this based on?',
+        fills: ['fact, data point, or observation', 'summary of findings'],
+      },
+      {
+        question: 'What practical lesson should the audience take from it?',
+        fills: ['plain-language explanation', 'better response', 'key lesson'],
+      },
+    ],
+    ctaStyles: ['industry_prompt', 'authority_reframe', 'peer_question'],
+    ctaRequirement: 'optional',
+    proofRequirement: 'required',
+    antiPatterns: ['Do not cite research unless source context is provided.'],
+  }),
+  t({
+    id: 'brand_case_study',
+    name: 'Brand Case Study',
+    archetype: 'brand_case_study',
+    variant: 'Strategy shift case study',
+    bestForRoles: BUSINESS_ROLES,
+    bestForGoals: [
+      'Build authority',
+      'Promote my product/service',
+      'Get inbound leads',
+    ],
+    bestForPillars: ARCHETYPE_PILLARS.brand_case_study,
+    template: `[brand or company] achieved [notable result].
+
+The important part is how the strategy changed over time.
+
+At first, the strategy was [original strategy].
+
+It worked until [market or industry shift].
+
+That created [negative outcome].
+
+The company responded by:
+
+1. [change 1]
+2. [change 2]
+3. [change 3]
+
+The result was [outcome].
+
+The larger lesson:
+
+[lesson for the audience]
+
+[optional cta]`,
+    variables: [
+      'brand or company',
+      'notable result',
+      'original strategy',
+      'market or industry shift',
+      'negative outcome',
+      'change 1',
+      'lesson for the audience',
+    ],
+    clarifyingQuestions: [
+      {
+        question:
+          'What brand or company case can you discuss from supplied context?',
+        fills: ['brand or company', 'notable result', 'original strategy'],
+      },
+      {
+        question: 'What strategy changed, and what lesson should readers take?',
+        fills: [
+          'market or industry shift',
+          'change 1',
+          'lesson for the audience',
+        ],
+      },
+    ],
+    ctaStyles: ['belief_statement', 'offer_bridge', 'industry_prompt'],
+    ctaRequirement: 'optional',
+    proofRequirement: 'required',
+    antiPatterns: ['Do not invent brand results or strategy details.'],
+  }),
+];
 
 export const LINKEDIN_POST_TEMPLATES: PostTemplate[] = [
+  ...IMPORTED_LINKEDIN_POST_TEMPLATES,
   t({
-    id: "pain_diagnosis_01",
-    name: "Surface Problem vs Root Problem",
-    archetype: "Pain Diagnosis",
-    variant: "X is not the real problem",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Get inbound leads", "Build authority", "Promote my product/service"],
-    bestForPillars: ["Problem education", "Audience belief shift", "Mistakes and misconceptions"],
+    id: 'pain_diagnosis_01',
+    name: 'Surface Problem vs Root Problem',
+    archetype: 'Pain Diagnosis',
+    variant: 'X is not the real problem',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: [
+      'Get inbound leads',
+      'Build authority',
+      'Promote my product/service',
+    ],
+    bestForPillars: [
+      'Problem education',
+      'Audience belief shift',
+      'Mistakes and misconceptions',
+    ],
     template: `Most [audience] think they have a [surface problem] problem.
 
 Usually, they don’t.
@@ -379,40 +2176,49 @@ The better question is:
 
 [cta]`,
     variables: [
-      "audience",
-      "surface problem",
-      "deeper problem",
-      "symptom 1",
-      "symptom 2",
-      "symptom 3",
-      "common wrong fix",
-      "surface symptom",
-      "root cause",
-      "cta",
+      'audience',
+      'surface problem',
+      'deeper problem',
+      'symptom 1',
+      'symptom 2',
+      'symptom 3',
+      'common wrong fix',
+      'surface symptom',
+      'root cause',
+      'cta',
     ],
     clarifyingQuestions: [
       {
-        question: "What problem does your audience think they have, and what is usually causing it underneath?",
-        fills: ["surface problem", "deeper problem", "root cause"],
+        question:
+          'What problem does your audience think they have, and what is usually causing it underneath?',
+        fills: ['surface problem', 'deeper problem', 'root cause'],
       },
       {
-        question: "What are 2–3 signs this problem is showing up?",
-        fills: ["symptom 1", "symptom 2", "symptom 3"],
+        question: 'What are 2–3 signs this problem is showing up?',
+        fills: ['symptom 1', 'symptom 2', 'symptom 3'],
       },
     ],
-    ctaStyles: ["diagnostic", "soft_lead", "problem_solution"],
-    proofRequirement: "optional",
-    antiPatterns: ["Do not turn this into a long educational essay."],
+    ctaStyles: ['diagnostic', 'soft_lead', 'problem_solution'],
+    proofRequirement: 'optional',
+    antiPatterns: ['Do not turn this into a long educational essay.'],
   }),
 
   t({
-    id: "pain_diagnosis_02",
-    name: "Symptoms of a Deeper Issue",
-    archetype: "Pain Diagnosis",
-    variant: "Symptoms before diagnosis",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Marketer"],
-    bestForGoals: ["Get inbound leads", "Build authority"],
-    bestForPillars: ["Problem education", "Audience belief shift"],
+    id: 'pain_diagnosis_02',
+    name: 'Symptoms of a Deeper Issue',
+    archetype: 'Pain Diagnosis',
+    variant: 'Symptoms before diagnosis',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Marketer',
+    ],
+    bestForGoals: ['Get inbound leads', 'Build authority'],
+    bestForPillars: ['Problem education', 'Audience belief shift'],
     template: `If you’re seeing:
 
 1. [symptom 1]
@@ -434,40 +2240,49 @@ Before you try [next tactic], ask:
 
 [cta]`,
     variables: [
-      "symptom 1",
-      "symptom 2",
-      "symptom 3",
-      "symptom 4",
-      "surface diagnosis",
-      "deeper diagnosis",
-      "wrong area",
-      "right area",
-      "next tactic",
-      "cta",
+      'symptom 1',
+      'symptom 2',
+      'symptom 3',
+      'symptom 4',
+      'surface diagnosis',
+      'deeper diagnosis',
+      'wrong area',
+      'right area',
+      'next tactic',
+      'cta',
     ],
     clarifyingQuestions: [
       {
-        question: "What symptoms would your audience recognize immediately?",
-        fills: ["symptom 1", "symptom 2", "symptom 3", "symptom 4"],
+        question: 'What symptoms would your audience recognize immediately?',
+        fills: ['symptom 1', 'symptom 2', 'symptom 3', 'symptom 4'],
       },
       {
-        question: "What do people usually misdiagnose this as?",
-        fills: ["surface diagnosis", "deeper diagnosis"],
+        question: 'What do people usually misdiagnose this as?',
+        fills: ['surface diagnosis', 'deeper diagnosis'],
       },
     ],
-    ctaStyles: ["diagnostic", "soft_lead"],
-    proofRequirement: "none",
+    ctaStyles: ['diagnostic', 'soft_lead'],
+    proofRequirement: 'none',
     antiPatterns: [],
   }),
 
   t({
-    id: "pain_diagnosis_03",
-    name: "The Expensive Wrong Fix",
-    archetype: "Pain Diagnosis",
-    variant: "Wrong fix",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Get inbound leads", "Promote my product/service"],
-    bestForPillars: ["Problem education", "Objection handling", "Product / service education"],
+    id: 'pain_diagnosis_03',
+    name: 'The Expensive Wrong Fix',
+    archetype: 'Pain Diagnosis',
+    variant: 'Wrong fix',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: ['Get inbound leads', 'Promote my product/service'],
+    bestForPillars: ['Problem education'],
     template: `A lot of [audience] try to fix [problem] by doing [wrong fix].
 
 It makes sense.
@@ -489,30 +2304,50 @@ Because it gets closer to the source.
 Don’t spend more on [wrong fix] before checking [root cause].
 
 [cta]`,
-    variables: ["audience", "problem", "wrong fix", "root cause", "bad outcome 1", "bad outcome 2", "bad outcome 3", "better first move", "cta"],
+    variables: [
+      'audience',
+      'problem',
+      'wrong fix',
+      'root cause',
+      'bad outcome 1',
+      'bad outcome 2',
+      'bad outcome 3',
+      'better first move',
+      'cta',
+    ],
     clarifyingQuestions: [
       {
-        question: "What wrong fix does your audience often try first?",
-        fills: ["wrong fix"],
+        question: 'What wrong fix does your audience often try first?',
+        fills: ['wrong fix'],
       },
       {
-        question: "What should they check before spending time or money on that?",
-        fills: ["root cause", "better first move"],
+        question:
+          'What should they check before spending time or money on that?',
+        fills: ['root cause', 'better first move'],
       },
     ],
-    ctaStyles: ["problem_solution", "soft_lead", "offer_bridge"],
-    proofRequirement: "optional",
-    antiPatterns: ["Do not shame the audience for making the mistake."],
+    ctaStyles: ['problem_solution', 'soft_lead', 'offer_bridge'],
+    proofRequirement: 'optional',
+    antiPatterns: ['Do not shame the audience for making the mistake.'],
   }),
 
   t({
-    id: "pain_diagnosis_04",
-    name: "Nobody Checks This First",
-    archetype: "Pain Diagnosis",
-    variant: "Ignored diagnostic",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Get inbound leads", "Build authority"],
-    bestForPillars: ["Problem education", "Process / how-I-work"],
+    id: 'pain_diagnosis_04',
+    name: 'Nobody Checks This First',
+    archetype: 'Pain Diagnosis',
+    variant: 'Ignored diagnostic',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: ['Get inbound leads', 'Build authority'],
+    bestForPillars: ['Problem education', 'Process / how-I-work'],
     template: `Before you try to fix [problem], check [ignored check].
 
 Most people skip this.
@@ -534,30 +2369,50 @@ The question I’d ask first:
 Start there.
 
 [cta]`,
-    variables: ["problem", "ignored check", "premature action 1", "premature action 2", "premature action 3", "desired outcome", "cta"],
+    variables: [
+      'problem',
+      'ignored check',
+      'premature action 1',
+      'premature action 2',
+      'premature action 3',
+      'desired outcome',
+      'cta',
+    ],
     clarifyingQuestions: [
       {
-        question: "What important check does your audience usually skip?",
-        fills: ["ignored check"],
+        question: 'What important check does your audience usually skip?',
+        fills: ['ignored check'],
       },
       {
-        question: "What actions do they jump into too early?",
-        fills: ["premature action 1", "premature action 2", "premature action 3"],
+        question: 'What actions do they jump into too early?',
+        fills: [
+          'premature action 1',
+          'premature action 2',
+          'premature action 3',
+        ],
       },
     ],
-    ctaStyles: ["diagnostic", "authority_reframe", "soft_lead"],
-    proofRequirement: "none",
+    ctaStyles: ['diagnostic', 'authority_reframe', 'soft_lead'],
+    proofRequirement: 'none',
     antiPatterns: [],
   }),
 
   t({
-    id: "pain_diagnosis_05",
-    name: "Problem Beneath the Problem",
-    archetype: "Pain Diagnosis",
-    variant: "Layered diagnosis",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Marketer"],
-    bestForGoals: ["Get inbound leads", "Build authority"],
-    bestForPillars: ["Problem education", "Audience belief shift"],
+    id: 'pain_diagnosis_05',
+    name: 'Problem Beneath the Problem',
+    archetype: 'Pain Diagnosis',
+    variant: 'Layered diagnosis',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Marketer',
+    ],
+    bestForGoals: ['Get inbound leads', 'Build authority'],
+    bestForPillars: ['Problem education', 'Audience belief shift'],
     template: `[surface problem] is usually not where the problem starts.
 
 It’s where the problem becomes visible.
@@ -579,30 +2434,46 @@ The goal is to notice [hidden issue] earlier.
 That changes the whole conversation.
 
 [cta]`,
-    variables: ["surface problem", "hidden issue", "early sign 1", "early sign 2", "early sign 3", "cta"],
+    variables: [
+      'surface problem',
+      'hidden issue',
+      'early sign 1',
+      'early sign 2',
+      'early sign 3',
+      'cta',
+    ],
     clarifyingQuestions: [
       {
-        question: "What surface problem does your audience notice too late?",
-        fills: ["surface problem"],
+        question: 'What surface problem does your audience notice too late?',
+        fills: ['surface problem'],
       },
       {
-        question: "What hidden issue usually comes before it?",
-        fills: ["hidden issue", "early sign 1", "early sign 2", "early sign 3"],
+        question: 'What hidden issue usually comes before it?',
+        fills: ['hidden issue', 'early sign 1', 'early sign 2', 'early sign 3'],
       },
     ],
-    ctaStyles: ["diagnostic", "authority_reframe", "soft_lead"],
-    proofRequirement: "optional",
+    ctaStyles: ['diagnostic', 'authority_reframe', 'soft_lead'],
+    proofRequirement: 'optional',
     antiPatterns: [],
   }),
 
   t({
-    id: "checklist_01",
-    name: "Before You Do X",
-    archetype: "Checklist",
-    variant: "Pre-action checklist",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Get inbound leads", "Build authority", "Grow my audience"],
-    bestForPillars: ["Problem education", "Process / how-I-work"],
+    id: 'checklist_01',
+    name: 'Before You Do X',
+    archetype: 'Checklist',
+    variant: 'Pre-action checklist',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: ['Get inbound leads', 'Build authority', 'Grow my audience'],
+    bestForPillars: ['Problem education', 'Process / how-I-work'],
     template: `Before you [do action], check these first:
 
 1. [check 1]
@@ -621,41 +2492,56 @@ A better question is:
 
 [cta]`,
     variables: [
-      "do action",
-      "check 1",
-      "check 2",
-      "check 3",
-      "check 4",
-      "check 5",
-      "important check",
-      "bad outcome",
-      "core issue",
-      "next action",
-      "cta",
+      'do action',
+      'check 1',
+      'check 2',
+      'check 3',
+      'check 4',
+      'check 5',
+      'important check',
+      'bad outcome',
+      'core issue',
+      'next action',
+      'cta',
     ],
     clarifyingQuestions: [
       {
-        question: "What action does your audience usually rush into?",
-        fills: ["do action", "next action"],
+        question: 'What action does your audience usually rush into?',
+        fills: ['do action', 'next action'],
       },
       {
-        question: "What should they check before doing that?",
-        fills: ["check 1", "check 2", "check 3", "check 4", "check 5", "important check"],
+        question: 'What should they check before doing that?',
+        fills: [
+          'check 1',
+          'check 2',
+          'check 3',
+          'check 4',
+          'check 5',
+          'important check',
+        ],
       },
     ],
-    ctaStyles: ["diagnostic", "soft_lead", "conversation"],
-    proofRequirement: "none",
-    antiPatterns: ["Do not explain every checklist item unless necessary."],
+    ctaStyles: ['diagnostic', 'soft_lead', 'conversation'],
+    proofRequirement: 'none',
+    antiPatterns: ['Do not explain every checklist item unless necessary.'],
   }),
 
   t({
-    id: "checklist_02",
-    name: "Signs You Need to Fix X",
-    archetype: "Checklist",
-    variant: "Warning signs",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Marketer"],
-    bestForGoals: ["Get inbound leads", "Grow my audience", "Build authority"],
-    bestForPillars: ["Problem education", "Audience belief shift"],
+    id: 'checklist_02',
+    name: 'Signs You Need to Fix X',
+    archetype: 'Checklist',
+    variant: 'Warning signs',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Marketer',
+    ],
+    bestForGoals: ['Get inbound leads', 'Grow my audience', 'Build authority'],
+    bestForPillars: ['Problem education', 'Audience belief shift'],
     template: `You probably need to fix [problem area] if:
 
 1. [sign 1]
@@ -673,30 +2559,50 @@ Don’t wait until [late consequence].
 Fix [problem area] while the signals are still small.
 
 [cta]`,
-    variables: ["problem area", "sign 1", "sign 2", "sign 3", "sign 4", "sign 5", "biggest sign", "deeper meaning", "late consequence", "cta"],
+    variables: [
+      'problem area',
+      'sign 1',
+      'sign 2',
+      'sign 3',
+      'sign 4',
+      'sign 5',
+      'biggest sign',
+      'deeper meaning',
+      'late consequence',
+      'cta',
+    ],
     clarifyingQuestions: [
       {
-        question: "What are the signs that your audience has this problem?",
-        fills: ["sign 1", "sign 2", "sign 3", "sign 4", "sign 5"],
+        question: 'What are the signs that your audience has this problem?',
+        fills: ['sign 1', 'sign 2', 'sign 3', 'sign 4', 'sign 5'],
       },
       {
-        question: "Which sign is the most important warning sign?",
-        fills: ["biggest sign", "deeper meaning"],
+        question: 'Which sign is the most important warning sign?',
+        fills: ['biggest sign', 'deeper meaning'],
       },
     ],
-    ctaStyles: ["diagnostic", "conversation", "soft_lead"],
-    proofRequirement: "none",
+    ctaStyles: ['diagnostic', 'conversation', 'soft_lead'],
+    proofRequirement: 'none',
     antiPatterns: [],
   }),
 
   t({
-    id: "checklist_03",
-    name: "Decision Questions",
-    archetype: "Checklist",
-    variant: "Questions before decision",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Build authority", "Get inbound leads", "Build network"],
-    bestForPillars: ["Problem education", "Process / how-I-work"],
+    id: 'checklist_03',
+    name: 'Decision Questions',
+    archetype: 'Checklist',
+    variant: 'Questions before decision',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: ['Build authority', 'Get inbound leads', 'Build network'],
+    bestForPillars: ['Problem education', 'Process / how-I-work'],
     template: `Before deciding on [decision], ask these questions:
 
 1. [question 1]
@@ -721,41 +2627,61 @@ Ask:
 
 [cta]`,
     variables: [
-      "decision",
-      "question 1",
-      "question 2",
-      "question 3",
-      "question 4",
-      "question 5",
-      "shallow question",
-      "weak basis",
-      "strong basis",
-      "better question",
-      "cta",
+      'decision',
+      'question 1',
+      'question 2',
+      'question 3',
+      'question 4',
+      'question 5',
+      'shallow question',
+      'weak basis',
+      'strong basis',
+      'better question',
+      'cta',
     ],
     clarifyingQuestions: [
       {
-        question: "What decision does your audience struggle with?",
-        fills: ["decision"],
+        question: 'What decision does your audience struggle with?',
+        fills: ['decision'],
       },
       {
-        question: "What questions would help them make a better decision?",
-        fills: ["question 1", "question 2", "question 3", "question 4", "question 5", "better question"],
+        question: 'What questions would help them make a better decision?',
+        fills: [
+          'question 1',
+          'question 2',
+          'question 3',
+          'question 4',
+          'question 5',
+          'better question',
+        ],
       },
     ],
-    ctaStyles: ["diagnostic", "peer_question", "authority_reframe"],
-    proofRequirement: "none",
+    ctaStyles: ['diagnostic', 'peer_question', 'authority_reframe'],
+    proofRequirement: 'none',
     antiPatterns: [],
   }),
 
   t({
-    id: "checklist_04",
-    name: "What Good Looks Like",
-    archetype: "Checklist",
-    variant: "Quality standards",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Build authority", "Get job opportunities", "Promote my product/service"],
-    bestForPillars: ["Process / how-I-work", "Problem education", "Career / credibility proof"],
+    id: 'checklist_04',
+    name: 'What Good Looks Like',
+    archetype: 'Checklist',
+    variant: 'Quality standards',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: [
+      'Build authority',
+      'Get job opportunities',
+      'Promote my product/service',
+    ],
+    bestForPillars: ['Values / philosophy'],
     template: `Everyone says they want better [topic].
 
 But “better” is too vague.
@@ -777,30 +2703,54 @@ The real question is:
 Start there.
 
 [cta]`,
-    variables: ["topic", "standard 1", "standard 2", "standard 3", "standard 4", "standard 5", "wrong metric", "cta"],
+    variables: [
+      'topic',
+      'standard 1',
+      'standard 2',
+      'standard 3',
+      'standard 4',
+      'standard 5',
+      'wrong metric',
+      'cta',
+    ],
     clarifyingQuestions: [
       {
-        question: "What does your audience vaguely want to improve?",
-        fills: ["topic"],
+        question: 'What does your audience vaguely want to improve?',
+        fills: ['topic'],
       },
       {
-        question: "What does ‘good’ actually look like in that area?",
-        fills: ["standard 1", "standard 2", "standard 3", "standard 4", "standard 5"],
+        question: 'What does ‘good’ actually look like in that area?',
+        fills: [
+          'standard 1',
+          'standard 2',
+          'standard 3',
+          'standard 4',
+          'standard 5',
+        ],
       },
     ],
-    ctaStyles: ["belief_statement", "work_style", "offer_bridge"],
-    proofRequirement: "none",
+    ctaStyles: ['belief_statement', 'work_style', 'offer_bridge'],
+    proofRequirement: 'none',
     antiPatterns: [],
   }),
 
   t({
-    id: "checklist_05",
-    name: "Quick Audit",
-    archetype: "Checklist",
-    variant: "Self-audit",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Get inbound leads", "Build authority", "Grow my audience"],
-    bestForPillars: ["Problem education", "Process / how-I-work"],
+    id: 'checklist_05',
+    name: 'Quick Audit',
+    archetype: 'Checklist',
+    variant: 'Self-audit',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: ['Get inbound leads', 'Build authority', 'Grow my audience'],
+    bestForPillars: ['Problem education', 'Process / how-I-work'],
     template: `Quick audit for [topic]:
 
 1. Is [audit question 1]?
@@ -819,40 +2769,55 @@ Fix the constraint.
 
 [cta]`,
     variables: [
-      "topic",
-      "audit question 1",
-      "audit question 2",
-      "audit question 3",
-      "audit question 4",
-      "audit question 5",
-      "important question",
-      "foundation",
-      "desired outcome",
-      "cta",
+      'topic',
+      'audit question 1',
+      'audit question 2',
+      'audit question 3',
+      'audit question 4',
+      'audit question 5',
+      'important question',
+      'foundation',
+      'desired outcome',
+      'cta',
     ],
     clarifyingQuestions: [
       {
-        question: "What should your audience audit?",
-        fills: ["topic"],
+        question: 'What should your audience audit?',
+        fills: ['topic'],
       },
       {
-        question: "What are the 5 checks in that audit?",
-        fills: ["audit question 1", "audit question 2", "audit question 3", "audit question 4", "audit question 5"],
+        question: 'What are the 5 checks in that audit?',
+        fills: [
+          'audit question 1',
+          'audit question 2',
+          'audit question 3',
+          'audit question 4',
+          'audit question 5',
+        ],
       },
     ],
-    ctaStyles: ["diagnostic", "soft_lead", "conversation"],
-    proofRequirement: "none",
+    ctaStyles: ['diagnostic', 'soft_lead', 'conversation'],
+    proofRequirement: 'none',
     antiPatterns: [],
   }),
 
   t({
-    id: "contrarian_take_01",
-    name: "Most People Have This Backwards",
-    archetype: "Contrarian Take",
-    variant: "Backwards belief",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Build authority", "Grow my audience", "Build network"],
-    bestForPillars: ["Point of view", "Audience belief shift"],
+    id: 'contrarian_take_01',
+    name: 'Most People Have This Backwards',
+    archetype: 'Contrarian Take',
+    variant: 'Backwards belief',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: ['Build authority', 'Grow my audience', 'Build network'],
+    bestForPillars: ['Point of view', 'Audience belief shift'],
     template: `Most people think [common belief].
 
 I don’t.
@@ -879,41 +2844,50 @@ Not [old frame].
 
 [cta]`,
     variables: [
-      "common belief",
-      "opposite belief",
-      "bad behavior 1",
-      "bad behavior 2",
-      "bad behavior 3",
-      "better behavior 1",
-      "better behavior 2",
-      "better behavior 3",
-      "old frame",
-      "new frame",
-      "cta",
+      'common belief',
+      'opposite belief',
+      'bad behavior 1',
+      'bad behavior 2',
+      'bad behavior 3',
+      'better behavior 1',
+      'better behavior 2',
+      'better behavior 3',
+      'old frame',
+      'new frame',
+      'cta',
     ],
     clarifyingQuestions: [
       {
-        question: "What common belief in your space do you disagree with?",
-        fills: ["common belief", "old frame"],
+        question: 'What common belief in your space do you disagree with?',
+        fills: ['common belief', 'old frame'],
       },
       {
-        question: "What do you believe instead?",
-        fills: ["opposite belief", "new frame"],
+        question: 'What do you believe instead?',
+        fills: ['opposite belief', 'new frame'],
       },
     ],
-    ctaStyles: ["authority_reframe", "industry_prompt", "agree_disagree"],
-    proofRequirement: "recommended",
-    antiPatterns: ["Do not make the take extreme just for attention."],
+    ctaStyles: ['authority_reframe', 'industry_prompt', 'agree_disagree'],
+    proofRequirement: 'recommended',
+    antiPatterns: ['Do not make the take extreme just for attention.'],
   }),
 
   t({
-    id: "contrarian_take_02",
-    name: "The Uncomfortable Truth",
-    archetype: "Contrarian Take",
-    variant: "Uncomfortable truth",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Build authority", "Grow my audience"],
-    bestForPillars: ["Point of view", "Mistakes and misconceptions"],
+    id: 'contrarian_take_02',
+    name: 'The Uncomfortable Truth',
+    archetype: 'Contrarian Take',
+    variant: 'Uncomfortable truth',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: ['Build authority', 'Grow my audience'],
+    bestForPillars: ['Point of view', 'Audience belief shift'],
     template: `Uncomfortable truth about [topic]:
 
 [uncomfortable truth]
@@ -936,40 +2910,53 @@ It means [clarification].
 
 [cta]`,
     variables: [
-      "topic",
-      "uncomfortable truth",
-      "reason people avoid it",
-      "bad outcome 1",
-      "bad outcome 2",
-      "bad outcome 3",
-      "honest reframe",
-      "misinterpretation",
-      "clarification",
-      "cta",
+      'topic',
+      'uncomfortable truth',
+      'reason people avoid it',
+      'bad outcome 1',
+      'bad outcome 2',
+      'bad outcome 3',
+      'honest reframe',
+      'misinterpretation',
+      'clarification',
+      'cta',
     ],
     clarifyingQuestions: [
       {
-        question: "What uncomfortable truth does your audience need to hear?",
-        fills: ["uncomfortable truth"],
+        question: 'What uncomfortable truth does your audience need to hear?',
+        fills: ['uncomfortable truth'],
       },
       {
-        question: "What might people misunderstand about this take?",
-        fills: ["misinterpretation", "clarification"],
+        question: 'What might people misunderstand about this take?',
+        fills: ['misinterpretation', 'clarification'],
       },
     ],
-    ctaStyles: ["authority_reframe", "agree_disagree", "conversation"],
-    proofRequirement: "recommended",
-    antiPatterns: ["Do not insult the audience."],
+    ctaStyles: ['authority_reframe', 'agree_disagree', 'conversation'],
+    proofRequirement: 'recommended',
+    antiPatterns: ['Do not insult the audience.'],
   }),
 
   t({
-    id: "contrarian_take_03",
-    name: "Stop Optimizing the Wrong Thing",
-    archetype: "Contrarian Take",
-    variant: "Wrong focus",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Build authority", "Get inbound leads", "Grow my audience"],
-    bestForPillars: ["Point of view", "Problem education", "Audience belief shift"],
+    id: 'contrarian_take_03',
+    name: 'Stop Optimizing the Wrong Thing',
+    archetype: 'Contrarian Take',
+    variant: 'Wrong focus',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: ['Build authority', 'Get inbound leads', 'Grow my audience'],
+    bestForPillars: [
+      'Point of view',
+      'Problem education',
+      'Audience belief shift',
+    ],
     template: `Too many [audience] optimize for [wrong thing].
 
 It feels useful because [why it feels useful].
@@ -994,41 +2981,55 @@ The goal is better [right thing].
 
 [cta]`,
     variables: [
-      "audience",
-      "wrong thing",
-      "why it feels useful",
-      "bad outcome 1",
-      "bad outcome 2",
-      "bad outcome 3",
-      "right thing",
-      "better outcome 1",
-      "better outcome 2",
-      "better outcome 3",
-      "cta",
+      'audience',
+      'wrong thing',
+      'why it feels useful',
+      'bad outcome 1',
+      'bad outcome 2',
+      'bad outcome 3',
+      'right thing',
+      'better outcome 1',
+      'better outcome 2',
+      'better outcome 3',
+      'cta',
     ],
     clarifyingQuestions: [
       {
-        question: "What does your audience over-optimize for?",
-        fills: ["wrong thing"],
+        question: 'What does your audience over-optimize for?',
+        fills: ['wrong thing'],
       },
       {
-        question: "What should they optimize for instead?",
-        fills: ["right thing", "better outcome 1", "better outcome 2", "better outcome 3"],
+        question: 'What should they optimize for instead?',
+        fills: [
+          'right thing',
+          'better outcome 1',
+          'better outcome 2',
+          'better outcome 3',
+        ],
       },
     ],
-    ctaStyles: ["diagnostic", "authority_reframe", "conversation"],
-    proofRequirement: "none",
+    ctaStyles: ['diagnostic', 'authority_reframe', 'conversation'],
+    proofRequirement: 'none',
     antiPatterns: [],
   }),
 
   t({
-    id: "contrarian_take_04",
-    name: "Everyone Says X, I See Y",
-    archetype: "Contrarian Take",
-    variant: "Public narrative vs reality",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Build authority", "Grow my audience", "Build network"],
-    bestForPillars: ["Point of view", "Market / industry observation"],
+    id: 'contrarian_take_04',
+    name: 'Everyone Says X, I See Y',
+    archetype: 'Contrarian Take',
+    variant: 'Public narrative vs reality',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: ['Build authority', 'Grow my audience', 'Build network'],
+    bestForPillars: ['Point of view', 'Market / industry observation'],
     template: `Everyone keeps saying [popular narrative].
 
 But I keep seeing [observed reality].
@@ -1051,41 +3052,60 @@ So instead of asking [old question], I’d ask:
 
 [cta]`,
     variables: [
-      "popular narrative",
-      "observed reality",
-      "signal 1",
-      "signal 2",
-      "signal 3",
-      "surface conversation",
-      "real issue",
-      "practical consequence",
-      "old question",
-      "better question",
-      "cta",
+      'popular narrative',
+      'observed reality',
+      'signal 1',
+      'signal 2',
+      'signal 3',
+      'surface conversation',
+      'real issue',
+      'practical consequence',
+      'old question',
+      'better question',
+      'cta',
     ],
     clarifyingQuestions: [
       {
-        question: "What does everyone in your space keep saying?",
-        fills: ["popular narrative", "surface conversation"],
+        question: 'What does everyone in your space keep saying?',
+        fills: ['popular narrative', 'surface conversation'],
       },
       {
-        question: "What are you seeing instead?",
-        fills: ["observed reality", "real issue", "signal 1", "signal 2", "signal 3"],
+        question: 'What are you seeing instead?',
+        fills: [
+          'observed reality',
+          'real issue',
+          'signal 1',
+          'signal 2',
+          'signal 3',
+        ],
       },
     ],
-    ctaStyles: ["industry_prompt", "peer_question", "authority_reframe"],
-    proofRequirement: "recommended",
+    ctaStyles: ['industry_prompt', 'peer_question', 'authority_reframe'],
+    proofRequirement: 'recommended',
     antiPatterns: [],
   }),
 
   t({
-    id: "contrarian_take_05",
-    name: "Advice I No Longer Give",
-    archetype: "Contrarian Take",
-    variant: "Outgrown advice",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Build authority", "Grow my audience", "Build network"],
-    bestForPillars: ["Point of view", "Personal story", "Mistakes and misconceptions"],
+    id: 'contrarian_take_05',
+    name: 'Advice I No Longer Give',
+    archetype: 'Contrarian Take',
+    variant: 'Outgrown advice',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: ['Build authority', 'Grow my audience', 'Build network'],
+    bestForPillars: [
+      'Point of view',
+      'Personal story',
+      'Mistakes and misconceptions',
+    ],
     template: `Advice I no longer give:
 
 “[old advice]”
@@ -1109,30 +3129,56 @@ Sometimes better advice is not louder.
 It’s more specific.
 
 [cta]`,
-    variables: ["old advice", "why it seemed right", "problem 1", "problem 2", "problem 3", "new advice", "reason", "cta"],
+    variables: [
+      'old advice',
+      'why it seemed right',
+      'problem 1',
+      'problem 2',
+      'problem 3',
+      'new advice',
+      'reason',
+      'cta',
+    ],
     clarifyingQuestions: [
       {
-        question: "What advice did you used to give or believe?",
-        fills: ["old advice", "why it seemed right"],
+        question: 'What advice did you used to give or believe?',
+        fills: ['old advice', 'why it seemed right'],
       },
       {
-        question: "What would you say now instead?",
-        fills: ["new advice", "reason"],
+        question: 'What would you say now instead?',
+        fills: ['new advice', 'reason'],
       },
     ],
-    ctaStyles: ["authority_reframe", "relatable", "conversation"],
-    proofRequirement: "recommended",
+    ctaStyles: ['authority_reframe', 'relatable', 'conversation'],
+    proofRequirement: 'recommended',
     antiPatterns: [],
   }),
 
   t({
-    id: "mini_case_study_01",
-    name: "Hidden Bottleneck",
-    archetype: "Mini Case Study",
-    variant: "Root cause case",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Get inbound leads", "Build authority", "Promote my product/service"],
-    bestForPillars: ["Proof / case study", "Problem education", "Process / how-I-work"],
+    id: 'mini_case_study_01',
+    name: 'Hidden Bottleneck',
+    archetype: 'Mini Case Study',
+    variant: 'Root cause case',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: [
+      'Get inbound leads',
+      'Build authority',
+      'Promote my product/service',
+    ],
+    bestForPillars: [
+      'Proof / case study',
+      'Problem education',
+      'Audience belief shift',
+    ],
     template: `A [client/customer/project/team] came in with [surface problem].
 
 At first, it looked like [obvious diagnosis].
@@ -1153,40 +3199,58 @@ Don’t solve [surface problem] before you understand [root cause].
 
 [cta]`,
     variables: [
-      "client/customer/project/team",
-      "surface problem",
-      "obvious diagnosis",
-      "root cause",
-      "wrong fix",
-      "actual fix",
-      "change 1",
-      "change 2",
-      "change 3",
-      "cta",
+      'client/customer/project/team',
+      'surface problem',
+      'obvious diagnosis',
+      'root cause',
+      'wrong fix',
+      'actual fix',
+      'change 1',
+      'change 2',
+      'change 3',
+      'cta',
     ],
     clarifyingQuestions: [
       {
-        question: "Can you describe one client, customer, project, or team situation anonymously?",
-        fills: ["client/customer/project/team", "surface problem", "obvious diagnosis"],
+        question:
+          'Can you describe one client, customer, project, or team situation anonymously?',
+        fills: [
+          'client/customer/project/team',
+          'surface problem',
+          'obvious diagnosis',
+        ],
       },
       {
-        question: "What turned out to be the real issue?",
-        fills: ["root cause", "actual fix", "change 1", "change 2", "change 3"],
+        question: 'What turned out to be the real issue?',
+        fills: ['root cause', 'actual fix', 'change 1', 'change 2', 'change 3'],
       },
     ],
-    ctaStyles: ["soft_lead", "diagnostic", "problem_solution"],
-    proofRequirement: "required",
-    antiPatterns: ["Do not invent a case if no case exists."],
+    ctaStyles: ['soft_lead', 'diagnostic', 'problem_solution'],
+    proofRequirement: 'required',
+    antiPatterns: ['Do not invent a case if no case exists.'],
   }),
 
   t({
-    id: "mini_case_study_02",
-    name: "Small Change, Big Difference",
-    archetype: "Mini Case Study",
-    variant: "Small intervention",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Get inbound leads", "Promote my product/service", "Build authority"],
-    bestForPillars: ["Proof / case study", "Process / how-I-work"],
+    id: 'mini_case_study_02',
+    name: 'Small Change, Big Difference',
+    archetype: 'Mini Case Study',
+    variant: 'Small intervention',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: [
+      'Get inbound leads',
+      'Promote my product/service',
+      'Build authority',
+    ],
+    bestForPillars: ['Proof / case study'],
     template: `One small change made [outcome] much easier.
 
 Before:
@@ -1212,30 +3276,57 @@ It was that it fixed [specific constraint].
 Small changes work when they touch the right constraint.
 
 [cta]`,
-    variables: ["outcome", "before 1", "before 2", "before 3", "small change", "after 1", "after 2", "after 3", "specific constraint", "cta"],
+    variables: [
+      'outcome',
+      'before 1',
+      'before 2',
+      'before 3',
+      'small change',
+      'after 1',
+      'after 2',
+      'after 3',
+      'specific constraint',
+      'cta',
+    ],
     clarifyingQuestions: [
       {
-        question: "What small change made a meaningful difference?",
-        fills: ["small change", "specific constraint"],
+        question: 'What small change made a meaningful difference?',
+        fills: ['small change', 'specific constraint'],
       },
       {
-        question: "What was different before and after?",
-        fills: ["before 1", "before 2", "before 3", "after 1", "after 2", "after 3"],
+        question: 'What was different before and after?',
+        fills: [
+          'before 1',
+          'before 2',
+          'before 3',
+          'after 1',
+          'after 2',
+          'after 3',
+        ],
       },
     ],
-    ctaStyles: ["soft_lead", "offer_bridge", "belief_statement"],
-    proofRequirement: "required",
-    antiPatterns: ["Do not exaggerate the outcome."],
+    ctaStyles: ['soft_lead', 'offer_bridge', 'belief_statement'],
+    proofRequirement: 'required',
+    antiPatterns: ['Do not exaggerate the outcome.'],
   }),
 
   t({
-    id: "mini_case_study_03",
-    name: "First Attempt Failed",
-    archetype: "Mini Case Study",
-    variant: "Failed first attempt",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Build authority", "Get inbound leads"],
-    bestForPillars: ["Proof / case study", "Mistakes and misconceptions"],
+    id: 'mini_case_study_03',
+    name: 'First Attempt Failed',
+    archetype: 'Mini Case Study',
+    variant: 'Failed first attempt',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: ['Build authority', 'Get inbound leads'],
+    bestForPillars: ['Proof / case study', 'Mistakes and misconceptions'],
     template: `The first thing we tried didn’t work.
 
 We tried [first attempt] because [why it made sense].
@@ -1257,30 +3348,53 @@ The lesson:
 A failed first attempt is useful if it shows you what the real problem is.
 
 [cta]`,
-    variables: ["first attempt", "why it made sense", "problem 1", "problem 2", "problem 3", "insight", "new approach", "result or lesson", "cta"],
+    variables: [
+      'first attempt',
+      'why it made sense',
+      'problem 1',
+      'problem 2',
+      'problem 3',
+      'insight',
+      'new approach',
+      'result or lesson',
+      'cta',
+    ],
     clarifyingQuestions: [
       {
-        question: "What did you try first that didn’t work?",
-        fills: ["first attempt", "why it made sense"],
+        question: 'What did you try first that didn’t work?',
+        fills: ['first attempt', 'why it made sense'],
       },
       {
-        question: "What did that failed attempt reveal?",
-        fills: ["insight", "new approach", "result or lesson"],
+        question: 'What did that failed attempt reveal?',
+        fills: ['insight', 'new approach', 'result or lesson'],
       },
     ],
-    ctaStyles: ["relatable", "diagnostic", "authority_reframe"],
-    proofRequirement: "required",
-    antiPatterns: ["Do not make failure sound like fake humility."],
+    ctaStyles: ['relatable', 'diagnostic', 'authority_reframe'],
+    proofRequirement: 'required',
+    antiPatterns: ['Do not make failure sound like fake humility.'],
   }),
 
   t({
-    id: "mini_case_study_04",
-    name: "Pattern Behind the Result",
-    archetype: "Mini Case Study",
-    variant: "Outcome breakdown",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Build authority", "Promote my product/service", "Get job opportunities"],
-    bestForPillars: ["Proof / case study", "Career / credibility proof"],
+    id: 'mini_case_study_04',
+    name: 'Pattern Behind the Result',
+    archetype: 'Mini Case Study',
+    variant: 'Outcome breakdown',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: [
+      'Build authority',
+      'Promote my product/service',
+      'Get job opportunities',
+    ],
+    bestForPillars: ['Proof / case study', 'Career / credibility proof'],
     template: `[result] did not happen because of one big move.
 
 It happened because of a few repeated actions:
@@ -1299,30 +3413,62 @@ That’s the part people usually miss.
 Outcomes are easier to understand when you look at the pattern behind them.
 
 [cta]`,
-    variables: ["result", "action 1", "action 2", "action 3", "action 4", "visible result", "invisible work", "cta"],
+    variables: [
+      'result',
+      'action 1',
+      'action 2',
+      'action 3',
+      'action 4',
+      'visible result',
+      'invisible work',
+      'cta',
+    ],
     clarifyingQuestions: [
       {
-        question: "What result or project outcome can you honestly mention?",
-        fills: ["result", "visible result"],
+        question: 'What result or project outcome can you honestly mention?',
+        fills: ['result', 'visible result'],
       },
       {
-        question: "What repeated actions created that result?",
-        fills: ["action 1", "action 2", "action 3", "action 4", "invisible work"],
+        question: 'What repeated actions created that result?',
+        fills: [
+          'action 1',
+          'action 2',
+          'action 3',
+          'action 4',
+          'invisible work',
+        ],
       },
     ],
-    ctaStyles: ["belief_statement", "career_signal", "offer_bridge"],
-    proofRequirement: "required",
-    antiPatterns: ["Do not invent metrics."],
+    ctaStyles: ['belief_statement', 'career_signal', 'offer_bridge'],
+    proofRequirement: 'required',
+    antiPatterns: ['Do not invent metrics.'],
   }),
 
   t({
-    id: "mini_case_study_05",
-    name: "Came for X, Needed Y",
-    archetype: "Mini Case Study",
-    variant: "Reframed request",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Get inbound leads", "Promote my product/service", "Build authority"],
-    bestForPillars: ["Proof / case study", "Problem education", "Audience belief shift"],
+    id: 'mini_case_study_05',
+    name: 'Came for X, Needed Y',
+    archetype: 'Mini Case Study',
+    variant: 'Reframed request',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: [
+      'Get inbound leads',
+      'Promote my product/service',
+      'Build authority',
+    ],
+    bestForPillars: [
+      'Proof / case study',
+      'Problem education',
+      'Audience belief shift',
+    ],
     template: `A [client/customer/team/person] asked for [initial request].
 
 That made sense from the outside.
@@ -1345,40 +3491,59 @@ It’s just the language people use before the diagnosis is clear.
 
 [cta]`,
     variables: [
-      "client/customer/team/person",
-      "initial request",
-      "surface goal",
-      "actual need",
-      "requested thing",
-      "better thing",
-      "realization 1",
-      "realization 2",
-      "realization 3",
-      "cta",
+      'client/customer/team/person',
+      'initial request',
+      'surface goal',
+      'actual need',
+      'requested thing',
+      'better thing',
+      'realization 1',
+      'realization 2',
+      'realization 3',
+      'cta',
     ],
     clarifyingQuestions: [
       {
-        question: "What do clients or your audience often ask for first?",
-        fills: ["initial request", "requested thing", "surface goal"],
+        question: 'What do clients or your audience often ask for first?',
+        fills: ['initial request', 'requested thing', 'surface goal'],
       },
       {
-        question: "What do they actually need?",
-        fills: ["actual need", "better thing", "realization 1", "realization 2", "realization 3"],
+        question: 'What do they actually need?',
+        fills: [
+          'actual need',
+          'better thing',
+          'realization 1',
+          'realization 2',
+          'realization 3',
+        ],
       },
     ],
-    ctaStyles: ["diagnostic", "soft_lead", "problem_solution"],
-    proofRequirement: "required",
+    ctaStyles: ['diagnostic', 'soft_lead', 'problem_solution'],
+    proofRequirement: 'required',
     antiPatterns: [],
   }),
 
   t({
-    id: "before_after_01",
-    name: "Before and After Shift",
-    archetype: "Before / After",
-    variant: "Clear transformation",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Get inbound leads", "Promote my product/service", "Get job opportunities"],
-    bestForPillars: ["Proof / case study", "Career / credibility proof"],
+    id: 'before_after_01',
+    name: 'Before and After Shift',
+    archetype: 'Before / After',
+    variant: 'Clear transformation',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: [
+      'Get inbound leads',
+      'Promote my product/service',
+      'Get job opportunities',
+    ],
+    bestForPillars: ['Career / credibility proof'],
     template: `Before [change]:
 
 1. [before state 1]
@@ -1399,40 +3564,58 @@ That’s what made the result stick.
 
 [cta]`,
     variables: [
-      "change",
-      "before state 1",
-      "before state 2",
-      "before state 3",
-      "after state 1",
-      "after state 2",
-      "after state 3",
-      "obvious change",
-      "deeper change",
-      "cta",
+      'change',
+      'before state 1',
+      'before state 2',
+      'before state 3',
+      'after state 1',
+      'after state 2',
+      'after state 3',
+      'obvious change',
+      'deeper change',
+      'cta',
     ],
     clarifyingQuestions: [
       {
-        question: "What changed, and what was the situation like before?",
-        fills: ["change", "before state 1", "before state 2", "before state 3"],
+        question: 'What changed, and what was the situation like before?',
+        fills: ['change', 'before state 1', 'before state 2', 'before state 3'],
       },
       {
-        question: "What looked different afterward?",
-        fills: ["after state 1", "after state 2", "after state 3", "deeper change"],
+        question: 'What looked different afterward?',
+        fills: [
+          'after state 1',
+          'after state 2',
+          'after state 3',
+          'deeper change',
+        ],
       },
     ],
-    ctaStyles: ["soft_lead", "offer_bridge", "career_signal"],
-    proofRequirement: "recommended",
+    ctaStyles: ['soft_lead', 'offer_bridge', 'career_signal'],
+    proofRequirement: 'recommended',
     antiPatterns: [],
   }),
 
   t({
-    id: "before_after_02",
-    name: "Messy to Clear",
-    archetype: "Before / After",
-    variant: "Clarity transformation",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Get inbound leads", "Build authority", "Get job opportunities"],
-    bestForPillars: ["Process / how-I-work", "Proof / case study"],
+    id: 'before_after_02',
+    name: 'Messy to Clear',
+    archetype: 'Before / After',
+    variant: 'Clarity transformation',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: [
+      'Get inbound leads',
+      'Build authority',
+      'Get job opportunities',
+    ],
+    bestForPillars: ['Career / credibility proof'],
     template: `At first, [situation] was messy.
 
 There was:
@@ -1457,39 +3640,53 @@ That’s usually where progress starts.
 
 [cta]`,
     variables: [
-      "situation",
-      "messy part 1",
-      "messy part 2",
-      "messy part 3",
-      "clarifying move",
-      "clear insight 1",
-      "clear insight 2",
-      "clear insight 3",
-      "cta",
+      'situation',
+      'messy part 1',
+      'messy part 2',
+      'messy part 3',
+      'clarifying move',
+      'clear insight 1',
+      'clear insight 2',
+      'clear insight 3',
+      'cta',
     ],
     clarifyingQuestions: [
       {
-        question: "Where was there confusion or messiness?",
-        fills: ["situation", "messy part 1", "messy part 2", "messy part 3"],
+        question: 'Where was there confusion or messiness?',
+        fills: ['situation', 'messy part 1', 'messy part 2', 'messy part 3'],
       },
       {
-        question: "What created clarity?",
-        fills: ["clarifying move", "clear insight 1", "clear insight 2", "clear insight 3"],
+        question: 'What created clarity?',
+        fills: [
+          'clarifying move',
+          'clear insight 1',
+          'clear insight 2',
+          'clear insight 3',
+        ],
       },
     ],
-    ctaStyles: ["diagnostic", "belief_statement", "work_style"],
-    proofRequirement: "recommended",
+    ctaStyles: ['diagnostic', 'belief_statement', 'work_style'],
+    proofRequirement: 'recommended',
     antiPatterns: [],
   }),
 
   t({
-    id: "before_after_03",
-    name: "Reactive to Intentional",
-    archetype: "Before / After",
-    variant: "Operating system shift",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Build authority", "Get inbound leads"],
-    bestForPillars: ["Process / how-I-work", "Problem education"],
+    id: 'before_after_03',
+    name: 'Reactive to Intentional',
+    archetype: 'Before / After',
+    variant: 'Operating system shift',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: ['Build authority', 'Get inbound leads'],
+    bestForPillars: ['Process / how-I-work', 'Audience belief shift'],
     template: `Before, [audience/team/person] was reacting to [trigger].
 
 That looked like:
@@ -1514,41 +3711,67 @@ That’s the difference between reacting to [trigger] and managing [deeper syste
 
 [cta]`,
     variables: [
-      "audience/team/person",
-      "trigger",
-      "reactive behavior 1",
-      "reactive behavior 2",
-      "reactive behavior 3",
-      "new system or mindset",
-      "intentional behavior 1",
-      "intentional behavior 2",
-      "intentional behavior 3",
-      "deeper system",
-      "cta",
+      'audience/team/person',
+      'trigger',
+      'reactive behavior 1',
+      'reactive behavior 2',
+      'reactive behavior 3',
+      'new system or mindset',
+      'intentional behavior 1',
+      'intentional behavior 2',
+      'intentional behavior 3',
+      'deeper system',
+      'cta',
     ],
     clarifyingQuestions: [
       {
-        question: "Where was the person or team reacting too much?",
-        fills: ["trigger", "reactive behavior 1", "reactive behavior 2", "reactive behavior 3"],
+        question: 'Where was the person or team reacting too much?',
+        fills: [
+          'trigger',
+          'reactive behavior 1',
+          'reactive behavior 2',
+          'reactive behavior 3',
+        ],
       },
       {
-        question: "What system or mindset made the work more intentional?",
-        fills: ["new system or mindset", "intentional behavior 1", "intentional behavior 2", "intentional behavior 3"],
+        question: 'What system or mindset made the work more intentional?',
+        fills: [
+          'new system or mindset',
+          'intentional behavior 1',
+          'intentional behavior 2',
+          'intentional behavior 3',
+        ],
       },
     ],
-    ctaStyles: ["authority_reframe", "soft_lead", "diagnostic"],
-    proofRequirement: "optional",
+    ctaStyles: ['authority_reframe', 'soft_lead', 'diagnostic'],
+    proofRequirement: 'optional',
     antiPatterns: [],
   }),
 
   t({
-    id: "before_after_04",
-    name: "Invisible Before and After",
-    archetype: "Before / After",
-    variant: "Internal transformation",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional"],
-    bestForGoals: ["Build authority", "Grow my audience", "Get job opportunities"],
-    bestForPillars: ["Personal story", "Proof / case study", "Career / credibility proof"],
+    id: 'before_after_04',
+    name: 'Invisible Before and After',
+    archetype: 'Before / After',
+    variant: 'Internal transformation',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+    ],
+    bestForGoals: [
+      'Build authority',
+      'Grow my audience',
+      'Get job opportunities',
+    ],
+    bestForPillars: [
+      'Personal story',
+      'Career / credibility proof',
+      'Values / philosophy',
+    ],
     template: `The visible change was [visible change].
 
 But the real change was quieter.
@@ -1573,47 +3796,60 @@ The outside result was just the evidence.
 
 [cta]`,
     variables: [
-      "visible change",
-      "internal before 1",
-      "internal before 2",
-      "internal before 3",
-      "internal after 1",
-      "internal after 2",
-      "internal after 3",
-      "internal change",
-      "cta",
+      'visible change',
+      'internal before 1',
+      'internal before 2',
+      'internal before 3',
+      'internal after 1',
+      'internal after 2',
+      'internal after 3',
+      'internal change',
+      'cta',
     ],
     clarifyingQuestions: [
       {
-        question: "What external change did people notice?",
-        fills: ["visible change"],
+        question: 'What external change did people notice?',
+        fills: ['visible change'],
       },
       {
-        question: "What internal shift made it possible?",
+        question: 'What internal shift made it possible?',
         fills: [
-          "internal before 1",
-          "internal before 2",
-          "internal before 3",
-          "internal after 1",
-          "internal after 2",
-          "internal after 3",
-          "internal change",
+          'internal before 1',
+          'internal before 2',
+          'internal before 3',
+          'internal after 1',
+          'internal after 2',
+          'internal after 3',
+          'internal change',
         ],
       },
     ],
-    ctaStyles: ["relatable", "belief_statement", "career_signal"],
-    proofRequirement: "recommended",
+    ctaStyles: ['relatable', 'belief_statement', 'career_signal'],
+    proofRequirement: 'recommended',
     antiPatterns: [],
   }),
 
   t({
-    id: "before_after_05",
-    name: "What Changed When We Stopped",
-    archetype: "Before / After",
-    variant: "Removal-based progress",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Build authority", "Get inbound leads", "Grow my audience"],
-    bestForPillars: ["Mistakes and misconceptions", "Process / how-I-work", "Audience belief shift"],
+    id: 'before_after_05',
+    name: 'What Changed When We Stopped',
+    archetype: 'Before / After',
+    variant: 'Removal-based progress',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: ['Build authority', 'Get inbound leads', 'Grow my audience'],
+    bestForPillars: [
+      'Mistakes and misconceptions',
+      'Audience belief shift',
+      'Personal story',
+    ],
     template: `Things got better when we stopped [old behavior].
 
 Before, [old behavior] created:
@@ -1636,39 +3872,57 @@ Sometimes it is removing the thing that keeps creating noise.
 
 [cta]`,
     variables: [
-      "old behavior",
-      "bad outcome 1",
-      "bad outcome 2",
-      "bad outcome 3",
-      "new behavior",
-      "better outcome 1",
-      "better outcome 2",
-      "better outcome 3",
-      "cta",
+      'old behavior',
+      'bad outcome 1',
+      'bad outcome 2',
+      'bad outcome 3',
+      'new behavior',
+      'better outcome 1',
+      'better outcome 2',
+      'better outcome 3',
+      'cta',
     ],
     clarifyingQuestions: [
       {
-        question: "What did you or the client stop doing?",
-        fills: ["old behavior"],
+        question: 'What did you or the client stop doing?',
+        fills: ['old behavior'],
       },
       {
-        question: "What improved after stopping it?",
-        fills: ["better outcome 1", "better outcome 2", "better outcome 3", "new behavior"],
+        question: 'What improved after stopping it?',
+        fills: [
+          'better outcome 1',
+          'better outcome 2',
+          'better outcome 3',
+          'new behavior',
+        ],
       },
     ],
-    ctaStyles: ["authority_reframe", "relatable", "soft_lead"],
-    proofRequirement: "recommended",
+    ctaStyles: ['authority_reframe', 'relatable', 'soft_lead'],
+    proofRequirement: 'recommended',
     antiPatterns: [],
   }),
 
   t({
-    id: "mistake_lesson_01",
-    name: "I Used to Think",
-    archetype: "Mistake Lesson",
-    variant: "Changed belief",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Grow my audience", "Build authority", "Build network"],
-    bestForPillars: ["Personal story", "Mistakes and misconceptions", "Point of view"],
+    id: 'mistake_lesson_01',
+    name: 'I Used to Think',
+    archetype: 'Mistake Lesson',
+    variant: 'Changed belief',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: ['Grow my audience', 'Build authority', 'Build network'],
+    bestForPillars: [
+      'Personal story',
+      'Mistakes and misconceptions',
+      'Point of view',
+    ],
     template: `I used to think [old belief].
 
 So I kept doing [old behavior].
@@ -1692,30 +3946,54 @@ Sometimes growth is not adding more.
 It’s noticing what no longer works.
 
 [cta]`,
-    variables: ["old belief", "old behavior", "moment of friction", "lesson", "new behavior 1", "new behavior 2", "new behavior 3", "cta"],
+    variables: [
+      'old belief',
+      'old behavior',
+      'moment of friction',
+      'lesson',
+      'new behavior 1',
+      'new behavior 2',
+      'new behavior 3',
+      'cta',
+    ],
     clarifyingQuestions: [
       {
-        question: "What did you used to believe that you no longer believe?",
-        fills: ["old belief", "lesson"],
+        question: 'What did you used to believe that you no longer believe?',
+        fills: ['old belief', 'lesson'],
       },
       {
-        question: "What experience changed your mind?",
-        fills: ["old behavior", "moment of friction", "new behavior 1", "new behavior 2", "new behavior 3"],
+        question: 'What experience changed your mind?',
+        fills: [
+          'old behavior',
+          'moment of friction',
+          'new behavior 1',
+          'new behavior 2',
+          'new behavior 3',
+        ],
       },
     ],
-    ctaStyles: ["relatable", "conversation", "authority_reframe"],
-    proofRequirement: "recommended",
+    ctaStyles: ['relatable', 'conversation', 'authority_reframe'],
+    proofRequirement: 'recommended',
     antiPatterns: [],
   }),
 
   t({
-    id: "mistake_lesson_02",
-    name: "Mistake I Kept Repeating",
-    archetype: "Mistake Lesson",
-    variant: "Repeated mistake",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Grow my audience", "Build authority"],
-    bestForPillars: ["Personal story", "Mistakes and misconceptions"],
+    id: 'mistake_lesson_02',
+    name: 'Mistake I Kept Repeating',
+    archetype: 'Mistake Lesson',
+    variant: 'Repeated mistake',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: ['Grow my audience', 'Build authority'],
+    bestForPillars: ['Personal story', 'Mistakes and misconceptions'],
     template: `A mistake I kept repeating:
 
 [mistake]
@@ -1737,30 +4015,52 @@ It’s not perfect.
 But it stops me from solving the same problem the same wrong way.
 
 [cta]`,
-    variables: ["mistake", "why it seemed reasonable", "bad result 1", "bad result 2", "bad result 3", "real problem", "new behavior", "cta"],
+    variables: [
+      'mistake',
+      'why it seemed reasonable',
+      'bad result 1',
+      'bad result 2',
+      'bad result 3',
+      'real problem',
+      'new behavior',
+      'cta',
+    ],
     clarifyingQuestions: [
       {
-        question: "What mistake did you repeat more than once?",
-        fills: ["mistake", "why it seemed reasonable"],
+        question: 'What mistake did you repeat more than once?',
+        fills: ['mistake', 'why it seemed reasonable'],
       },
       {
-        question: "What do you do differently now?",
-        fills: ["real problem", "new behavior"],
+        question: 'What do you do differently now?',
+        fills: ['real problem', 'new behavior'],
       },
     ],
-    ctaStyles: ["relatable", "conversation", "belief_statement"],
-    proofRequirement: "recommended",
+    ctaStyles: ['relatable', 'conversation', 'belief_statement'],
+    proofRequirement: 'recommended',
     antiPatterns: [],
   }),
 
   t({
-    id: "mistake_lesson_03",
-    name: "Lesson Learned Too Late",
-    archetype: "Mistake Lesson",
-    variant: "Late realization",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Grow my audience", "Build authority", "Get job opportunities"],
-    bestForPillars: ["Personal story", "Career / credibility proof"],
+    id: 'mistake_lesson_03',
+    name: 'Lesson Learned Too Late',
+    archetype: 'Mistake Lesson',
+    variant: 'Late realization',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: [
+      'Grow my audience',
+      'Build authority',
+      'Get job opportunities',
+    ],
+    bestForPillars: ['Personal story', 'Career / credibility proof'],
     template: `This took me too long to learn:
 
 [lesson]
@@ -1789,41 +4089,55 @@ Expensive to ignore.
 
 [cta]`,
     variables: [
-      "lesson",
-      "old belief",
-      "old behavior",
-      "bad result 1",
-      "bad result 2",
-      "bad result 3",
-      "new belief",
-      "new focus 1",
-      "new focus 2",
-      "new focus 3",
-      "cta",
+      'lesson',
+      'old belief',
+      'old behavior',
+      'bad result 1',
+      'bad result 2',
+      'bad result 3',
+      'new belief',
+      'new focus 1',
+      'new focus 2',
+      'new focus 3',
+      'cta',
     ],
     clarifyingQuestions: [
       {
-        question: "What lesson did you learn later than you wish?",
-        fills: ["lesson", "new belief"],
+        question: 'What lesson did you learn later than you wish?',
+        fills: ['lesson', 'new belief'],
       },
       {
-        question: "What did you used to do before learning it?",
-        fills: ["old belief", "old behavior", "bad result 1", "bad result 2", "bad result 3"],
+        question: 'What did you used to do before learning it?',
+        fills: [
+          'old belief',
+          'old behavior',
+          'bad result 1',
+          'bad result 2',
+          'bad result 3',
+        ],
       },
     ],
-    ctaStyles: ["relatable", "career_signal", "conversation"],
-    proofRequirement: "recommended",
+    ctaStyles: ['relatable', 'career_signal', 'conversation'],
+    proofRequirement: 'recommended',
     antiPatterns: [],
   }),
 
   t({
-    id: "mistake_lesson_04",
-    name: "What I Got Wrong About Success",
-    archetype: "Mistake Lesson",
-    variant: "Success reframe",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional"],
-    bestForGoals: ["Grow my audience", "Build network"],
-    bestForPillars: ["Personal story", "Values / philosophy"],
+    id: 'mistake_lesson_04',
+    name: 'What I Got Wrong About Success',
+    archetype: 'Mistake Lesson',
+    variant: 'Success reframe',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+    ],
+    bestForGoals: ['Grow my audience', 'Build network'],
+    bestForPillars: ['Personal story', 'Values / philosophy'],
     template: `I used to think success meant [old definition of success].
 
 So I chased:
@@ -1850,41 +4164,59 @@ So did the way I measure progress.
 
 [cta]`,
     variables: [
-      "old definition of success",
-      "old pursuit 1",
-      "old pursuit 2",
-      "old pursuit 3",
-      "cost",
-      "new definition 1",
-      "new definition 2",
-      "new definition 3",
-      "misinterpretation",
-      "clarification",
-      "cta",
+      'old definition of success',
+      'old pursuit 1',
+      'old pursuit 2',
+      'old pursuit 3',
+      'cost',
+      'new definition 1',
+      'new definition 2',
+      'new definition 3',
+      'misinterpretation',
+      'clarification',
+      'cta',
     ],
     clarifyingQuestions: [
       {
-        question: "What did you once think success meant?",
-        fills: ["old definition of success", "old pursuit 1", "old pursuit 2", "old pursuit 3"],
+        question: 'What did you once think success meant?',
+        fills: [
+          'old definition of success',
+          'old pursuit 1',
+          'old pursuit 2',
+          'old pursuit 3',
+        ],
       },
       {
-        question: "What does success mean to you now?",
-        fills: ["new definition 1", "new definition 2", "new definition 3", "clarification"],
+        question: 'What does success mean to you now?',
+        fills: [
+          'new definition 1',
+          'new definition 2',
+          'new definition 3',
+          'clarification',
+        ],
       },
     ],
-    ctaStyles: ["relatable", "shared_learning", "conversation"],
-    proofRequirement: "optional",
+    ctaStyles: ['relatable', 'shared_learning', 'conversation'],
+    proofRequirement: 'optional',
     antiPatterns: [],
   }),
 
   t({
-    id: "mistake_lesson_05",
-    name: "Small Failure, Big Lesson",
-    archetype: "Mistake Lesson",
-    variant: "Small failure",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional"],
-    bestForGoals: ["Grow my audience", "Build authority", "Build network"],
-    bestForPillars: ["Personal story", "Mistakes and misconceptions"],
+    id: 'mistake_lesson_05',
+    name: 'Small Failure, Big Lesson',
+    archetype: 'Mistake Lesson',
+    variant: 'Small failure',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+    ],
+    bestForGoals: ['Grow my audience', 'Build authority', 'Build network'],
+    bestForPillars: ['Personal story', 'Mistakes and misconceptions'],
     template: `A small failure that taught me a lot:
 
 [failure]
@@ -1908,30 +4240,58 @@ Not because I’m afraid of failing.
 Because I want the failure to teach me faster.
 
 [cta]`,
-    variables: ["failure", "feeling", "wrong assumption", "lesson 1", "lesson 2", "lesson 3", "new awareness", "cta"],
+    variables: [
+      'failure',
+      'feeling',
+      'wrong assumption',
+      'lesson 1',
+      'lesson 2',
+      'lesson 3',
+      'new awareness',
+      'cta',
+    ],
     clarifyingQuestions: [
       {
-        question: "What small failure or awkward moment taught you something?",
-        fills: ["failure", "feeling"],
+        question: 'What small failure or awkward moment taught you something?',
+        fills: ['failure', 'feeling'],
       },
       {
-        question: "What did it teach you?",
-        fills: ["wrong assumption", "lesson 1", "lesson 2", "lesson 3", "new awareness"],
+        question: 'What did it teach you?',
+        fills: [
+          'wrong assumption',
+          'lesson 1',
+          'lesson 2',
+          'lesson 3',
+          'new awareness',
+        ],
       },
     ],
-    ctaStyles: ["relatable", "conversation", "shared_learning"],
-    proofRequirement: "recommended",
+    ctaStyles: ['relatable', 'conversation', 'shared_learning'],
+    proofRequirement: 'recommended',
     antiPatterns: [],
   }),
 
   t({
-    id: "process_breakdown_01",
-    name: "How I Approach X",
-    archetype: "Process Breakdown",
-    variant: "Three-step process",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Build authority", "Get inbound leads", "Get job opportunities"],
-    bestForPillars: ["Process / how-I-work", "Problem education"],
+    id: 'process_breakdown_01',
+    name: 'How I Approach X',
+    archetype: 'Process Breakdown',
+    variant: 'Three-step process',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: [
+      'Build authority',
+      'Get inbound leads',
+      'Get job opportunities',
+    ],
+    bestForPillars: ['Process / how-I-work', 'Problem education'],
     template: `Here’s how I approach [problem]:
 
 Step 1: [step 1]
@@ -1951,30 +4311,48 @@ The process is simple.
 But the order matters.
 
 [cta]`,
-    variables: ["problem", "step 1", "reason 1", "step 2", "insight", "step 3", "outcome", "cta"],
+    variables: [
+      'problem',
+      'step 1',
+      'reason 1',
+      'step 2',
+      'insight',
+      'step 3',
+      'outcome',
+      'cta',
+    ],
     clarifyingQuestions: [
       {
-        question: "What problem do you want to explain your process for?",
-        fills: ["problem"],
+        question: 'What problem do you want to explain your process for?',
+        fills: ['problem'],
       },
       {
-        question: "What are the 3 main steps in your process?",
-        fills: ["step 1", "step 2", "step 3", "reason 1", "insight", "outcome"],
+        question: 'What are the 3 main steps in your process?',
+        fills: ['step 1', 'step 2', 'step 3', 'reason 1', 'insight', 'outcome'],
       },
     ],
-    ctaStyles: ["belief_statement", "soft_lead", "work_style"],
-    proofRequirement: "none",
+    ctaStyles: ['belief_statement', 'soft_lead', 'work_style'],
+    proofRequirement: 'none',
     antiPatterns: [],
   }),
 
   t({
-    id: "process_breakdown_02",
-    name: "First 30 Minutes",
-    archetype: "Process Breakdown",
-    variant: "Initial diagnosis",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Build authority", "Get inbound leads"],
-    bestForPillars: ["Process / how-I-work", "Problem education"],
+    id: 'process_breakdown_02',
+    name: 'First 30 Minutes',
+    archetype: 'Process Breakdown',
+    variant: 'Initial diagnosis',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: ['Build authority', 'Get inbound leads'],
+    bestForPillars: ['Process / how-I-work', 'Problem education'],
     template: `My first 30 minutes with [problem] are not about solving it.
 
 They’re about understanding it.
@@ -1996,30 +4374,49 @@ Only after that do I decide [next step].
 Because if the diagnosis is wrong, the solution is just noise.
 
 [cta]`,
-    variables: ["problem", "signal 1", "signal 2", "signal 3", "question 1", "question 2", "question 3", "next step", "cta"],
+    variables: [
+      'problem',
+      'signal 1',
+      'signal 2',
+      'signal 3',
+      'question 1',
+      'question 2',
+      'question 3',
+      'next step',
+      'cta',
+    ],
     clarifyingQuestions: [
       {
-        question: "What do you look at first when this problem appears?",
-        fills: ["signal 1", "signal 2", "signal 3"],
+        question: 'What do you look at first when this problem appears?',
+        fills: ['signal 1', 'signal 2', 'signal 3'],
       },
       {
-        question: "What questions do you ask before solving it?",
-        fills: ["question 1", "question 2", "question 3"],
+        question: 'What questions do you ask before solving it?',
+        fills: ['question 1', 'question 2', 'question 3'],
       },
     ],
-    ctaStyles: ["diagnostic", "authority_reframe", "specific_peer_question"],
-    proofRequirement: "none",
+    ctaStyles: ['diagnostic', 'authority_reframe', 'specific_peer_question'],
+    proofRequirement: 'none',
     antiPatterns: [],
   }),
 
   t({
-    id: "process_breakdown_03",
-    name: "Simple Framework",
-    archetype: "Process Breakdown",
-    variant: "Named framework",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Build authority", "Get inbound leads"],
-    bestForPillars: ["Process / how-I-work", "Problem education"],
+    id: 'process_breakdown_03',
+    name: 'Simple Framework',
+    archetype: 'Process Breakdown',
+    variant: 'Named framework',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: ['Build authority', 'Get inbound leads'],
+    bestForPillars: ['Process / how-I-work', 'Problem education'],
     template: `A simple framework I use for [topic]:
 
 1. [framework part 1]
@@ -2041,40 +4438,58 @@ Then the next step becomes obvious.
 
 [cta]`,
     variables: [
-      "topic",
-      "framework part 1",
-      "one-line explanation 1",
-      "framework part 2",
-      "one-line explanation 2",
-      "framework part 3",
-      "one-line explanation 3",
-      "wrong starting point",
-      "right starting point",
-      "cta",
+      'topic',
+      'framework part 1',
+      'one-line explanation 1',
+      'framework part 2',
+      'one-line explanation 2',
+      'framework part 3',
+      'one-line explanation 3',
+      'wrong starting point',
+      'right starting point',
+      'cta',
     ],
     clarifyingQuestions: [
       {
-        question: "What framework or mental model do you use often?",
-        fills: ["topic", "framework part 1", "framework part 2", "framework part 3"],
+        question: 'What framework or mental model do you use often?',
+        fills: [
+          'topic',
+          'framework part 1',
+          'framework part 2',
+          'framework part 3',
+        ],
       },
       {
-        question: "Where do most people start incorrectly?",
-        fills: ["wrong starting point", "right starting point"],
+        question: 'Where do most people start incorrectly?',
+        fills: ['wrong starting point', 'right starting point'],
       },
     ],
-    ctaStyles: ["authority_reframe", "diagnostic", "soft_lead"],
-    proofRequirement: "none",
+    ctaStyles: ['authority_reframe', 'diagnostic', 'soft_lead'],
+    proofRequirement: 'none',
     antiPatterns: [],
   }),
 
   t({
-    id: "process_breakdown_04",
-    name: "What Happens Behind the Scenes",
-    archetype: "Process Breakdown",
-    variant: "Visible output vs hidden work",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Build authority", "Grow my audience", "Recruit / hire talent"],
-    bestForPillars: ["Process / how-I-work", "Behind the scenes"],
+    id: 'process_breakdown_04',
+    name: 'What Happens Behind the Scenes',
+    archetype: 'Process Breakdown',
+    variant: 'Visible output vs hidden work',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: [
+      'Build authority',
+      'Grow my audience',
+      'Recruit / hire talent',
+    ],
+    bestForPillars: ['Process / how-I-work', 'Behind the scenes'],
     template: `From the outside, [visible output] looks like [surface impression].
 
 Behind the scenes, it usually takes:
@@ -2092,39 +4507,58 @@ That’s why [topic] looks easier from the outside than it feels on the inside.
 
 [cta]`,
     variables: [
-      "visible output",
-      "surface impression",
-      "hidden work 1",
-      "hidden work 2",
-      "hidden work 3",
-      "hidden work 4",
-      "invisible effort",
-      "topic",
-      "cta",
+      'visible output',
+      'surface impression',
+      'hidden work 1',
+      'hidden work 2',
+      'hidden work 3',
+      'hidden work 4',
+      'invisible effort',
+      'topic',
+      'cta',
     ],
     clarifyingQuestions: [
       {
-        question: "What result or output do people see from the outside?",
-        fills: ["visible output", "surface impression"],
+        question: 'What result or output do people see from the outside?',
+        fills: ['visible output', 'surface impression'],
       },
       {
-        question: "What hidden work goes into it?",
-        fills: ["hidden work 1", "hidden work 2", "hidden work 3", "hidden work 4", "invisible effort"],
+        question: 'What hidden work goes into it?',
+        fills: [
+          'hidden work 1',
+          'hidden work 2',
+          'hidden work 3',
+          'hidden work 4',
+          'invisible effort',
+        ],
       },
     ],
-    ctaStyles: ["belief_statement", "culture_invite", "conversation"],
-    proofRequirement: "optional",
+    ctaStyles: ['belief_statement', 'culture_invite', 'conversation'],
+    proofRequirement: 'optional',
     antiPatterns: [],
   }),
 
   t({
-    id: "process_breakdown_05",
-    name: "Quality Checklist",
-    archetype: "Process Breakdown",
-    variant: "Standards for good work",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Build authority", "Get job opportunities", "Promote my product/service"],
-    bestForPillars: ["Process / how-I-work", "Career / credibility proof", "Product / service education"],
+    id: 'process_breakdown_05',
+    name: 'Quality Checklist',
+    archetype: 'Process Breakdown',
+    variant: 'Standards for good work',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: [
+      'Build authority',
+      'Get job opportunities',
+      'Promote my product/service',
+    ],
+    bestForPillars: ['Process / how-I-work'],
     template: `Before I call [work/output] good, I check:
 
 1. [quality check 1]
@@ -2143,41 +4577,60 @@ Good work creates [real standard].
 
 [cta]`,
     variables: [
-      "work/output",
-      "quality check 1",
-      "quality check 2",
-      "quality check 3",
-      "quality check 4",
-      "quality check 5",
-      "most important check",
-      "bad outcome",
-      "surface standard",
-      "real standard",
-      "cta",
+      'work/output',
+      'quality check 1',
+      'quality check 2',
+      'quality check 3',
+      'quality check 4',
+      'quality check 5',
+      'most important check',
+      'bad outcome',
+      'surface standard',
+      'real standard',
+      'cta',
     ],
     clarifyingQuestions: [
       {
-        question: "What do you check before calling your work good?",
-        fills: ["quality check 1", "quality check 2", "quality check 3", "quality check 4", "quality check 5"],
+        question: 'What do you check before calling your work good?',
+        fills: [
+          'quality check 1',
+          'quality check 2',
+          'quality check 3',
+          'quality check 4',
+          'quality check 5',
+        ],
       },
       {
-        question: "Which quality check matters most?",
-        fills: ["most important check", "bad outcome", "real standard"],
+        question: 'Which quality check matters most?',
+        fills: ['most important check', 'bad outcome', 'real standard'],
       },
     ],
-    ctaStyles: ["belief_statement", "work_style", "offer_bridge"],
-    proofRequirement: "none",
+    ctaStyles: ['belief_statement', 'work_style', 'offer_bridge'],
+    proofRequirement: 'none',
     antiPatterns: [],
   }),
 
   t({
-    id: "myth_buster_01",
-    name: "Myth vs Reality",
-    archetype: "Myth-Buster",
-    variant: "Classic myth buster",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Build authority", "Grow my audience"],
-    bestForPillars: ["Mistakes and misconceptions", "Audience belief shift", "Point of view"],
+    id: 'myth_buster_01',
+    name: 'Myth vs Reality',
+    archetype: 'Myth-Buster',
+    variant: 'Classic myth buster',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: ['Build authority', 'Grow my audience'],
+    bestForPillars: [
+      'Mistakes and misconceptions',
+      'Audience belief shift',
+      'Point of view',
+    ],
     template: `Myth:
 
 [common myth]
@@ -2203,30 +4656,48 @@ A better belief:
 That one leads to better decisions.
 
 [cta]`,
-    variables: ["common myth", "truth", "appealing shortcut", "bad outcome 1", "bad outcome 2", "bad outcome 3", "better belief", "cta"],
+    variables: [
+      'common myth',
+      'truth',
+      'appealing shortcut',
+      'bad outcome 1',
+      'bad outcome 2',
+      'bad outcome 3',
+      'better belief',
+      'cta',
+    ],
     clarifyingQuestions: [
       {
-        question: "What myth does your audience believe?",
-        fills: ["common myth"],
+        question: 'What myth does your audience believe?',
+        fills: ['common myth'],
       },
       {
-        question: "What is the more accurate truth?",
-        fills: ["truth", "better belief"],
+        question: 'What is the more accurate truth?',
+        fills: ['truth', 'better belief'],
       },
     ],
-    ctaStyles: ["authority_reframe", "conversation", "belief_statement"],
-    proofRequirement: "none",
+    ctaStyles: ['authority_reframe', 'conversation', 'belief_statement'],
+    proofRequirement: 'none',
     antiPatterns: [],
   }),
 
   t({
-    id: "myth_buster_02",
-    name: "The Half-Truth",
-    archetype: "Myth-Buster",
-    variant: "Nuanced advice",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Build authority", "Build network"],
-    bestForPillars: ["Mistakes and misconceptions", "Point of view"],
+    id: 'myth_buster_02',
+    name: 'The Half-Truth',
+    archetype: 'Myth-Buster',
+    variant: 'Nuanced advice',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: ['Build authority', 'Build network'],
+    bestForPillars: ['Mistakes and misconceptions', 'Point of view'],
     template: `[common advice] is not wrong.
 
 It’s just incomplete.
@@ -2251,40 +4722,55 @@ So the better advice is:
 
 [cta]`,
     variables: [
-      "common advice",
-      "works when 1",
-      "works when 2",
-      "works when 3",
-      "breaks when 1",
-      "breaks when 2",
-      "breaks when 3",
-      "missing context",
-      "better advice",
-      "cta",
+      'common advice',
+      'works when 1',
+      'works when 2',
+      'works when 3',
+      'breaks when 1',
+      'breaks when 2',
+      'breaks when 3',
+      'missing context',
+      'better advice',
+      'cta',
     ],
     clarifyingQuestions: [
       {
-        question: "What common advice is only partly true?",
-        fills: ["common advice"],
+        question: 'What common advice is only partly true?',
+        fills: ['common advice'],
       },
       {
-        question: "When does it work, and when does it break?",
-        fills: ["works when 1", "works when 2", "works when 3", "breaks when 1", "breaks when 2", "breaks when 3"],
+        question: 'When does it work, and when does it break?',
+        fills: [
+          'works when 1',
+          'works when 2',
+          'works when 3',
+          'breaks when 1',
+          'breaks when 2',
+          'breaks when 3',
+        ],
       },
     ],
-    ctaStyles: ["authority_reframe", "shared_learning", "industry_prompt"],
-    proofRequirement: "none",
+    ctaStyles: ['authority_reframe', 'shared_learning', 'industry_prompt'],
+    proofRequirement: 'none',
     antiPatterns: [],
   }),
 
   t({
-    id: "myth_buster_03",
-    name: "This Works, But Only When",
-    archetype: "Myth-Buster",
-    variant: "Conditional tactic",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Marketer"],
-    bestForGoals: ["Build authority", "Get inbound leads"],
-    bestForPillars: ["Mistakes and misconceptions", "Problem education"],
+    id: 'myth_buster_03',
+    name: 'This Works, But Only When',
+    archetype: 'Myth-Buster',
+    variant: 'Conditional tactic',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Marketer',
+    ],
+    bestForGoals: ['Build authority', 'Get inbound leads'],
+    bestForPillars: ['Mistakes and misconceptions', 'Problem education'],
     template: `[tactic] works.
 
 But only when [condition].
@@ -2305,39 +4791,51 @@ The missing context is [missing context].
 
 [cta]`,
     variables: [
-      "tactic",
-      "condition",
-      "failure condition 1",
-      "failure condition 2",
-      "failure condition 3",
-      "good outcome",
-      "bad outcome",
-      "missing context",
-      "cta",
+      'tactic',
+      'condition',
+      'failure condition 1',
+      'failure condition 2',
+      'failure condition 3',
+      'good outcome',
+      'bad outcome',
+      'missing context',
+      'cta',
     ],
     clarifyingQuestions: [
       {
-        question: "What tactic does your audience overuse or misunderstand?",
-        fills: ["tactic"],
+        question: 'What tactic does your audience overuse or misunderstand?',
+        fills: ['tactic'],
       },
       {
-        question: "When does it work, and when does it fail?",
-        fills: ["condition", "failure condition 1", "failure condition 2", "failure condition 3"],
+        question: 'When does it work, and when does it fail?',
+        fills: [
+          'condition',
+          'failure condition 1',
+          'failure condition 2',
+          'failure condition 3',
+        ],
       },
     ],
-    ctaStyles: ["diagnostic", "authority_reframe", "soft_lead"],
-    proofRequirement: "none",
+    ctaStyles: ['diagnostic', 'authority_reframe', 'soft_lead'],
+    proofRequirement: 'none',
     antiPatterns: [],
   }),
 
   t({
-    id: "myth_buster_04",
-    name: "Dangerous Simplification",
-    archetype: "Myth-Buster",
-    variant: "Oversimplified idea",
-    bestForRoles: ["Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Marketer"],
-    bestForGoals: ["Build authority", "Grow my audience"],
-    bestForPillars: ["Mistakes and misconceptions", "Audience belief shift"],
+    id: 'myth_buster_04',
+    name: 'Dangerous Simplification',
+    archetype: 'Myth-Buster',
+    variant: 'Oversimplified idea',
+    bestForRoles: [
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Marketer',
+    ],
+    bestForGoals: ['Build authority', 'Grow my audience'],
+    bestForPillars: ['Mistakes and misconceptions', 'Audience belief shift'],
     template: `[oversimplified idea] sounds helpful.
 
 That’s why it spreads.
@@ -2359,30 +4857,52 @@ Less catchy.
 Much more accurate.
 
 [cta]`,
-    variables: ["oversimplified idea", "hidden complexity 1", "hidden complexity 2", "hidden complexity 3", "bad outcome", "better framing", "cta"],
+    variables: [
+      'oversimplified idea',
+      'hidden complexity 1',
+      'hidden complexity 2',
+      'hidden complexity 3',
+      'bad outcome',
+      'better framing',
+      'cta',
+    ],
     clarifyingQuestions: [
       {
-        question: "What idea is too oversimplified in your industry?",
-        fills: ["oversimplified idea"],
+        question: 'What idea is too oversimplified in your industry?',
+        fills: ['oversimplified idea'],
       },
       {
-        question: "What complexity does that idea hide?",
-        fills: ["hidden complexity 1", "hidden complexity 2", "hidden complexity 3", "better framing"],
+        question: 'What complexity does that idea hide?',
+        fills: [
+          'hidden complexity 1',
+          'hidden complexity 2',
+          'hidden complexity 3',
+          'better framing',
+        ],
       },
     ],
-    ctaStyles: ["authority_reframe", "agree_disagree", "belief_statement"],
-    proofRequirement: "none",
+    ctaStyles: ['authority_reframe', 'agree_disagree', 'belief_statement'],
+    proofRequirement: 'none',
     antiPatterns: [],
   }),
 
   t({
-    id: "myth_buster_05",
-    name: "Myth I Believed Too",
-    archetype: "Myth-Buster",
-    variant: "Personal myth correction",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Grow my audience", "Build authority"],
-    bestForPillars: ["Personal story", "Mistakes and misconceptions"],
+    id: 'myth_buster_05',
+    name: 'Myth I Believed Too',
+    archetype: 'Myth-Buster',
+    variant: 'Personal myth correction',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: ['Grow my audience', 'Build authority'],
+    bestForPillars: ['Personal story', 'Mistakes and misconceptions'],
     template: `I used to believe [myth].
 
 It made sense because [why it made sense].
@@ -2406,30 +4926,49 @@ I did too.
 But it cost me [cost].
 
 [cta]`,
-    variables: ["myth", "why it made sense", "old action 1", "old action 2", "old action 3", "truth", "better belief", "cost", "cta"],
+    variables: [
+      'myth',
+      'why it made sense',
+      'old action 1',
+      'old action 2',
+      'old action 3',
+      'truth',
+      'better belief',
+      'cost',
+      'cta',
+    ],
     clarifyingQuestions: [
       {
-        question: "What myth did you also believe at some point?",
-        fills: ["myth", "why it made sense"],
+        question: 'What myth did you also believe at some point?',
+        fills: ['myth', 'why it made sense'],
       },
       {
-        question: "What changed your mind?",
-        fills: ["truth", "better belief", "cost"],
+        question: 'What changed your mind?',
+        fills: ['truth', 'better belief', 'cost'],
       },
     ],
-    ctaStyles: ["relatable", "authority_reframe", "conversation"],
-    proofRequirement: "recommended",
+    ctaStyles: ['relatable', 'authority_reframe', 'conversation'],
+    proofRequirement: 'recommended',
     antiPatterns: [],
   }),
 
   t({
-    id: "strong_opinion_01",
-    name: "Opinions I’d Defend",
-    archetype: "Strong Opinion List",
-    variant: "Opinion list",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Grow my audience", "Build authority"],
-    bestForPillars: ["Point of view", "Values / philosophy"],
+    id: 'strong_opinion_01',
+    name: 'Opinions I’d Defend',
+    archetype: 'Strong Opinion List',
+    variant: 'Opinion list',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: ['Grow my audience', 'Build authority'],
+    bestForPillars: ['Point of view', 'Values / philosophy'],
     template: `A few opinions I have about [topic]:
 
 1. [opinion 1]
@@ -2450,41 +4989,61 @@ I think [deeper thing] matters more.
 
 [cta]`,
     variables: [
-      "topic",
-      "opinion 1",
-      "opinion 2",
-      "opinion 3",
-      "opinion 4",
-      "opinion 5",
-      "strongest opinion",
-      "reason",
-      "surface thing",
-      "deeper thing",
-      "cta",
+      'topic',
+      'opinion 1',
+      'opinion 2',
+      'opinion 3',
+      'opinion 4',
+      'opinion 5',
+      'strongest opinion',
+      'reason',
+      'surface thing',
+      'deeper thing',
+      'cta',
     ],
     clarifyingQuestions: [
       {
-        question: "What topic do you have strong opinions about?",
-        fills: ["topic"],
+        question: 'What topic do you have strong opinions about?',
+        fills: ['topic'],
       },
       {
-        question: "What are 3–5 opinions you’d defend?",
-        fills: ["opinion 1", "opinion 2", "opinion 3", "opinion 4", "opinion 5", "strongest opinion"],
+        question: 'What are 3–5 opinions you’d defend?',
+        fills: [
+          'opinion 1',
+          'opinion 2',
+          'opinion 3',
+          'opinion 4',
+          'opinion 5',
+          'strongest opinion',
+        ],
       },
     ],
-    ctaStyles: ["agree_disagree", "conversation", "authority_reframe"],
-    proofRequirement: "none",
-    antiPatterns: ["Do not make opinions artificially controversial."],
+    ctaStyles: ['agree_disagree', 'conversation', 'authority_reframe'],
+    proofRequirement: 'none',
+    antiPatterns: ['Do not make opinions artificially controversial.'],
   }),
 
   t({
-    id: "strong_opinion_02",
-    name: "Things I Don’t Believe Anymore",
-    archetype: "Strong Opinion List",
-    variant: "Belief changes",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Grow my audience", "Build authority"],
-    bestForPillars: ["Point of view", "Personal story", "Mistakes and misconceptions"],
+    id: 'strong_opinion_02',
+    name: 'Things I Don’t Believe Anymore',
+    archetype: 'Strong Opinion List',
+    variant: 'Belief changes',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: ['Grow my audience', 'Build authority'],
+    bestForPillars: [
+      'Point of view',
+      'Personal story',
+      'Mistakes and misconceptions',
+    ],
     template: `Things I don’t believe anymore about [topic]:
 
 1. [old belief 1]
@@ -2507,41 +5066,60 @@ They’re evidence that you’re paying attention.
 
 [cta]`,
     variables: [
-      "topic",
-      "old belief 1",
-      "old belief 2",
-      "old belief 3",
-      "old belief 4",
-      "old belief 5",
-      "biggest shift",
-      "old view",
-      "new view",
-      "changed behavior",
-      "cta",
+      'topic',
+      'old belief 1',
+      'old belief 2',
+      'old belief 3',
+      'old belief 4',
+      'old belief 5',
+      'biggest shift',
+      'old view',
+      'new view',
+      'changed behavior',
+      'cta',
     ],
     clarifyingQuestions: [
       {
-        question: "What beliefs have changed for you over time?",
-        fills: ["old belief 1", "old belief 2", "old belief 3", "old belief 4", "old belief 5"],
+        question: 'What beliefs have changed for you over time?',
+        fills: [
+          'old belief 1',
+          'old belief 2',
+          'old belief 3',
+          'old belief 4',
+          'old belief 5',
+        ],
       },
       {
-        question: "Which belief shift changed your behavior most?",
-        fills: ["biggest shift", "old view", "new view", "changed behavior"],
+        question: 'Which belief shift changed your behavior most?',
+        fills: ['biggest shift', 'old view', 'new view', 'changed behavior'],
       },
     ],
-    ctaStyles: ["relatable", "conversation", "authority_reframe"],
-    proofRequirement: "optional",
+    ctaStyles: ['relatable', 'conversation', 'authority_reframe'],
+    proofRequirement: 'optional',
     antiPatterns: [],
   }),
 
   t({
-    id: "strong_opinion_03",
-    name: "Green Flags and Red Flags",
-    archetype: "Strong Opinion List",
-    variant: "Signal list",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Grow my audience", "Build authority", "Recruit / hire talent"],
-    bestForPillars: ["Problem education", "Hiring / culture", "Process / how-I-work"],
+    id: 'strong_opinion_03',
+    name: 'Green Flags and Red Flags',
+    archetype: 'Strong Opinion List',
+    variant: 'Signal list',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: [
+      'Grow my audience',
+      'Build authority',
+      'Recruit / hire talent',
+    ],
+    bestForPillars: ['Hiring / culture', 'Values / philosophy'],
     template: `Green flags in [topic]:
 
 1. [green flag 1]
@@ -2564,42 +5142,62 @@ The other predicts [negative prediction].
 
 [cta]`,
     variables: [
-      "topic",
-      "green flag 1",
-      "green flag 2",
-      "green flag 3",
-      "red flag 1",
-      "red flag 2",
-      "red flag 3",
-      "underrated green flag",
-      "dangerous red flag",
-      "positive prediction",
-      "negative prediction",
-      "cta",
+      'topic',
+      'green flag 1',
+      'green flag 2',
+      'green flag 3',
+      'red flag 1',
+      'red flag 2',
+      'red flag 3',
+      'underrated green flag',
+      'dangerous red flag',
+      'positive prediction',
+      'negative prediction',
+      'cta',
     ],
     clarifyingQuestions: [
       {
-        question: "What topic should the green flags and red flags relate to?",
-        fills: ["topic"],
+        question: 'What topic should the green flags and red flags relate to?',
+        fills: ['topic'],
       },
       {
-        question: "What are the top green flags and red flags?",
-        fills: ["green flag 1", "green flag 2", "green flag 3", "red flag 1", "red flag 2", "red flag 3"],
+        question: 'What are the top green flags and red flags?',
+        fills: [
+          'green flag 1',
+          'green flag 2',
+          'green flag 3',
+          'red flag 1',
+          'red flag 2',
+          'red flag 3',
+        ],
       },
     ],
-    ctaStyles: ["agree_disagree", "diagnostic", "hiring_signal"],
-    proofRequirement: "none",
+    ctaStyles: ['agree_disagree', 'diagnostic', 'hiring_signal'],
+    proofRequirement: 'none',
     antiPatterns: [],
   }),
 
   t({
-    id: "strong_opinion_04",
-    name: "Underrated Things",
-    archetype: "Strong Opinion List",
-    variant: "Underappreciated factors",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Build authority", "Grow my audience"],
-    bestForPillars: ["Point of view", "Problem education", "Values / philosophy"],
+    id: 'strong_opinion_04',
+    name: 'Underrated Things',
+    archetype: 'Strong Opinion List',
+    variant: 'Underappreciated factors',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: ['Build authority', 'Grow my audience'],
+    bestForPillars: [
+      'Point of view',
+      'Problem education',
+      'Values / philosophy',
+    ],
     template: `Things that matter more than people think in [topic]:
 
 1. [underrated thing 1]
@@ -2620,40 +5218,55 @@ But it quietly affects [important outcome].
 
 [cta]`,
     variables: [
-      "topic",
-      "underrated thing 1",
-      "underrated thing 2",
-      "underrated thing 3",
-      "underrated thing 4",
-      "underrated thing 5",
-      "most underestimated thing",
-      "reason",
-      "important outcome",
-      "cta",
+      'topic',
+      'underrated thing 1',
+      'underrated thing 2',
+      'underrated thing 3',
+      'underrated thing 4',
+      'underrated thing 5',
+      'most underestimated thing',
+      'reason',
+      'important outcome',
+      'cta',
     ],
     clarifyingQuestions: [
       {
-        question: "What does your audience underestimate?",
-        fills: ["underrated thing 1", "underrated thing 2", "underrated thing 3", "underrated thing 4", "underrated thing 5"],
+        question: 'What does your audience underestimate?',
+        fills: [
+          'underrated thing 1',
+          'underrated thing 2',
+          'underrated thing 3',
+          'underrated thing 4',
+          'underrated thing 5',
+        ],
       },
       {
-        question: "Which one matters most, and why?",
-        fills: ["most underestimated thing", "reason", "important outcome"],
+        question: 'Which one matters most, and why?',
+        fills: ['most underestimated thing', 'reason', 'important outcome'],
       },
     ],
-    ctaStyles: ["authority_reframe", "conversation", "belief_statement"],
-    proofRequirement: "none",
+    ctaStyles: ['authority_reframe', 'conversation', 'belief_statement'],
+    proofRequirement: 'none',
     antiPatterns: [],
   }),
 
   t({
-    id: "strong_opinion_05",
-    name: "Lines I Won’t Cross",
-    archetype: "Strong Opinion List",
-    variant: "Principles and boundaries",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Build authority", "Grow my audience", "Build network"],
-    bestForPillars: ["Values / philosophy", "Point of view"],
+    id: 'strong_opinion_05',
+    name: 'Lines I Won’t Cross',
+    archetype: 'Strong Opinion List',
+    variant: 'Principles and boundaries',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: ['Build authority', 'Grow my audience', 'Build network'],
+    bestForPillars: ['Values / philosophy', 'Point of view'],
     template: `Lines I won’t cross in [topic/work]:
 
 1. I won’t [boundary 1]
@@ -2675,41 +5288,51 @@ Some things are not worth trading for [tempting reward].
 
 [cta]`,
     variables: [
-      "topic/work",
-      "boundary 1",
-      "boundary 2",
-      "boundary 3",
-      "boundary 4",
-      "wrong interpretation",
-      "real reason",
-      "principle",
-      "possible cost",
-      "tempting reward",
-      "cta",
+      'topic/work',
+      'boundary 1',
+      'boundary 2',
+      'boundary 3',
+      'boundary 4',
+      'wrong interpretation',
+      'real reason',
+      'principle',
+      'possible cost',
+      'tempting reward',
+      'cta',
     ],
     clarifyingQuestions: [
       {
-        question: "What professional lines or standards will you not compromise on?",
-        fills: ["boundary 1", "boundary 2", "boundary 3", "boundary 4"],
+        question:
+          'What professional lines or standards will you not compromise on?',
+        fills: ['boundary 1', 'boundary 2', 'boundary 3', 'boundary 4'],
       },
       {
-        question: "Why do those standards matter to you?",
-        fills: ["real reason", "principle", "tempting reward"],
+        question: 'Why do those standards matter to you?',
+        fills: ['real reason', 'principle', 'tempting reward'],
       },
     ],
-    ctaStyles: ["belief_statement", "relatable", "conversation"],
-    proofRequirement: "optional",
+    ctaStyles: ['belief_statement', 'relatable', 'conversation'],
+    proofRequirement: 'optional',
     antiPatterns: [],
   }),
 
   t({
-    id: "objection_handling_01",
-    name: "We’re Not Ready Yet",
-    archetype: "Objection Handling",
-    variant: "Readiness objection",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Get inbound leads", "Promote my product/service"],
-    bestForPillars: ["Objection handling", "Product / service education"],
+    id: 'objection_handling_01',
+    name: 'We’re Not Ready Yet',
+    archetype: 'Objection Handling',
+    variant: 'Readiness objection',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: ['Get inbound leads', 'Promote my product/service'],
+    bestForPillars: ['Objection handling', 'Product / service education'],
     template: `When [audience] say “we’re not ready for [thing],” they usually don’t mean [surface meaning].
 
 They usually mean:
@@ -2732,42 +5355,56 @@ It’s [safe first step].
 
 [cta]`,
     variables: [
-      "audience",
-      "thing",
-      "surface meaning",
-      "real concern 1",
-      "real concern 2",
-      "real concern 3",
-      "cost of waiting 1",
-      "cost of waiting 2",
-      "cost of waiting 3",
-      "big intimidating step",
-      "safe first step",
-      "cta",
+      'audience',
+      'thing',
+      'surface meaning',
+      'real concern 1',
+      'real concern 2',
+      'real concern 3',
+      'cost of waiting 1',
+      'cost of waiting 2',
+      'cost of waiting 3',
+      'big intimidating step',
+      'safe first step',
+      'cta',
     ],
     clarifyingQuestions: [
       {
-        question: "What does your audience often say they’re not ready for?",
-        fills: ["thing", "surface meaning"],
+        question: 'What does your audience often say they’re not ready for?',
+        fills: ['thing', 'surface meaning'],
       },
       {
-        question: "What is usually behind that hesitation?",
-        fills: ["real concern 1", "real concern 2", "real concern 3", "safe first step"],
+        question: 'What is usually behind that hesitation?',
+        fills: [
+          'real concern 1',
+          'real concern 2',
+          'real concern 3',
+          'safe first step',
+        ],
       },
     ],
-    ctaStyles: ["soft_lead", "problem_solution", "offer_bridge"],
-    proofRequirement: "none",
+    ctaStyles: ['soft_lead', 'problem_solution', 'offer_bridge'],
+    proofRequirement: 'none',
     antiPatterns: [],
   }),
 
   t({
-    id: "objection_handling_02",
-    name: "Too Expensive",
-    archetype: "Objection Handling",
-    variant: "Cost objection",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Get inbound leads", "Promote my product/service"],
-    bestForPillars: ["Objection handling", "Product / service education"],
+    id: 'objection_handling_02',
+    name: 'Too Expensive',
+    archetype: 'Objection Handling',
+    variant: 'Cost objection',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: ['Get inbound leads', 'Promote my product/service'],
+    bestForPillars: ['Objection handling', 'Product / service education'],
     template: `“[thing] is too expensive.”
 
 Sometimes that’s true.
@@ -2782,44 +5419,60 @@ It may be costing:
 2. [hidden cost 2]
 3. [hidden cost 3]
 
-The price of [thing] is visible.
-
-The cost of [unresolved problem] is usually quieter.
-
-But quiet does not mean cheap.
+The price of [thing] is visible but the cost of [unresolved problem] is usually not.
+This is why many make the mistake of not doing anything about this problem which hurts them in the long run.
 
 [cta]`,
-    variables: ["thing", "unresolved problem", "hidden cost 1", "hidden cost 2", "hidden cost 3", "cta"],
+    variables: [
+      'thing',
+      'unresolved problem',
+      'hidden cost 1',
+      'hidden cost 2',
+      'hidden cost 3',
+      'cta',
+    ],
     clarifyingQuestions: [
       {
-        question: "What does your audience think is too expensive?",
-        fills: ["thing"],
+        question: 'What does your audience think is too expensive?',
+        fills: ['thing'],
       },
       {
-        question: "What does the unresolved problem cost them?",
-        fills: ["unresolved problem", "hidden cost 1", "hidden cost 2", "hidden cost 3"],
+        question: 'What does the unresolved problem cost them?',
+        fills: [
+          'unresolved problem',
+          'hidden cost 1',
+          'hidden cost 2',
+          'hidden cost 3',
+        ],
       },
     ],
-    ctaStyles: ["problem_solution", "offer_bridge", "soft_lead"],
-    proofRequirement: "none",
-    antiPatterns: ["Do not use aggressive sales language."],
+    ctaStyles: ['problem_solution', 'offer_bridge', 'soft_lead'],
+    proofRequirement: 'none',
+    antiPatterns: ['Do not use aggressive sales language.'],
   }),
 
   t({
-    id: "objection_handling_03",
-    name: "We Tried That Before",
-    archetype: "Objection Handling",
-    variant: "Past failure objection",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Get inbound leads", "Promote my product/service"],
-    bestForPillars: ["Objection handling", "Mistakes and misconceptions"],
+    id: 'objection_handling_03',
+    name: 'We Tried That Before',
+    archetype: 'Objection Handling',
+    variant: 'Past failure objection',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: ['Get inbound leads', 'Promote my product/service'],
+    bestForPillars: ['Objection handling', 'Mistakes and misconceptions'],
     template: `“We tried [thing] before.”
 
 That’s a valid concern.
 
-But the question is:
-
-“What exactly failed?”
+But have you ever looked into What exactly failed?
 
 Was it:
 
@@ -2828,7 +5481,7 @@ Was it:
 3. [possible failure point 3]
 4. [possible failure point 4]
 
-Because [thing] may not have been the issue.
+Because the [thing] may not have been the issue.
 
 The issue may have been [real issue].
 
@@ -2836,37 +5489,52 @@ Trying something once is not the same as doing it under the right conditions.
 
 [cta]`,
     variables: [
-      "thing",
-      "possible failure point 1",
-      "possible failure point 2",
-      "possible failure point 3",
-      "possible failure point 4",
-      "real issue",
-      "cta",
+      'thing',
+      'possible failure point 1',
+      'possible failure point 2',
+      'possible failure point 3',
+      'possible failure point 4',
+      'real issue',
+      'cta',
     ],
     clarifyingQuestions: [
       {
-        question: "What has your audience often already tried?",
-        fills: ["thing"],
+        question: 'What has your audience often already tried?',
+        fills: ['thing'],
       },
       {
-        question: "Why did it probably fail?",
-        fills: ["possible failure point 1", "possible failure point 2", "possible failure point 3", "possible failure point 4", "real issue"],
+        question: 'Why did it probably fail?',
+        fills: [
+          'possible failure point 1',
+          'possible failure point 2',
+          'possible failure point 3',
+          'possible failure point 4',
+          'real issue',
+        ],
       },
     ],
-    ctaStyles: ["soft_lead", "diagnostic", "problem_solution"],
-    proofRequirement: "none",
+    ctaStyles: ['soft_lead', 'diagnostic', 'problem_solution'],
+    proofRequirement: 'none',
     antiPatterns: [],
   }),
 
   t({
-    id: "objection_handling_04",
-    name: "We Can Do It Ourselves",
-    archetype: "Objection Handling",
-    variant: "DIY objection",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Get inbound leads", "Promote my product/service"],
-    bestForPillars: ["Objection handling", "Product / service education"],
+    id: 'objection_handling_04',
+    name: 'We Can Do It Ourselves',
+    archetype: 'Objection Handling',
+    variant: 'DIY objection',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: ['Get inbound leads', 'Promote my product/service'],
+    bestForPillars: ['Objection handling', 'Product / service education'],
     template: `“We can do [thing] ourselves.”
 
 Sometimes, yes.
@@ -2892,30 +5560,55 @@ It’s:
 “Is doing this ourselves the best use of our time, focus, and judgment?”
 
 [cta]`,
-    variables: ["thing", "works when 1", "works when 2", "works when 3", "breaks when 1", "breaks when 2", "breaks when 3", "cta"],
+    variables: [
+      'thing',
+      'works when 1',
+      'works when 2',
+      'works when 3',
+      'breaks when 1',
+      'breaks when 2',
+      'breaks when 3',
+      'cta',
+    ],
     clarifyingQuestions: [
       {
-        question: "What does your audience think they can do themselves?",
-        fills: ["thing"],
+        question: 'What does your audience think they can do themselves?',
+        fills: ['thing'],
       },
       {
-        question: "Where does DIY work, and where does it break?",
-        fills: ["works when 1", "works when 2", "works when 3", "breaks when 1", "breaks when 2", "breaks when 3"],
+        question: 'Where does DIY work, and where does it break?',
+        fills: [
+          'works when 1',
+          'works when 2',
+          'works when 3',
+          'breaks when 1',
+          'breaks when 2',
+          'breaks when 3',
+        ],
       },
     ],
-    ctaStyles: ["specific_peer_question", "soft_lead", "offer_bridge"],
-    proofRequirement: "none",
+    ctaStyles: ['specific_peer_question', 'soft_lead', 'offer_bridge'],
+    proofRequirement: 'none',
     antiPatterns: [],
   }),
 
   t({
-    id: "objection_handling_05",
-    name: "Objection Behind the Objection",
-    archetype: "Objection Handling",
-    variant: "Hidden fear",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Get inbound leads", "Promote my product/service"],
-    bestForPillars: ["Objection handling", "Audience belief shift"],
+    id: 'objection_handling_05',
+    name: 'Objection Behind the Objection',
+    archetype: 'Objection Handling',
+    variant: 'Hidden fear',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: ['Get inbound leads', 'Promote my product/service'],
+    bestForPillars: ['Objection handling', 'Audience belief shift'],
     template: `When someone says “[stated objection],” the real concern is often not [surface concern].
 
 It’s usually:
@@ -2940,38 +5633,52 @@ They need more clarity.
 
 [cta]`,
     variables: [
-      "stated objection",
-      "surface concern",
-      "hidden concern 1",
-      "hidden concern 2",
-      "hidden concern 3",
-      "logical response",
-      "empathetic reframe",
-      "cta",
+      'stated objection',
+      'surface concern',
+      'hidden concern 1',
+      'hidden concern 2',
+      'hidden concern 3',
+      'logical response',
+      'empathetic reframe',
+      'cta',
     ],
     clarifyingQuestions: [
       {
-        question: "What objection do you hear most often?",
-        fills: ["stated objection", "surface concern"],
+        question: 'What objection do you hear most often?',
+        fills: ['stated objection', 'surface concern'],
       },
       {
-        question: "What fear or concern sits underneath it?",
-        fills: ["hidden concern 1", "hidden concern 2", "hidden concern 3", "empathetic reframe"],
+        question: 'What fear or concern sits underneath it?',
+        fills: [
+          'hidden concern 1',
+          'hidden concern 2',
+          'hidden concern 3',
+          'empathetic reframe',
+        ],
       },
     ],
-    ctaStyles: ["soft_lead", "problem_solution", "offer_bridge"],
-    proofRequirement: "none",
+    ctaStyles: ['soft_lead', 'problem_solution', 'offer_bridge'],
+    proofRequirement: 'none',
     antiPatterns: [],
   }),
 
   t({
-    id: "use_case_story_01",
-    name: "When to Use This",
-    archetype: "Use Case Story",
-    variant: "Best-fit scenario",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Promote my product/service", "Get inbound leads"],
-    bestForPillars: ["Product / service education", "Problem education"],
+    id: 'use_case_story_01',
+    name: 'When to Use This',
+    archetype: 'Use Case Story',
+    variant: 'Best-fit scenario',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: ['Promote my product/service', 'Get inbound leads'],
+    bestForPillars: ['Product / service education', 'Problem education'],
     template: `[product/service/approach] is useful when [situation].
 
 Especially if you’re dealing with:
@@ -2994,41 +5701,57 @@ That’s where it makes the most sense.
 
 [cta]`,
     variables: [
-      "product/service/approach",
-      "situation",
-      "problem 1",
-      "problem 2",
-      "problem 3",
-      "help 1",
-      "help 2",
-      "help 3",
-      "wrong expectation",
-      "right expectation",
-      "cta",
+      'product/service/approach',
+      'situation',
+      'problem 1',
+      'problem 2',
+      'problem 3',
+      'help 1',
+      'help 2',
+      'help 3',
+      'wrong expectation',
+      'right expectation',
+      'cta',
     ],
     clarifyingQuestions: [
       {
-        question: "When is your product, service, or approach most useful?",
-        fills: ["product/service/approach", "situation"],
+        question: 'When is your product, service, or approach most useful?',
+        fills: ['product/service/approach', 'situation'],
       },
       {
-        question: "What problems does it help with?",
-        fills: ["problem 1", "problem 2", "problem 3", "help 1", "help 2", "help 3"],
+        question: 'What problems does it help with?',
+        fills: [
+          'problem 1',
+          'problem 2',
+          'problem 3',
+          'help 1',
+          'help 2',
+          'help 3',
+        ],
       },
     ],
-    ctaStyles: ["use_case", "offer_bridge", "soft_lead"],
-    proofRequirement: "none",
+    ctaStyles: ['use_case', 'offer_bridge', 'soft_lead'],
+    proofRequirement: 'none',
     antiPatterns: [],
   }),
 
   t({
-    id: "use_case_story_02",
-    name: "For and Not For",
-    archetype: "Use Case Story",
-    variant: "Fit positioning",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Promote my product/service", "Get inbound leads"],
-    bestForPillars: ["Product / service education", "Objection handling"],
+    id: 'use_case_story_02',
+    name: 'For and Not For',
+    archetype: 'Use Case Story',
+    variant: 'Fit positioning',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: ['Promote my product/service', 'Get inbound leads'],
+    bestForPillars: ['Product / service education', 'Objection handling'],
     template: `[product/service/approach] is not for everyone.
 
 It is for [right-fit audience] who want:
@@ -3051,41 +5774,55 @@ That distinction matters.
 
 [cta]`,
     variables: [
-      "product/service/approach",
-      "right-fit audience",
-      "right-fit desire 1",
-      "right-fit desire 2",
-      "right-fit desire 3",
-      "bad-fit desire 1",
-      "bad-fit desire 2",
-      "bad-fit desire 3",
-      "wrong expectation",
-      "right expectation",
-      "cta",
+      'product/service/approach',
+      'right-fit audience',
+      'right-fit desire 1',
+      'right-fit desire 2',
+      'right-fit desire 3',
+      'bad-fit desire 1',
+      'bad-fit desire 2',
+      'bad-fit desire 3',
+      'wrong expectation',
+      'right expectation',
+      'cta',
     ],
     clarifyingQuestions: [
       {
-        question: "Who is your product, service, or approach best for?",
-        fills: ["right-fit audience", "right-fit desire 1", "right-fit desire 2", "right-fit desire 3"],
+        question: 'Who is your product, service, or approach best for?',
+        fills: [
+          'right-fit audience',
+          'right-fit desire 1',
+          'right-fit desire 2',
+          'right-fit desire 3',
+        ],
       },
       {
-        question: "Who is it not a good fit for?",
-        fills: ["bad-fit desire 1", "bad-fit desire 2", "bad-fit desire 3"],
+        question: 'Who is it not a good fit for?',
+        fills: ['bad-fit desire 1', 'bad-fit desire 2', 'bad-fit desire 3'],
       },
     ],
-    ctaStyles: ["offer_bridge", "use_case", "soft_lead"],
-    proofRequirement: "none",
+    ctaStyles: ['offer_bridge', 'use_case', 'soft_lead'],
+    proofRequirement: 'none',
     antiPatterns: [],
   }),
 
   t({
-    id: "use_case_story_03",
-    name: "Day-in-the-Life Use Case",
-    archetype: "Use Case Story",
-    variant: "Real-life moment",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Promote my product/service", "Get inbound leads"],
-    bestForPillars: ["Product / service education", "Problem education"],
+    id: 'use_case_story_03',
+    name: 'Day-in-the-Life Use Case',
+    archetype: 'Use Case Story',
+    variant: 'Real-life moment',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: ['Promote my product/service', 'Get inbound leads'],
+    bestForPillars: ['Product / service education', 'Problem education'],
     template: `[problem] usually shows up in small moments.
 
 Like when [daily moment].
@@ -3104,47 +5841,64 @@ It helps them:
 2. [help 2]
 3. [help 3]
 
-Not in theory.
+Not just in theory.
 
-In the actual moment where the problem appears.
+But in the actual moment where the problem appears.
 
 [cta]`,
     variables: [
-      "problem",
-      "daily moment",
-      "audience",
-      "friction 1",
-      "friction 2",
-      "friction 3",
-      "product/service/approach",
-      "help 1",
-      "help 2",
-      "help 3",
-      "cta",
+      'problem',
+      'daily moment',
+      'audience',
+      'friction 1',
+      'friction 2',
+      'friction 3',
+      'product/service/approach',
+      'help 1',
+      'help 2',
+      'help 3',
+      'cta',
     ],
     clarifyingQuestions: [
       {
-        question: "When does this problem show up during the audience’s day or week?",
-        fills: ["problem", "daily moment", "friction 1", "friction 2", "friction 3"],
+        question:
+          'When does this problem show up during the audience’s day or week?',
+        fills: [
+          'problem',
+          'daily moment',
+          'friction 1',
+          'friction 2',
+          'friction 3',
+        ],
       },
       {
-        question: "How does your product, service, or approach help in that moment?",
-        fills: ["product/service/approach", "help 1", "help 2", "help 3"],
+        question:
+          'How does your product, service, or approach help in that moment?',
+        fills: ['product/service/approach', 'help 1', 'help 2', 'help 3'],
       },
     ],
-    ctaStyles: ["use_case", "problem_solution", "offer_bridge"],
-    proofRequirement: "none",
+    ctaStyles: ['use_case', 'problem_solution', 'offer_bridge'],
+    proofRequirement: 'none',
     antiPatterns: [],
   }),
 
   t({
-    id: "use_case_story_04",
-    name: "Underrated Use Case",
-    archetype: "Use Case Story",
-    variant: "Overlooked value",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Promote my product/service", "Build authority"],
-    bestForPillars: ["Product / service education", "Point of view"],
+    id: 'use_case_story_04',
+    name: 'Underrated Use Case',
+    archetype: 'Use Case Story',
+    variant: 'Overlooked value',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: ['Promote my product/service', 'Build authority'],
+    bestForPillars: ['Product / service education'],
     template: `An underrated use case for [product/service/approach]:
 
 [underrated use case]
@@ -3164,30 +5918,52 @@ The obvious use case gets attention.
 The quiet use case often creates the bigger shift.
 
 [cta]`,
-    variables: ["product/service/approach", "underrated use case", "common use case", "benefit 1", "benefit 2", "benefit 3", "reason", "cta"],
+    variables: [
+      'product/service/approach',
+      'underrated use case',
+      'common use case',
+      'benefit 1',
+      'benefit 2',
+      'benefit 3',
+      'reason',
+      'cta',
+    ],
     clarifyingQuestions: [
       {
-        question: "What is an underrated use case for your work?",
-        fills: ["underrated use case"],
+        question: 'What is an underrated use case for your work?',
+        fills: ['underrated use case'],
       },
       {
-        question: "What does it help with that people might overlook?",
-        fills: ["benefit 1", "benefit 2", "benefit 3", "reason"],
+        question: 'What does it help with that people might overlook?',
+        fills: ['benefit 1', 'benefit 2', 'benefit 3', 'reason'],
       },
     ],
-    ctaStyles: ["use_case", "authority_reframe", "offer_bridge"],
-    proofRequirement: "none",
+    ctaStyles: ['use_case', 'authority_reframe', 'offer_bridge'],
+    proofRequirement: 'none',
     antiPatterns: [],
   }),
 
   t({
-    id: "use_case_story_05",
-    name: "Feature to Outcome",
-    archetype: "Use Case Story",
-    variant: "Translate capability",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Promote my product/service", "Get inbound leads", "Get job opportunities"],
-    bestForPillars: ["Product / service education", "Career / credibility proof"],
+    id: 'use_case_story_05',
+    name: 'Feature to Outcome',
+    archetype: 'Use Case Story',
+    variant: 'Translate capability',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: [
+      'Promote my product/service',
+      'Get inbound leads',
+      'Get job opportunities',
+    ],
+    bestForPillars: ['Product / service education'],
     template: `[feature/capability/skill] sounds like [surface description].
 
 But what it actually helps with is [real outcome].
@@ -3208,39 +5984,53 @@ Don’t confuse the two.
 
 [cta]`,
     variables: [
-      "feature/capability/skill",
-      "surface description",
-      "real outcome",
-      "capability",
-      "practical benefit 1",
-      "practical benefit 2",
-      "practical benefit 3",
-      "real-world reason",
-      "cta",
+      'feature/capability/skill',
+      'surface description',
+      'real outcome',
+      'capability',
+      'practical benefit 1',
+      'practical benefit 2',
+      'practical benefit 3',
+      'real-world reason',
+      'cta',
     ],
     clarifyingQuestions: [
       {
-        question: "What feature, capability, or skill do you want to explain?",
-        fills: ["feature/capability/skill", "capability"],
+        question: 'What feature, capability, or skill do you want to explain?',
+        fills: ['feature/capability/skill', 'capability'],
       },
       {
-        question: "What outcome does it create?",
-        fills: ["real outcome", "practical benefit 1", "practical benefit 2", "practical benefit 3"],
+        question: 'What outcome does it create?',
+        fills: [
+          'real outcome',
+          'practical benefit 1',
+          'practical benefit 2',
+          'practical benefit 3',
+        ],
       },
     ],
-    ctaStyles: ["offer_bridge", "career_signal", "use_case"],
-    proofRequirement: "none",
+    ctaStyles: ['offer_bridge', 'career_signal', 'use_case'],
+    proofRequirement: 'none',
     antiPatterns: [],
   }),
 
   t({
-    id: "honest_question_01",
-    name: "Question I Keep Coming Back To",
-    archetype: "Honest Question",
-    variant: "Thoughtful question",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Build network", "Grow my audience"],
-    bestForPillars: ["Community / network conversation", "Point of view"],
+    id: 'honest_question_01',
+    name: 'Question I Keep Coming Back To',
+    archetype: 'Honest Question',
+    variant: 'Thoughtful question',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: ['Build network', 'Grow my audience'],
+    bestForPillars: ['Community / network conversation'],
     template: `A question I keep coming back to:
 
 “[question]”
@@ -3260,30 +6050,47 @@ But I think the answer changes how we approach [topic].
 How are you thinking about this?
 
 [cta]`,
-    variables: ["question", "observation", "side 1", "side 2", "why it matters", "topic", "cta"],
+    variables: [
+      'question',
+      'observation',
+      'side 1',
+      'side 2',
+      'why it matters',
+      'topic',
+      'cta',
+    ],
     clarifyingQuestions: [
       {
-        question: "What question have you been thinking about lately?",
-        fills: ["question", "topic"],
+        question: 'What question have you been thinking about lately?',
+        fills: ['question', 'topic'],
       },
       {
-        question: "What tension makes the question interesting?",
-        fills: ["side 1", "side 2", "why it matters"],
+        question: 'What tension makes the question interesting?',
+        fills: ['side 1', 'side 2', 'why it matters'],
       },
     ],
-    ctaStyles: ["peer_question", "shared_learning", "conversation"],
-    proofRequirement: "none",
-    antiPatterns: ["Do not pretend to have a strong conclusion."],
+    ctaStyles: ['peer_question', 'shared_learning', 'conversation'],
+    proofRequirement: 'none',
+    antiPatterns: ['Do not pretend to have a strong conclusion.'],
   }),
 
   t({
-    id: "honest_question_02",
-    name: "How Are Others Handling This",
-    archetype: "Honest Question",
-    variant: "Peer input",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Build network", "Grow my audience"],
-    bestForPillars: ["Community / network conversation", "Problem education"],
+    id: 'honest_question_02',
+    name: 'How Are Others Handling This',
+    archetype: 'Honest Question',
+    variant: 'Peer input',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: ['Build network', 'Grow my audience'],
+    bestForPillars: ['Community / network conversation', 'Problem education'],
     template: `I’m seeing more [audience] struggle with [challenge].
 
 The usual options are:
@@ -3305,30 +6112,56 @@ Curious:
 How are others handling [challenge] right now?
 
 [cta]`,
-    variables: ["audience", "challenge", "option 1", "option 2", "option 3", "tradeoff 1", "tradeoff 2", "tradeoff 3", "cta"],
+    variables: [
+      'audience',
+      'challenge',
+      'option 1',
+      'option 2',
+      'option 3',
+      'tradeoff 1',
+      'tradeoff 2',
+      'tradeoff 3',
+      'cta',
+    ],
     clarifyingQuestions: [
       {
-        question: "What challenge are you seeing repeatedly?",
-        fills: ["challenge"],
+        question: 'What challenge are you seeing repeatedly?',
+        fills: ['challenge'],
       },
       {
-        question: "What options or tradeoffs are people dealing with?",
-        fills: ["option 1", "option 2", "option 3", "tradeoff 1", "tradeoff 2", "tradeoff 3"],
+        question: 'What options or tradeoffs are people dealing with?',
+        fills: [
+          'option 1',
+          'option 2',
+          'option 3',
+          'tradeoff 1',
+          'tradeoff 2',
+          'tradeoff 3',
+        ],
       },
     ],
-    ctaStyles: ["peer_question", "collaboration", "conversation"],
-    proofRequirement: "none",
+    ctaStyles: ['peer_question', 'collaboration', 'conversation'],
+    proofRequirement: 'none',
     antiPatterns: [],
   }),
 
   t({
-    id: "honest_question_03",
-    name: "Torn Between Two Views",
-    archetype: "Honest Question",
-    variant: "Balanced tension",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Build network", "Grow my audience", "Build authority"],
-    bestForPillars: ["Community / network conversation", "Point of view"],
+    id: 'honest_question_03',
+    name: 'Torn Between Two Views',
+    archetype: 'Honest Question',
+    variant: 'Balanced tension',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: ['Build network', 'Grow my audience', 'Build authority'],
+    bestForPillars: ['Community / network conversation'],
     template: `I’m torn between two views on [topic].
 
 View 1:
@@ -3352,30 +6185,51 @@ But I’m not fully settled.
 What am I missing?
 
 [cta]`,
-    variables: ["topic", "view 1", "reason 1", "view 2", "reason 2", "tension", "current leaning", "cta"],
+    variables: [
+      'topic',
+      'view 1',
+      'reason 1',
+      'view 2',
+      'reason 2',
+      'tension',
+      'current leaning',
+      'cta',
+    ],
     clarifyingQuestions: [
       {
-        question: "What topic are you genuinely torn about?",
-        fills: ["topic"],
+        question: 'What topic are you genuinely torn about?',
+        fills: ['topic'],
       },
       {
-        question: "What are the two valid sides?",
-        fills: ["view 1", "reason 1", "view 2", "reason 2", "tension"],
+        question: 'What are the two valid sides?',
+        fills: ['view 1', 'reason 1', 'view 2', 'reason 2', 'tension'],
       },
     ],
-    ctaStyles: ["shared_learning", "peer_question", "industry_prompt"],
-    proofRequirement: "none",
+    ctaStyles: ['shared_learning', 'peer_question', 'industry_prompt'],
+    proofRequirement: 'none',
     antiPatterns: [],
   }),
 
   t({
-    id: "honest_question_04",
-    name: "What’s Changed For You",
-    archetype: "Honest Question",
-    variant: "Perspective shift prompt",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Build network", "Grow my audience"],
-    bestForPillars: ["Community / network conversation", "Market / industry observation"],
+    id: 'honest_question_04',
+    name: 'What’s Changed For You',
+    archetype: 'Honest Question',
+    variant: 'Perspective shift prompt',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: ['Build network', 'Grow my audience'],
+    bestForPillars: [
+      'Community / network conversation',
+      'Market / industry observation',
+    ],
     template: `Something has changed in [field/topic].
 
 A few years ago, [old reality].
@@ -3397,30 +6251,49 @@ My current take:
 What has changed for you?
 
 [cta]`,
-    variables: ["field/topic", "old reality", "new reality", "change 1", "change 2", "change 3", "audience", "current take", "cta"],
+    variables: [
+      'field/topic',
+      'old reality',
+      'new reality',
+      'change 1',
+      'change 2',
+      'change 3',
+      'audience',
+      'current take',
+      'cta',
+    ],
     clarifyingQuestions: [
       {
-        question: "What has changed in your field recently or over time?",
-        fills: ["field/topic", "old reality", "new reality"],
+        question: 'What has changed in your field recently or over time?',
+        fills: ['field/topic', 'old reality', 'new reality'],
       },
       {
-        question: "What does that change affect?",
-        fills: ["change 1", "change 2", "change 3", "current take"],
+        question: 'What does that change affect?',
+        fills: ['change 1', 'change 2', 'change 3', 'current take'],
       },
     ],
-    ctaStyles: ["peer_question", "industry_prompt", "conversation"],
-    proofRequirement: "none",
+    ctaStyles: ['peer_question', 'industry_prompt', 'conversation'],
+    proofRequirement: 'none',
     antiPatterns: [],
   }),
 
   t({
-    id: "honest_question_05",
-    name: "Looking for Better Examples",
-    archetype: "Honest Question",
-    variant: "Community sourcing",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Build network", "Grow my audience"],
-    bestForPillars: ["Community / network conversation"],
+    id: 'honest_question_05',
+    name: 'Looking for Better Examples',
+    archetype: 'Honest Question',
+    variant: 'Community sourcing',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: ['Build network', 'Grow my audience'],
+    bestForPillars: ['Community / network conversation'],
     template: `I’m looking for better examples of [thing].
 
 Most examples I see are either:
@@ -3441,46 +6314,55 @@ Who has seen a good example of this?
 
 [cta]`,
     variables: [
-      "thing",
-      "weak example type 1",
-      "weak example type 2",
-      "weak example type 3",
-      "desired example trait 1",
-      "desired example trait 2",
-      "desired example trait 3",
-      "reason it matters",
-      "cta",
+      'thing',
+      'weak example type 1',
+      'weak example type 2',
+      'weak example type 3',
+      'desired example trait 1',
+      'desired example trait 2',
+      'desired example trait 3',
+      'reason it matters',
+      'cta',
     ],
     clarifyingQuestions: [
       {
-        question: "What are you looking for examples of?",
-        fills: ["thing"],
+        question: 'What are you looking for examples of?',
+        fills: ['thing'],
       },
       {
-        question: "What makes a good example versus a weak one?",
+        question: 'What makes a good example versus a weak one?',
         fills: [
-          "weak example type 1",
-          "weak example type 2",
-          "weak example type 3",
-          "desired example trait 1",
-          "desired example trait 2",
-          "desired example trait 3",
+          'weak example type 1',
+          'weak example type 2',
+          'weak example type 3',
+          'desired example trait 1',
+          'desired example trait 2',
+          'desired example trait 3',
         ],
       },
     ],
-    ctaStyles: ["peer_question", "collaboration", "shared_learning"],
-    proofRequirement: "none",
+    ctaStyles: ['peer_question', 'collaboration', 'shared_learning'],
+    proofRequirement: 'none',
     antiPatterns: [],
   }),
 
   t({
-    id: "hiring_philosophy_01",
-    name: "We Don’t Hire for X",
-    archetype: "Hiring Philosophy",
-    variant: "Better hiring signal",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Recruit / hire talent", "Build authority"],
-    bestForPillars: ["Hiring / culture", "Values / philosophy"],
+    id: 'hiring_philosophy_01',
+    name: 'We Don’t Hire for X',
+    archetype: 'Hiring Philosophy',
+    variant: 'Better hiring signal',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: ['Recruit / hire talent', 'Build authority'],
+    bestForPillars: ['Hiring / culture', 'Values / philosophy'],
     template: `We don’t hire for [surface trait].
 
 We look for [deeper trait].
@@ -3502,30 +6384,49 @@ The right fit is someone who [right-fit behavior].
 That’s the kind of person we want to build with.
 
 [cta]`,
-    variables: ["surface trait", "deeper trait", "context", "trait 1", "trait 2", "trait 3", "wrong-fit behavior", "right-fit behavior", "cta"],
+    variables: [
+      'surface trait',
+      'deeper trait',
+      'context',
+      'trait 1',
+      'trait 2',
+      'trait 3',
+      'wrong-fit behavior',
+      'right-fit behavior',
+      'cta',
+    ],
     clarifyingQuestions: [
       {
-        question: "What do people overvalue when hiring?",
-        fills: ["surface trait"],
+        question: 'What do people overvalue when hiring?',
+        fills: ['surface trait'],
       },
       {
-        question: "What do you value more, and why?",
-        fills: ["deeper trait", "context", "trait 1", "trait 2", "trait 3"],
+        question: 'What do you value more, and why?',
+        fills: ['deeper trait', 'context', 'trait 1', 'trait 2', 'trait 3'],
       },
     ],
-    ctaStyles: ["hiring_signal", "culture_invite", "belief_statement"],
-    proofRequirement: "none",
+    ctaStyles: ['hiring_signal', 'culture_invite', 'belief_statement'],
+    proofRequirement: 'none',
     antiPatterns: [],
   }),
 
   t({
-    id: "hiring_philosophy_02",
-    name: "Who Thrives Here",
-    archetype: "Hiring Philosophy",
-    variant: "Fit signal",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Recruit / hire talent"],
-    bestForPillars: ["Hiring / culture", "Values / philosophy"],
+    id: 'hiring_philosophy_02',
+    name: 'Who Thrives Here',
+    archetype: 'Hiring Philosophy',
+    variant: 'Fit signal',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: ['Recruit / hire talent'],
+    bestForPillars: ['Hiring / culture', 'Values / philosophy'],
     template: `The people who thrive here are not always the ones with [surface credential].
 
 They’re usually the ones who:
@@ -3546,30 +6447,54 @@ It’s fit.
 And fit matters more than people admit.
 
 [cta]`,
-    variables: ["surface credential", "trait 1", "trait 2", "trait 3", "trait 4", "positive environment trait", "poor-fit need", "cta"],
+    variables: [
+      'surface credential',
+      'trait 1',
+      'trait 2',
+      'trait 3',
+      'trait 4',
+      'positive environment trait',
+      'poor-fit need',
+      'cta',
+    ],
     clarifyingQuestions: [
       {
-        question: "What kind of person thrives in your environment?",
-        fills: ["trait 1", "trait 2", "trait 3", "trait 4", "positive environment trait"],
+        question: 'What kind of person thrives in your environment?',
+        fills: [
+          'trait 1',
+          'trait 2',
+          'trait 3',
+          'trait 4',
+          'positive environment trait',
+        ],
       },
       {
-        question: "Who is probably not a good fit?",
-        fills: ["poor-fit need"],
+        question: 'Who is probably not a good fit?',
+        fills: ['poor-fit need'],
       },
     ],
-    ctaStyles: ["hiring_signal", "culture_invite", "role_invite"],
-    proofRequirement: "none",
+    ctaStyles: ['hiring_signal', 'culture_invite', 'role_invite'],
+    proofRequirement: 'none',
     antiPatterns: [],
   }),
 
   t({
-    id: "hiring_philosophy_03",
-    name: "The Work Is Not for Everyone",
-    archetype: "Hiring Philosophy",
-    variant: "Honest role expectations",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Recruit / hire talent"],
-    bestForPillars: ["Hiring / culture", "Behind the scenes"],
+    id: 'hiring_philosophy_03',
+    name: 'The Work Is Not for Everyone',
+    archetype: 'Hiring Philosophy',
+    variant: 'Honest role expectations',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: ['Recruit / hire talent'],
+    bestForPillars: ['Hiring / culture', 'Behind the scenes'],
     template: `This work is not for everyone.
 
 It requires:
@@ -3589,30 +6514,52 @@ The wrong person will find it draining.
 That’s why I’d rather be honest about the work than oversell the opportunity.
 
 [cta]`,
-    variables: ["requirement 1", "requirement 2", "requirement 3", "hard reality 1", "hard reality 2", "cta"],
+    variables: [
+      'requirement 1',
+      'requirement 2',
+      'requirement 3',
+      'hard reality 1',
+      'hard reality 2',
+      'cta',
+    ],
     clarifyingQuestions: [
       {
-        question: "What makes the work challenging?",
-        fills: ["requirement 1", "requirement 2", "requirement 3", "hard reality 1", "hard reality 2"],
+        question: 'What makes the work challenging?',
+        fills: [
+          'requirement 1',
+          'requirement 2',
+          'requirement 3',
+          'hard reality 1',
+          'hard reality 2',
+        ],
       },
       {
-        question: "Who would enjoy that challenge?",
+        question: 'Who would enjoy that challenge?',
         fills: [],
       },
     ],
-    ctaStyles: ["hiring_signal", "culture_invite", "role_invite"],
-    proofRequirement: "none",
-    antiPatterns: ["Do not make the role sound toxic or heroic."],
+    ctaStyles: ['hiring_signal', 'culture_invite', 'role_invite'],
+    proofRequirement: 'none',
+    antiPatterns: ['Do not make the role sound toxic or heroic.'],
   }),
 
   t({
-    id: "hiring_philosophy_04",
-    name: "What We Look for in Interviews",
-    archetype: "Hiring Philosophy",
-    variant: "Interview signals",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Recruit / hire talent", "Build authority"],
-    bestForPillars: ["Hiring / culture", "Process / how-I-work"],
+    id: 'hiring_philosophy_04',
+    name: 'What We Look for in Interviews',
+    archetype: 'Hiring Philosophy',
+    variant: 'Interview signals',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: ['Recruit / hire talent', 'Build authority'],
+    bestForPillars: ['Hiring / culture', 'Process / how-I-work'],
     template: `In interviews, I pay attention to [signal].
 
 Not because [wrong reason].
@@ -3637,40 +6584,56 @@ They’re the ones where you can see how someone thinks.
 
 [cta]`,
     variables: [
-      "signal",
-      "wrong reason",
-      "real reason",
-      "strong signal 1",
-      "strong signal 2",
-      "strong signal 3",
-      "weak signal 1",
-      "weak signal 2",
-      "weak signal 3",
-      "cta",
+      'signal',
+      'wrong reason',
+      'real reason',
+      'strong signal 1',
+      'strong signal 2',
+      'strong signal 3',
+      'weak signal 1',
+      'weak signal 2',
+      'weak signal 3',
+      'cta',
     ],
     clarifyingQuestions: [
       {
-        question: "What do you pay attention to in interviews?",
-        fills: ["signal", "real reason"],
+        question: 'What do you pay attention to in interviews?',
+        fills: ['signal', 'real reason'],
       },
       {
-        question: "What are strong and weak signals?",
-        fills: ["strong signal 1", "strong signal 2", "strong signal 3", "weak signal 1", "weak signal 2", "weak signal 3"],
+        question: 'What are strong and weak signals?',
+        fills: [
+          'strong signal 1',
+          'strong signal 2',
+          'strong signal 3',
+          'weak signal 1',
+          'weak signal 2',
+          'weak signal 3',
+        ],
       },
     ],
-    ctaStyles: ["hiring_signal", "belief_statement", "culture_invite"],
-    proofRequirement: "none",
+    ctaStyles: ['hiring_signal', 'belief_statement', 'culture_invite'],
+    proofRequirement: 'none',
     antiPatterns: [],
   }),
 
   t({
-    id: "hiring_philosophy_05",
-    name: "Culture Is Behavior",
-    archetype: "Hiring Philosophy",
-    variant: "Culture standards",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Recruit / hire talent", "Build authority"],
-    bestForPillars: ["Hiring / culture", "Values / philosophy"],
+    id: 'hiring_philosophy_05',
+    name: 'Culture Is Behavior',
+    archetype: 'Hiring Philosophy',
+    variant: 'Culture standards',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: ['Recruit / hire talent', 'Build authority'],
+    bestForPillars: ['Hiring / culture', 'Values / philosophy'],
     template: `Culture is not [fake culture signal].
 
 Culture is what happens when:
@@ -3689,30 +6652,54 @@ It’s what you allow.
 That’s the culture.
 
 [cta]`,
-    variables: ["fake culture signal", "behavior 1", "behavior 2", "behavior 3", "behavior 4", "value", "opposite behavior", "cta"],
+    variables: [
+      'fake culture signal',
+      'behavior 1',
+      'behavior 2',
+      'behavior 3',
+      'behavior 4',
+      'value',
+      'opposite behavior',
+      'cta',
+    ],
     clarifyingQuestions: [
       {
-        question: "What value matters most in your culture?",
-        fills: ["value"],
+        question: 'What value matters most in your culture?',
+        fills: ['value'],
       },
       {
-        question: "What behaviors prove that value is real?",
-        fills: ["behavior 1", "behavior 2", "behavior 3", "behavior 4", "opposite behavior"],
+        question: 'What behaviors prove that value is real?',
+        fills: [
+          'behavior 1',
+          'behavior 2',
+          'behavior 3',
+          'behavior 4',
+          'opposite behavior',
+        ],
       },
     ],
-    ctaStyles: ["culture_invite", "hiring_signal", "belief_statement"],
-    proofRequirement: "none",
+    ctaStyles: ['culture_invite', 'hiring_signal', 'belief_statement'],
+    proofRequirement: 'none',
     antiPatterns: [],
   }),
 
   t({
-    id: "career_proof_01",
-    name: "One Project Taught Me",
-    archetype: "Career Proof",
-    variant: "Project proof",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Get job opportunities", "Build authority"],
-    bestForPillars: ["Career / credibility proof", "Proof / case study"],
+    id: 'career_proof_01',
+    name: 'One Project Taught Me',
+    archetype: 'Career Proof',
+    variant: 'Project proof',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: ['Get job opportunities', 'Build authority'],
+    bestForPillars: ['Career / credibility proof'],
     template: `One project taught me more about [skill] than any course could.
 
 The challenge was [challenge].
@@ -3736,30 +6723,61 @@ What I learned:
 That’s the kind of work I want to do more of.
 
 [cta]`,
-    variables: ["skill", "challenge", "responsibility", "obvious difficulty", "real difficulty", "action 1", "action 2", "action 3", "lesson", "cta"],
+    variables: [
+      'skill',
+      'challenge',
+      'responsibility',
+      'obvious difficulty',
+      'real difficulty',
+      'action 1',
+      'action 2',
+      'action 3',
+      'lesson',
+      'cta',
+    ],
     clarifyingQuestions: [
       {
-        question: "What project are you proud of?",
-        fills: ["challenge", "responsibility"],
+        question: 'What project are you proud of?',
+        fills: ['challenge', 'responsibility'],
       },
       {
-        question: "What did it prove about how you work?",
-        fills: ["skill", "real difficulty", "action 1", "action 2", "action 3", "lesson"],
+        question: 'What did it prove about how you work?',
+        fills: [
+          'skill',
+          'real difficulty',
+          'action 1',
+          'action 2',
+          'action 3',
+          'lesson',
+        ],
       },
     ],
-    ctaStyles: ["career_signal", "work_style", "open_to_conversation"],
-    proofRequirement: "required",
-    antiPatterns: ["Do not sound desperate for a job."],
+    ctaStyles: ['career_signal', 'work_style', 'open_to_conversation'],
+    proofRequirement: 'required',
+    antiPatterns: ['Do not sound desperate for a job.'],
   }),
 
   t({
-    id: "career_proof_02",
-    name: "How I Solve Problems",
-    archetype: "Career Proof",
-    variant: "Problem-solving proof",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Get job opportunities", "Build authority", "Get inbound leads"],
-    bestForPillars: ["Career / credibility proof", "Process / how-I-work"],
+    id: 'career_proof_02',
+    name: 'How I Solve Problems',
+    archetype: 'Career Proof',
+    variant: 'Problem-solving proof',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: [
+      'Get job opportunities',
+      'Build authority',
+      'Get inbound leads',
+    ],
+    bestForPillars: ['Career / credibility proof', 'Process / how-I-work'],
     template: `The kind of problem I like solving:
 
 [problem type]
@@ -3784,40 +6802,54 @@ That’s where I tend to do my best work.
 
 [cta]`,
     variables: [
-      "problem type",
-      "messy element 1",
-      "messy element 2",
-      "messy element 3",
-      "approach step 1",
-      "approach step 2",
-      "approach step 3",
-      "strength",
-      "ideal context",
-      "cta",
+      'problem type',
+      'messy element 1',
+      'messy element 2',
+      'messy element 3',
+      'approach step 1',
+      'approach step 2',
+      'approach step 3',
+      'strength',
+      'ideal context',
+      'cta',
     ],
     clarifyingQuestions: [
       {
-        question: "What kind of problem are you good at solving?",
-        fills: ["problem type", "strength"],
+        question: 'What kind of problem are you good at solving?',
+        fills: ['problem type', 'strength'],
       },
       {
-        question: "How do you usually approach it?",
-        fills: ["approach step 1", "approach step 2", "approach step 3", "ideal context"],
+        question: 'How do you usually approach it?',
+        fills: [
+          'approach step 1',
+          'approach step 2',
+          'approach step 3',
+          'ideal context',
+        ],
       },
     ],
-    ctaStyles: ["work_style", "career_signal", "soft_lead"],
-    proofRequirement: "recommended",
+    ctaStyles: ['work_style', 'career_signal', 'soft_lead'],
+    proofRequirement: 'recommended',
     antiPatterns: [],
   }),
 
   t({
-    id: "career_proof_03",
-    name: "What I Want More Of",
-    archetype: "Career Proof",
-    variant: "Opportunity signal",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Get job opportunities", "Build network"],
-    bestForPillars: ["Career / credibility proof", "Personal story"],
+    id: 'career_proof_03',
+    name: 'What I Want More Of',
+    archetype: 'Career Proof',
+    variant: 'Opportunity signal',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: ['Get job opportunities', 'Build network'],
+    bestForPillars: ['Career / credibility proof', 'Personal story'],
     template: `The work I want more of:
 
 [work type]
@@ -3840,38 +6872,52 @@ That’s where I can do my best work.
 
 [cta]`,
     variables: [
-      "work type",
-      "energizing element 1",
-      "energizing element 2",
-      "energizing element 3",
-      "past experience",
-      "specific part",
-      "fit signal",
-      "cta",
+      'work type',
+      'energizing element 1',
+      'energizing element 2',
+      'energizing element 3',
+      'past experience',
+      'specific part',
+      'fit signal',
+      'cta',
     ],
     clarifyingQuestions: [
       {
-        question: "What kind of work energizes you most?",
-        fills: ["work type", "energizing element 1", "energizing element 2", "energizing element 3"],
+        question: 'What kind of work energizes you most?',
+        fills: [
+          'work type',
+          'energizing element 1',
+          'energizing element 2',
+          'energizing element 3',
+        ],
       },
       {
-        question: "What kind of opportunity are you looking for next?",
-        fills: ["fit signal", "past experience", "specific part"],
+        question: 'What kind of opportunity are you looking for next?',
+        fills: ['fit signal', 'past experience', 'specific part'],
       },
     ],
-    ctaStyles: ["career_signal", "open_to_conversation", "collaboration"],
-    proofRequirement: "optional",
+    ctaStyles: ['career_signal', 'open_to_conversation', 'collaboration'],
+    proofRequirement: 'optional',
     antiPatterns: [],
   }),
 
   t({
-    id: "career_proof_04",
-    name: "Skill Built the Hard Way",
-    archetype: "Career Proof",
-    variant: "Earned skill",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Get job opportunities", "Build authority"],
-    bestForPillars: ["Career / credibility proof", "Personal story"],
+    id: 'career_proof_04',
+    name: 'Skill Built the Hard Way',
+    archetype: 'Career Proof',
+    variant: 'Earned skill',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: ['Get job opportunities', 'Build authority'],
+    bestForPillars: ['Career / credibility proof', 'Personal story'],
     template: `I built [skill] the hard way.
 
 Not through [easy path].
@@ -3894,39 +6940,53 @@ But they change how you work.
 
 [cta]`,
     variables: [
-      "skill",
-      "easy path",
-      "hard context",
-      "learned behavior 1",
-      "learned behavior 2",
-      "learned behavior 3",
-      "hardest part",
-      "current value",
-      "cta",
+      'skill',
+      'easy path',
+      'hard context',
+      'learned behavior 1',
+      'learned behavior 2',
+      'learned behavior 3',
+      'hardest part',
+      'current value',
+      'cta',
     ],
     clarifyingQuestions: [
       {
-        question: "What skill did you build through real experience?",
-        fills: ["skill", "hard context"],
+        question: 'What skill did you build through real experience?',
+        fills: ['skill', 'hard context'],
       },
       {
-        question: "How does that skill show up in your work now?",
-        fills: ["learned behavior 1", "learned behavior 2", "learned behavior 3", "current value"],
+        question: 'How does that skill show up in your work now?',
+        fills: [
+          'learned behavior 1',
+          'learned behavior 2',
+          'learned behavior 3',
+          'current value',
+        ],
       },
     ],
-    ctaStyles: ["career_signal", "work_style", "belief_statement"],
-    proofRequirement: "recommended",
+    ctaStyles: ['career_signal', 'work_style', 'belief_statement'],
+    proofRequirement: 'recommended',
     antiPatterns: [],
   }),
 
   t({
-    id: "career_proof_05",
-    name: "What People Come to Me For",
-    archetype: "Career Proof",
-    variant: "Peer recognition",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Get job opportunities", "Build authority"],
-    bestForPillars: ["Career / credibility proof", "Values / philosophy"],
+    id: 'career_proof_05',
+    name: 'What People Come to Me For',
+    archetype: 'Career Proof',
+    variant: 'Peer recognition',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: ['Get job opportunities', 'Build authority'],
+    bestForPillars: ['Career / credibility proof'],
     template: `People often come to me for [thing people ask for].
 
 Not because I have all the answers.
@@ -3948,30 +7008,52 @@ Sometimes your strongest skill is the thing people keep asking you for.
 Pay attention to that pattern.
 
 [cta]`,
-    variables: ["thing people ask for", "strength 1", "strength 2", "strength 3", "short example", "realization", "cta"],
+    variables: [
+      'thing people ask for',
+      'strength 1',
+      'strength 2',
+      'strength 3',
+      'short example',
+      'realization',
+      'cta',
+    ],
     clarifyingQuestions: [
       {
-        question: "What do people often ask you for help with?",
-        fills: ["thing people ask for", "strength 1", "strength 2", "strength 3"],
+        question: 'What do people often ask you for help with?',
+        fills: [
+          'thing people ask for',
+          'strength 1',
+          'strength 2',
+          'strength 3',
+        ],
       },
       {
-        question: "Can you give a quick example?",
-        fills: ["short example", "realization"],
+        question: 'Can you give a quick example?',
+        fills: ['short example', 'realization'],
       },
     ],
-    ctaStyles: ["career_signal", "work_style", "open_to_conversation"],
-    proofRequirement: "recommended",
+    ctaStyles: ['career_signal', 'work_style', 'open_to_conversation'],
+    proofRequirement: 'recommended',
     antiPatterns: [],
   }),
 
   t({
-    id: "trend_reframe_01",
-    name: "Everyone Is Talking About X",
-    archetype: "Trend Reframe",
-    variant: "Trend noise vs substance",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Build authority", "Grow my audience", "Build network"],
-    bestForPillars: ["Market / industry observation", "Point of view"],
+    id: 'trend_reframe_01',
+    name: 'Everyone Is Talking About X',
+    archetype: 'Trend Reframe',
+    variant: 'Trend noise vs substance',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: ['Build authority', 'Grow my audience', 'Build network'],
+    bestForPillars: ['Market / industry observation', 'Point of view'],
     template: `Everyone is talking about [trend].
 
 But I don’t think the real story is [surface story].
@@ -3992,41 +7074,55 @@ Because [practical reason].
 
 [cta]`,
     variables: [
-      "trend",
-      "surface story",
-      "deeper shift",
-      "signal 1",
-      "signal 2",
-      "signal 3",
-      "audience",
-      "implication",
-      "hype reason",
-      "practical reason",
-      "cta",
+      'trend',
+      'surface story',
+      'deeper shift',
+      'signal 1',
+      'signal 2',
+      'signal 3',
+      'audience',
+      'implication',
+      'hype reason',
+      'practical reason',
+      'cta',
     ],
     clarifyingQuestions: [
       {
-        question: "What trend is everyone talking about?",
-        fills: ["trend", "surface story"],
+        question: 'What trend is everyone talking about?',
+        fills: ['trend', 'surface story'],
       },
       {
-        question: "What deeper shift does it represent?",
-        fills: ["deeper shift", "signal 1", "signal 2", "signal 3", "implication"],
+        question: 'What deeper shift does it represent?',
+        fills: [
+          'deeper shift',
+          'signal 1',
+          'signal 2',
+          'signal 3',
+          'implication',
+        ],
       },
     ],
-    ctaStyles: ["industry_prompt", "authority_reframe", "conversation"],
-    proofRequirement: "recommended",
-    antiPatterns: ["Do not use hype language."],
+    ctaStyles: ['industry_prompt', 'authority_reframe', 'conversation'],
+    proofRequirement: 'recommended',
+    antiPatterns: ['Do not use hype language.'],
   }),
 
   t({
-    id: "trend_reframe_02",
-    name: "Trend Is Not About X",
-    archetype: "Trend Reframe",
-    variant: "Deeper meaning",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Build authority", "Grow my audience"],
-    bestForPillars: ["Market / industry observation", "Audience belief shift"],
+    id: 'trend_reframe_02',
+    name: 'Trend Is Not About X',
+    archetype: 'Trend Reframe',
+    variant: 'Deeper meaning',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: ['Build authority', 'Grow my audience'],
+    bestForPillars: ['Market / industry observation', 'Audience belief shift'],
     template: `[trend] is not really about [surface interpretation].
 
 It’s about [deeper interpretation].
@@ -4051,41 +7147,51 @@ Different read.
 
 [cta]`,
     variables: [
-      "trend",
-      "surface interpretation",
-      "deeper interpretation",
-      "audience",
-      "wrong focus 1",
-      "wrong focus 2",
-      "wrong focus 3",
-      "better focus 1",
-      "better focus 2",
-      "better focus 3",
-      "cta",
+      'trend',
+      'surface interpretation',
+      'deeper interpretation',
+      'audience',
+      'wrong focus 1',
+      'wrong focus 2',
+      'wrong focus 3',
+      'better focus 1',
+      'better focus 2',
+      'better focus 3',
+      'cta',
     ],
     clarifyingQuestions: [
       {
-        question: "What trend do you want to reframe?",
-        fills: ["trend"],
+        question: 'What trend do you want to reframe?',
+        fills: ['trend'],
       },
       {
-        question: "What is the surface interpretation versus your deeper interpretation?",
-        fills: ["surface interpretation", "deeper interpretation"],
+        question:
+          'What is the surface interpretation versus your deeper interpretation?',
+        fills: ['surface interpretation', 'deeper interpretation'],
       },
     ],
-    ctaStyles: ["authority_reframe", "industry_prompt", "belief_statement"],
-    proofRequirement: "none",
+    ctaStyles: ['authority_reframe', 'industry_prompt', 'belief_statement'],
+    proofRequirement: 'none',
     antiPatterns: [],
   }),
 
   t({
-    id: "trend_reframe_03",
-    name: "Boring Part of the Trend",
-    archetype: "Trend Reframe",
-    variant: "Operational reality",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Build authority", "Grow my audience"],
-    bestForPillars: ["Market / industry observation", "Process / how-I-work"],
+    id: 'trend_reframe_03',
+    name: 'Boring Part of the Trend',
+    archetype: 'Trend Reframe',
+    variant: 'Operational reality',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: ['Build authority', 'Grow my audience'],
+    bestForPillars: ['Market / industry observation', 'Audience belief shift'],
     template: `The boring part of [trend] matters more than the exciting part.
 
 Everyone talks about [exciting part].
@@ -4105,30 +7211,52 @@ The hype gets attention.
 The boring part creates results.
 
 [cta]`,
-    variables: ["trend", "exciting part", "boring reality 1", "boring reality 2", "boring reality 3", "condition", "cta"],
+    variables: [
+      'trend',
+      'exciting part',
+      'boring reality 1',
+      'boring reality 2',
+      'boring reality 3',
+      'condition',
+      'cta',
+    ],
     clarifyingQuestions: [
       {
-        question: "What trend is overhyped right now?",
-        fills: ["trend", "exciting part"],
+        question: 'What trend is overhyped right now?',
+        fills: ['trend', 'exciting part'],
       },
       {
-        question: "What boring reality sits underneath it?",
-        fills: ["boring reality 1", "boring reality 2", "boring reality 3", "condition"],
+        question: 'What boring reality sits underneath it?',
+        fills: [
+          'boring reality 1',
+          'boring reality 2',
+          'boring reality 3',
+          'condition',
+        ],
       },
     ],
-    ctaStyles: ["authority_reframe", "conversation", "belief_statement"],
-    proofRequirement: "none",
+    ctaStyles: ['authority_reframe', 'conversation', 'belief_statement'],
+    proofRequirement: 'none',
     antiPatterns: [],
   }),
 
   t({
-    id: "trend_reframe_04",
-    name: "What This Changes for Your Audience",
-    archetype: "Trend Reframe",
-    variant: "Audience implication",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Build authority", "Get inbound leads", "Build network"],
-    bestForPillars: ["Market / industry observation", "Problem education"],
+    id: 'trend_reframe_04',
+    name: 'What This Changes for Your Audience',
+    archetype: 'Trend Reframe',
+    variant: 'Audience implication',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: ['Build authority', 'Get inbound leads', 'Build network'],
+    bestForPillars: ['Market / industry observation', 'Problem education'],
     template: `[change] changes something important for [audience].
 
 It means they can no longer rely on:
@@ -4149,41 +7277,58 @@ I think it’s really a signal that [deeper implication].
 
 [cta]`,
     variables: [
-      "change",
-      "audience",
-      "old assumption 1",
-      "old assumption 2",
-      "old assumption 3",
-      "new focus 1",
-      "new focus 2",
-      "new focus 3",
-      "surface interpretation",
-      "deeper implication",
-      "cta",
+      'change',
+      'audience',
+      'old assumption 1',
+      'old assumption 2',
+      'old assumption 3',
+      'new focus 1',
+      'new focus 2',
+      'new focus 3',
+      'surface interpretation',
+      'deeper implication',
+      'cta',
     ],
     clarifyingQuestions: [
       {
-        question: "What changed in your market or field?",
-        fills: ["change"],
+        question: 'What changed in your market or field?',
+        fills: ['change'],
       },
       {
-        question: "How does it affect your audience specifically?",
-        fills: ["old assumption 1", "old assumption 2", "old assumption 3", "new focus 1", "new focus 2", "new focus 3", "deeper implication"],
+        question: 'How does it affect your audience specifically?',
+        fills: [
+          'old assumption 1',
+          'old assumption 2',
+          'old assumption 3',
+          'new focus 1',
+          'new focus 2',
+          'new focus 3',
+          'deeper implication',
+        ],
       },
     ],
-    ctaStyles: ["industry_prompt", "diagnostic", "peer_question"],
-    proofRequirement: "recommended",
+    ctaStyles: ['industry_prompt', 'diagnostic', 'peer_question'],
+    proofRequirement: 'recommended',
     antiPatterns: [],
   }),
 
   t({
-    id: "trend_reframe_05",
-    name: "Trend I’m Skeptical About",
-    archetype: "Trend Reframe",
-    variant: "Balanced skepticism",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Build authority", "Grow my audience"],
-    bestForPillars: ["Market / industry observation", "Point of view"],
+    id: 'trend_reframe_05',
+    name: 'Trend I’m Skeptical About',
+    archetype: 'Trend Reframe',
+    variant: 'Balanced skepticism',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: ['Build authority', 'Grow my audience'],
+    bestForPillars: ['Market / industry observation', 'Point of view'],
     template: `I’m skeptical about [trend].
 
 Not because [wrong reason].
@@ -4208,40 +7353,61 @@ My take is:
 
 [cta]`,
     variables: [
-      "trend",
-      "wrong reason",
-      "concern 1",
-      "concern 2",
-      "concern 3",
-      "useful condition 1",
-      "useful condition 2",
-      "useful condition 3",
-      "balanced take",
-      "cta",
+      'trend',
+      'wrong reason',
+      'concern 1',
+      'concern 2',
+      'concern 3',
+      'useful condition 1',
+      'useful condition 2',
+      'useful condition 3',
+      'balanced take',
+      'cta',
     ],
     clarifyingQuestions: [
       {
-        question: "What trend are you skeptical about?",
-        fills: ["trend"],
+        question: 'What trend are you skeptical about?',
+        fills: ['trend'],
       },
       {
-        question: "Why are you skeptical, and when might it still be useful?",
-        fills: ["concern 1", "concern 2", "concern 3", "useful condition 1", "useful condition 2", "useful condition 3", "balanced take"],
+        question: 'Why are you skeptical, and when might it still be useful?',
+        fills: [
+          'concern 1',
+          'concern 2',
+          'concern 3',
+          'useful condition 1',
+          'useful condition 2',
+          'useful condition 3',
+          'balanced take',
+        ],
       },
     ],
-    ctaStyles: ["agree_disagree", "industry_prompt", "authority_reframe"],
-    proofRequirement: "none",
-    antiPatterns: ["Do not make the skepticism sound like rage-bait."],
+    ctaStyles: ['agree_disagree', 'industry_prompt', 'authority_reframe'],
+    proofRequirement: 'none',
+    antiPatterns: ['Do not make the skepticism sound like rage-bait.'],
   }),
 
   t({
-    id: "customer_pattern_01",
-    name: "I Keep Seeing This Pattern",
-    archetype: "Customer / Client Pattern",
-    variant: "Repeated observation",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Get inbound leads", "Build authority"],
-    bestForPillars: ["Problem education", "Proof / case study"],
+    id: 'customer_pattern_01',
+    name: 'I Keep Seeing This Pattern',
+    archetype: 'Customer / Client Pattern',
+    variant: 'Repeated observation',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: ['Get inbound leads', 'Build authority'],
+    bestForPillars: [
+      'Problem education',
+      'Market / industry observation',
+      'Audience belief shift',
+    ],
     template: `I keep seeing the same pattern with [audience].
 
 They want [desired outcome].
@@ -4266,41 +7432,54 @@ Better [deeper activity].
 
 [cta]`,
     variables: [
-      "audience",
-      "desired outcome",
-      "wrong focus 1",
-      "wrong focus 2",
-      "wrong focus 3",
-      "better focus 1",
-      "better focus 2",
-      "better focus 3",
-      "surface activity",
-      "deeper activity",
-      "cta",
+      'audience',
+      'desired outcome',
+      'wrong focus 1',
+      'wrong focus 2',
+      'wrong focus 3',
+      'better focus 1',
+      'better focus 2',
+      'better focus 3',
+      'surface activity',
+      'deeper activity',
+      'cta',
     ],
     clarifyingQuestions: [
       {
-        question: "What pattern do you keep seeing with your audience?",
-        fills: ["wrong focus 1", "wrong focus 2", "wrong focus 3"],
+        question: 'What pattern do you keep seeing with your audience?',
+        fills: ['wrong focus 1', 'wrong focus 2', 'wrong focus 3'],
       },
       {
-        question: "What do the better examples do differently?",
-        fills: ["better focus 1", "better focus 2", "better focus 3", "deeper activity"],
+        question: 'What do the better examples do differently?',
+        fills: [
+          'better focus 1',
+          'better focus 2',
+          'better focus 3',
+          'deeper activity',
+        ],
       },
     ],
-    ctaStyles: ["soft_lead", "authority_reframe", "specific_peer_question"],
-    proofRequirement: "recommended",
+    ctaStyles: ['soft_lead', 'authority_reframe', 'specific_peer_question'],
+    proofRequirement: 'recommended',
     antiPatterns: [],
   }),
 
   t({
-    id: "customer_pattern_02",
-    name: "Same Problem in Different Clothes",
-    archetype: "Customer / Client Pattern",
-    variant: "Shared root cause",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Marketer"],
-    bestForGoals: ["Get inbound leads", "Build authority"],
-    bestForPillars: ["Problem education", "Audience belief shift"],
+    id: 'customer_pattern_02',
+    name: 'Same Problem in Different Clothes',
+    archetype: 'Customer / Client Pattern',
+    variant: 'Shared root cause',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Marketer',
+    ],
+    bestForGoals: ['Get inbound leads', 'Build authority'],
+    bestForPillars: ['Problem education', 'Audience belief shift'],
     template: `Different problems I see:
 
 1. [surface problem 1]
@@ -4326,30 +7505,52 @@ Fix the root issue.
 The surface problems get easier.
 
 [cta]`,
-    variables: ["surface problem 1", "surface problem 2", "surface problem 3", "root issue", "bad result 1", "bad result 2", "bad result 3", "cta"],
+    variables: [
+      'surface problem 1',
+      'surface problem 2',
+      'surface problem 3',
+      'root issue',
+      'bad result 1',
+      'bad result 2',
+      'bad result 3',
+      'cta',
+    ],
     clarifyingQuestions: [
       {
-        question: "What different surface problems seem connected?",
-        fills: ["surface problem 1", "surface problem 2", "surface problem 3"],
+        question: 'What different surface problems seem connected?',
+        fills: ['surface problem 1', 'surface problem 2', 'surface problem 3'],
       },
       {
-        question: "What root issue do they share?",
-        fills: ["root issue"],
+        question: 'What root issue do they share?',
+        fills: ['root issue'],
       },
     ],
-    ctaStyles: ["diagnostic", "soft_lead", "authority_reframe"],
-    proofRequirement: "none",
+    ctaStyles: ['diagnostic', 'soft_lead', 'authority_reframe'],
+    proofRequirement: 'none',
     antiPatterns: [],
   }),
 
   t({
-    id: "customer_pattern_03",
-    name: "What the Best Do Differently",
-    archetype: "Customer / Client Pattern",
-    variant: "Strong performers",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Build authority", "Grow my audience", "Recruit / hire talent"],
-    bestForPillars: ["Point of view", "Problem education", "Hiring / culture"],
+    id: 'customer_pattern_03',
+    name: 'What the Best Do Differently',
+    archetype: 'Customer / Client Pattern',
+    variant: 'Strong performers',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: [
+      'Build authority',
+      'Grow my audience',
+      'Recruit / hire talent',
+    ],
+    bestForPillars: ['Audience belief shift'],
     template: `The best [audience] I’ve seen do [topic] differently.
 
 Average ones focus on:
@@ -4372,50 +7573,63 @@ That shows up in [outcome].
 
 [cta]`,
     variables: [
-      "audience",
-      "topic",
-      "average behavior 1",
-      "average behavior 2",
-      "average behavior 3",
-      "strong behavior 1",
-      "strong behavior 2",
-      "strong behavior 3",
-      "surface difference",
-      "real difference",
-      "outcome",
-      "cta",
+      'audience',
+      'topic',
+      'average behavior 1',
+      'average behavior 2',
+      'average behavior 3',
+      'strong behavior 1',
+      'strong behavior 2',
+      'strong behavior 3',
+      'surface difference',
+      'real difference',
+      'outcome',
+      'cta',
     ],
     clarifyingQuestions: [
       {
-        question: "Who are the best examples in your world?",
-        fills: ["audience", "topic"],
+        question: 'Who are the best examples in your world?',
+        fills: ['audience', 'topic'],
       },
       {
-        question: "What do they do differently from average performers?",
+        question: 'What do they do differently from average performers?',
         fills: [
-          "average behavior 1",
-          "average behavior 2",
-          "average behavior 3",
-          "strong behavior 1",
-          "strong behavior 2",
-          "strong behavior 3",
-          "real difference",
+          'average behavior 1',
+          'average behavior 2',
+          'average behavior 3',
+          'strong behavior 1',
+          'strong behavior 2',
+          'strong behavior 3',
+          'real difference',
         ],
       },
     ],
-    ctaStyles: ["belief_statement", "conversation", "hiring_signal"],
-    proofRequirement: "recommended",
+    ctaStyles: ['belief_statement', 'conversation', 'hiring_signal'],
+    proofRequirement: 'recommended',
     antiPatterns: [],
   }),
 
   t({
-    id: "customer_pattern_04",
-    name: "Quiet Signal",
-    archetype: "Customer / Client Pattern",
-    variant: "Predictive signal",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Build authority", "Recruit / hire talent", "Get inbound leads"],
-    bestForPillars: ["Problem education", "Hiring / culture", "Point of view"],
+    id: 'customer_pattern_04',
+    name: 'Quiet Signal',
+    archetype: 'Customer / Client Pattern',
+    variant: 'Predictive signal',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: [
+      'Build authority',
+      'Recruit / hire talent',
+      'Get inbound leads',
+    ],
+    bestForPillars: ['Problem education'],
     template: `A quiet signal I pay attention to:
 
 [quiet signal]
@@ -4437,30 +7651,53 @@ That usually leads to [negative prediction].
 Small signals are not small if they predict the future.
 
 [cta]`,
-    variables: ["quiet signal", "prediction", "behavior 1", "behavior 2", "behavior 3", "opposite signal", "negative prediction", "cta"],
+    variables: [
+      'quiet signal',
+      'prediction',
+      'behavior 1',
+      'behavior 2',
+      'behavior 3',
+      'opposite signal',
+      'negative prediction',
+      'cta',
+    ],
     clarifyingQuestions: [
       {
-        question: "What subtle signal do you pay attention to?",
-        fills: ["quiet signal", "prediction"],
+        question: 'What subtle signal do you pay attention to?',
+        fills: ['quiet signal', 'prediction'],
       },
       {
-        question: "What behaviors show that signal?",
-        fills: ["behavior 1", "behavior 2", "behavior 3", "opposite signal", "negative prediction"],
+        question: 'What behaviors show that signal?',
+        fills: [
+          'behavior 1',
+          'behavior 2',
+          'behavior 3',
+          'opposite signal',
+          'negative prediction',
+        ],
       },
     ],
-    ctaStyles: ["belief_statement", "hiring_signal", "diagnostic"],
-    proofRequirement: "none",
+    ctaStyles: ['belief_statement', 'hiring_signal', 'diagnostic'],
+    proofRequirement: 'none',
     antiPatterns: [],
   }),
 
   t({
-    id: "customer_pattern_05",
-    name: "What Struggling People Have in Common",
-    archetype: "Customer / Client Pattern",
-    variant: "Stuck pattern",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Marketer"],
-    bestForGoals: ["Get inbound leads", "Build authority"],
-    bestForPillars: ["Problem education", "Audience belief shift"],
+    id: 'customer_pattern_05',
+    name: 'What Struggling People Have in Common',
+    archetype: 'Customer / Client Pattern',
+    variant: 'Stuck pattern',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Marketer',
+    ],
+    bestForGoals: ['Get inbound leads', 'Build authority'],
+    bestForPillars: ['Problem education', 'Audience belief shift'],
     template: `Struggling [audience] usually have a few things in common.
 
 They often:
@@ -4481,30 +7718,54 @@ The first step is [better first step].
 That’s how they stop fighting symptoms and start fixing the system.
 
 [cta]`,
-    variables: ["audience", "pattern 1", "pattern 2", "pattern 3", "pattern 4", "topic", "reframe", "wrong first step", "better first step", "cta"],
+    variables: [
+      'audience',
+      'pattern 1',
+      'pattern 2',
+      'pattern 3',
+      'pattern 4',
+      'topic',
+      'reframe',
+      'wrong first step',
+      'better first step',
+      'cta',
+    ],
     clarifyingQuestions: [
       {
-        question: "What do struggling people or teams in your audience tend to have in common?",
-        fills: ["pattern 1", "pattern 2", "pattern 3", "pattern 4"],
+        question:
+          'What do struggling people or teams in your audience tend to have in common?',
+        fills: ['pattern 1', 'pattern 2', 'pattern 3', 'pattern 4'],
       },
       {
-        question: "What is the more useful reframe?",
-        fills: ["reframe", "wrong first step", "better first step"],
+        question: 'What is the more useful reframe?',
+        fills: ['reframe', 'wrong first step', 'better first step'],
       },
     ],
-    ctaStyles: ["soft_lead", "diagnostic", "authority_reframe"],
-    proofRequirement: "none",
-    antiPatterns: ["Do not shame the audience."],
+    ctaStyles: ['soft_lead', 'diagnostic', 'authority_reframe'],
+    proofRequirement: 'none',
+    antiPatterns: ['Do not shame the audience.'],
   }),
 
   t({
-    id: "origin_story_01",
-    name: "Why I Started",
-    archetype: "Origin Story",
-    variant: "Founder / creator origin",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional"],
-    bestForGoals: ["Build authority", "Grow my audience", "Promote my product/service"],
-    bestForPillars: ["Personal story", "Values / philosophy", "Product / service education"],
+    id: 'origin_story_01',
+    name: 'Why I Started',
+    archetype: 'Origin Story',
+    variant: 'Founder / creator origin',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+    ],
+    bestForGoals: [
+      'Build authority',
+      'Grow my audience',
+      'Promote my product/service',
+    ],
+    bestForPillars: ['Personal story', 'Values / philosophy'],
     template: `I started [thing] because I was tired of [frustration].
 
 I kept seeing:
@@ -4531,42 +7792,57 @@ But it continues because of [mission].
 
 [cta]`,
     variables: [
-      "thing",
-      "frustration",
-      "problem 1",
-      "problem 2",
-      "problem 3",
-      "realization",
-      "decision",
-      "value 1",
-      "value 2",
-      "value 3",
-      "mission",
-      "cta",
+      'thing',
+      'frustration',
+      'problem 1',
+      'problem 2',
+      'problem 3',
+      'realization',
+      'decision',
+      'value 1',
+      'value 2',
+      'value 3',
+      'mission',
+      'cta',
     ],
     clarifyingQuestions: [
       {
-        question: "What frustration or problem pushed you to start?",
-        fills: ["frustration", "problem 1", "problem 2", "problem 3"],
+        question: 'What frustration or problem pushed you to start?',
+        fills: ['frustration', 'problem 1', 'problem 2', 'problem 3'],
       },
       {
-        question: "How does that still shape your work today?",
-        fills: ["realization", "decision", "value 1", "value 2", "value 3", "mission"],
+        question: 'How does that still shape your work today?',
+        fills: [
+          'realization',
+          'decision',
+          'value 1',
+          'value 2',
+          'value 3',
+          'mission',
+        ],
       },
     ],
-    ctaStyles: ["relatable", "offer_bridge", "belief_statement"],
-    proofRequirement: "recommended",
+    ctaStyles: ['relatable', 'offer_bridge', 'belief_statement'],
+    proofRequirement: 'recommended',
     antiPatterns: [],
   }),
 
   t({
-    id: "origin_story_02",
-    name: "Moment It Clicked",
-    archetype: "Origin Story",
-    variant: "Realization moment",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional"],
-    bestForGoals: ["Build authority", "Grow my audience"],
-    bestForPillars: ["Personal story", "Point of view"],
+    id: 'origin_story_02',
+    name: 'Moment It Clicked',
+    archetype: 'Origin Story',
+    variant: 'Realization moment',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+    ],
+    bestForGoals: ['Build authority', 'Grow my audience'],
+    bestForPillars: ['Personal story'],
     template: `There was a moment when [topic] finally clicked for me.
 
 Before that, I thought [old belief].
@@ -4592,30 +7868,63 @@ Not because everything became easy.
 Because the problem became clearer.
 
 [cta]`,
-    variables: ["topic", "old belief", "old behavior", "moment", "realization", "new action 1", "new action 2", "new action 3", "cta"],
+    variables: [
+      'topic',
+      'old belief',
+      'old behavior',
+      'moment',
+      'realization',
+      'new action 1',
+      'new action 2',
+      'new action 3',
+      'cta',
+    ],
     clarifyingQuestions: [
       {
-        question: "What moment changed how you saw the problem?",
-        fills: ["moment", "realization"],
+        question: 'What moment changed how you saw the problem?',
+        fills: ['moment', 'realization'],
       },
       {
-        question: "What did you think before, and what did you do differently after?",
-        fills: ["old belief", "old behavior", "new action 1", "new action 2", "new action 3"],
+        question:
+          'What did you think before, and what did you do differently after?',
+        fills: [
+          'old belief',
+          'old behavior',
+          'new action 1',
+          'new action 2',
+          'new action 3',
+        ],
       },
     ],
-    ctaStyles: ["relatable", "authority_reframe", "conversation"],
-    proofRequirement: "recommended",
+    ctaStyles: ['relatable', 'authority_reframe', 'conversation'],
+    proofRequirement: 'recommended',
     antiPatterns: [],
   }),
 
   t({
-    id: "origin_story_03",
-    name: "Problem I Couldn’t Ignore",
-    archetype: "Origin Story",
-    variant: "Conviction story",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional"],
-    bestForGoals: ["Build authority", "Promote my product/service", "Get inbound leads"],
-    bestForPillars: ["Personal story", "Problem education", "Values / philosophy"],
+    id: 'origin_story_03',
+    name: 'Problem I Couldn’t Ignore',
+    archetype: 'Origin Story',
+    variant: 'Conviction story',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+    ],
+    bestForGoals: [
+      'Build authority',
+      'Promote my product/service',
+      'Get inbound leads',
+    ],
+    bestForPillars: [
+      'Personal story',
+      'Problem education',
+      'Values / philosophy',
+    ],
     template: `I kept seeing [problem].
 
 At first, I thought it was just [early assumption].
@@ -4637,30 +7946,47 @@ The conviction came from repetition.
 Not theory.
 
 [cta]`,
-    variables: ["problem", "early assumption", "situation 1", "situation 2", "situation 3", "realization", "solution/work", "cta"],
+    variables: [
+      'problem',
+      'early assumption',
+      'situation 1',
+      'situation 2',
+      'situation 3',
+      'realization',
+      'solution/work',
+      'cta',
+    ],
     clarifyingQuestions: [
       {
-        question: "What problem kept showing up around you?",
-        fills: ["problem", "situation 1", "situation 2", "situation 3"],
+        question: 'What problem kept showing up around you?',
+        fills: ['problem', 'situation 1', 'situation 2', 'situation 3'],
       },
       {
-        question: "What did you decide to do about it?",
-        fills: ["realization", "solution/work"],
+        question: 'What did you decide to do about it?',
+        fills: ['realization', 'solution/work'],
       },
     ],
-    ctaStyles: ["offer_bridge", "soft_lead", "belief_statement"],
-    proofRequirement: "recommended",
+    ctaStyles: ['offer_bridge', 'soft_lead', 'belief_statement'],
+    proofRequirement: 'recommended',
     antiPatterns: [],
   }),
 
   t({
-    id: "origin_story_04",
-    name: "Why This Work Matters",
-    archetype: "Origin Story",
-    variant: "Personal meaning",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional"],
-    bestForGoals: ["Grow my audience", "Build authority", "Build network"],
-    bestForPillars: ["Personal story", "Values / philosophy"],
+    id: 'origin_story_04',
+    name: 'Why This Work Matters',
+    archetype: 'Origin Story',
+    variant: 'Personal meaning',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+    ],
+    bestForGoals: ['Grow my audience', 'Build authority', 'Build network'],
+    bestForPillars: ['Personal story', 'Values / philosophy'],
     template: `This work matters to me because [personal reason].
 
 Not in a vague way.
@@ -4687,42 +8013,64 @@ It’s [deeper meaning].
 
 [cta]`,
     variables: [
-      "personal reason",
-      "problem",
-      "consequence 1",
-      "consequence 2",
-      "consequence 3",
-      "better path",
-      "positive change 1",
-      "positive change 2",
-      "positive change 3",
-      "work/topic",
-      "deeper meaning",
-      "cta",
+      'personal reason',
+      'problem',
+      'consequence 1',
+      'consequence 2',
+      'consequence 3',
+      'better path',
+      'positive change 1',
+      'positive change 2',
+      'positive change 3',
+      'work/topic',
+      'deeper meaning',
+      'cta',
     ],
     clarifyingQuestions: [
       {
-        question: "Why does this work matter to you personally?",
-        fills: ["personal reason", "work/topic", "deeper meaning"],
+        question: 'Why does this work matter to you personally?',
+        fills: ['personal reason', 'work/topic', 'deeper meaning'],
       },
       {
-        question: "What changes when the problem is solved?",
-        fills: ["consequence 1", "consequence 2", "consequence 3", "positive change 1", "positive change 2", "positive change 3"],
+        question: 'What changes when the problem is solved?',
+        fills: [
+          'consequence 1',
+          'consequence 2',
+          'consequence 3',
+          'positive change 1',
+          'positive change 2',
+          'positive change 3',
+        ],
       },
     ],
-    ctaStyles: ["relatable", "shared_learning", "belief_statement"],
-    proofRequirement: "optional",
+    ctaStyles: ['relatable', 'shared_learning', 'belief_statement'],
+    proofRequirement: 'optional',
     antiPatterns: [],
   }),
 
   t({
-    id: "origin_story_05",
-    name: "From Annoyance to Offer",
-    archetype: "Origin Story",
-    variant: "Offer origin",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional"],
-    bestForGoals: ["Promote my product/service", "Get inbound leads", "Build authority"],
-    bestForPillars: ["Product / service education", "Personal story", "Problem education"],
+    id: 'origin_story_05',
+    name: 'From Annoyance to Offer',
+    archetype: 'Origin Story',
+    variant: 'Offer origin',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+    ],
+    bestForGoals: [
+      'Promote my product/service',
+      'Get inbound leads',
+      'Build authority',
+    ],
+    bestForPillars: [
+      'Product / service education',
+      'Problem education',
+    ],
     template: `[offer/product/service] started because I was annoyed by [annoyance].
 
 I kept seeing [audience] struggle with:
@@ -4743,41 +8091,58 @@ That is still the point.
 
 [cta]`,
     variables: [
-      "offer/product/service",
-      "annoyance",
-      "audience",
-      "struggle 1",
-      "struggle 2",
-      "struggle 3",
-      "why it annoyed you",
-      "solution",
-      "desired outcome",
-      "painful alternative",
-      "cta",
+      'offer/product/service',
+      'annoyance',
+      'audience',
+      'struggle 1',
+      'struggle 2',
+      'struggle 3',
+      'why it annoyed you',
+      'solution',
+      'desired outcome',
+      'painful alternative',
+      'cta',
     ],
     clarifyingQuestions: [
       {
-        question: "What annoyed you enough to build or offer something around it?",
-        fills: ["annoyance", "why it annoyed you"],
+        question:
+          'What annoyed you enough to build or offer something around it?',
+        fills: ['annoyance', 'why it annoyed you'],
       },
       {
-        question: "Who had the same problem, and what did you create to help?",
-        fills: ["audience", "struggle 1", "struggle 2", "struggle 3", "solution", "desired outcome"],
+        question: 'Who had the same problem, and what did you create to help?',
+        fills: [
+          'audience',
+          'struggle 1',
+          'struggle 2',
+          'struggle 3',
+          'solution',
+          'desired outcome',
+        ],
       },
     ],
-    ctaStyles: ["offer_bridge", "use_case", "soft_lead"],
-    proofRequirement: "recommended",
+    ctaStyles: ['offer_bridge', 'use_case', 'soft_lead'],
+    proofRequirement: 'recommended',
     antiPatterns: [],
   }),
 
   t({
-    id: "lessons_learned_01",
-    name: "Lessons From a Period",
-    archetype: "Lessons Learned",
-    variant: "Timeframe reflection",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Grow my audience", "Build authority", "Build network"],
-    bestForPillars: ["Personal story", "Values / philosophy", "Point of view"],
+    id: 'lessons_learned_01',
+    name: 'Lessons From a Period',
+    archetype: 'Lessons Learned',
+    variant: 'Timeframe reflection',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: ['Grow my audience', 'Build authority', 'Build network'],
+    bestForPillars: ['Personal story', 'Values / philosophy'],
     template: `Lessons from [timeframe]:
 
 1. [lesson 1]
@@ -4802,42 +8167,57 @@ Some lessons only become obvious after you live through them.
 
 [cta]`,
     variables: [
-      "timeframe",
-      "lesson 1",
-      "short explanation 1",
-      "lesson 2",
-      "short explanation 2",
-      "lesson 3",
-      "short explanation 3",
-      "lesson 4",
-      "short explanation 4",
-      "biggest lesson",
-      "reason",
-      "cta",
+      'timeframe',
+      'lesson 1',
+      'short explanation 1',
+      'lesson 2',
+      'short explanation 2',
+      'lesson 3',
+      'short explanation 3',
+      'lesson 4',
+      'short explanation 4',
+      'biggest lesson',
+      'reason',
+      'cta',
     ],
     clarifyingQuestions: [
       {
-        question: "What period should the post reflect on?",
-        fills: ["timeframe"],
+        question: 'What period should the post reflect on?',
+        fills: ['timeframe'],
       },
       {
-        question: "What are 3–4 lessons from that period?",
-        fills: ["lesson 1", "lesson 2", "lesson 3", "lesson 4", "biggest lesson", "reason"],
+        question: 'What are 3–4 lessons from that period?',
+        fills: [
+          'lesson 1',
+          'lesson 2',
+          'lesson 3',
+          'lesson 4',
+          'biggest lesson',
+          'reason',
+        ],
       },
     ],
-    ctaStyles: ["relatable", "conversation", "shared_learning"],
-    proofRequirement: "optional",
+    ctaStyles: ['relatable', 'conversation', 'shared_learning'],
+    proofRequirement: 'optional',
     antiPatterns: [],
   }),
 
   t({
-    id: "lessons_learned_02",
-    name: "Lessons From a Hard Season",
-    archetype: "Lessons Learned",
-    variant: "Difficult period",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional"],
-    bestForGoals: ["Grow my audience", "Build authority", "Build network"],
-    bestForPillars: ["Personal story", "Values / philosophy"],
+    id: 'lessons_learned_02',
+    name: 'Lessons From a Hard Season',
+    archetype: 'Lessons Learned',
+    variant: 'Difficult period',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+    ],
+    bestForGoals: ['Grow my audience', 'Build authority', 'Build network'],
+    bestForPillars: ['Personal story', 'Values / philosophy'],
     template: `[hard season] taught me a few things.
 
 1. [lesson 1]
@@ -4859,40 +8239,52 @@ But I also wouldn’t waste it.
 
 [cta]`,
     variables: [
-      "hard season",
-      "lesson 1",
-      "short explanation 1",
-      "lesson 2",
-      "short explanation 2",
-      "lesson 3",
-      "short explanation 3",
-      "hardest part",
-      "most useful lesson",
-      "cta",
+      'hard season',
+      'lesson 1',
+      'short explanation 1',
+      'lesson 2',
+      'short explanation 2',
+      'lesson 3',
+      'short explanation 3',
+      'hardest part',
+      'most useful lesson',
+      'cta',
     ],
     clarifyingQuestions: [
       {
-        question: "What hard season or challenge can you talk about?",
-        fills: ["hard season", "hardest part"],
+        question: 'What hard season or challenge can you talk about?',
+        fills: ['hard season', 'hardest part'],
       },
       {
-        question: "What did it teach you?",
-        fills: ["lesson 1", "lesson 2", "lesson 3", "most useful lesson"],
+        question: 'What did it teach you?',
+        fills: ['lesson 1', 'lesson 2', 'lesson 3', 'most useful lesson'],
       },
     ],
-    ctaStyles: ["relatable", "shared_learning", "conversation"],
-    proofRequirement: "recommended",
-    antiPatterns: ["Do not make pain sound like a motivational prop."],
+    ctaStyles: ['relatable', 'shared_learning', 'conversation'],
+    proofRequirement: 'recommended',
+    antiPatterns: ['Do not make pain sound like a motivational prop.'],
   }),
 
   t({
-    id: "lessons_learned_03",
-    name: "Lessons From Working With X",
-    archetype: "Lessons Learned",
-    variant: "Audience/client lessons",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Build authority", "Get inbound leads", "Grow my audience"],
-    bestForPillars: ["Proof / case study", "Problem education", "Personal story"],
+    id: 'lessons_learned_03',
+    name: 'Lessons From Working With X',
+    archetype: 'Lessons Learned',
+    variant: 'Audience/client lessons',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: ['Build authority', 'Get inbound leads', 'Grow my audience'],
+    bestForPillars: [
+      'Market / industry observation',
+      'Problem education',
+    ],
     template: `Lessons from working with [audience/group]:
 
 1. [lesson 1]
@@ -4919,42 +8311,57 @@ Both are useful to understand.
 
 [cta]`,
     variables: [
-      "audience/group",
-      "lesson 1",
-      "short explanation 1",
-      "lesson 2",
-      "short explanation 2",
-      "lesson 3",
-      "short explanation 3",
-      "lesson 4",
-      "short explanation 4",
-      "pattern",
-      "mistake",
-      "cta",
+      'audience/group',
+      'lesson 1',
+      'short explanation 1',
+      'lesson 2',
+      'short explanation 2',
+      'lesson 3',
+      'short explanation 3',
+      'lesson 4',
+      'short explanation 4',
+      'pattern',
+      'mistake',
+      'cta',
     ],
     clarifyingQuestions: [
       {
-        question: "Who have you worked with or learned from?",
-        fills: ["audience/group"],
+        question: 'Who have you worked with or learned from?',
+        fills: ['audience/group'],
       },
       {
-        question: "What lessons or patterns did you notice?",
-        fills: ["lesson 1", "lesson 2", "lesson 3", "lesson 4", "pattern", "mistake"],
+        question: 'What lessons or patterns did you notice?',
+        fills: [
+          'lesson 1',
+          'lesson 2',
+          'lesson 3',
+          'lesson 4',
+          'pattern',
+          'mistake',
+        ],
       },
     ],
-    ctaStyles: ["authority_reframe", "soft_lead", "conversation"],
-    proofRequirement: "recommended",
+    ctaStyles: ['authority_reframe', 'soft_lead', 'conversation'],
+    proofRequirement: 'recommended',
     antiPatterns: [],
   }),
 
   t({
-    id: "lessons_learned_04",
-    name: "Lessons I Keep Relearning",
-    archetype: "Lessons Learned",
-    variant: "Repeated reminder",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional"],
-    bestForGoals: ["Grow my audience", "Build network"],
-    bestForPillars: ["Personal story", "Values / philosophy"],
+    id: 'lessons_learned_04',
+    name: 'Lessons I Keep Relearning',
+    archetype: 'Lessons Learned',
+    variant: 'Repeated reminder',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+    ],
+    bestForGoals: ['Grow my audience', 'Build network'],
+    bestForPillars: ['Personal story', 'Values / philosophy'],
     template: `A lesson I keep relearning:
 
 [lesson]
@@ -4980,30 +8387,51 @@ Annoying.
 Still true.
 
 [cta]`,
-    variables: ["lesson", "situation 1", "situation 2", "situation 3", "old behavior", "reminder", "cta"],
+    variables: [
+      'lesson',
+      'situation 1',
+      'situation 2',
+      'situation 3',
+      'old behavior',
+      'reminder',
+      'cta',
+    ],
     clarifyingQuestions: [
       {
-        question: "What lesson do you keep relearning?",
-        fills: ["lesson", "reminder"],
+        question: 'What lesson do you keep relearning?',
+        fills: ['lesson', 'reminder'],
       },
       {
-        question: "When do you usually forget it?",
-        fills: ["situation 1", "situation 2", "situation 3", "old behavior"],
+        question: 'When do you usually forget it?',
+        fills: ['situation 1', 'situation 2', 'situation 3', 'old behavior'],
       },
     ],
-    ctaStyles: ["relatable", "conversation", "shared_learning"],
-    proofRequirement: "optional",
+    ctaStyles: ['relatable', 'conversation', 'shared_learning'],
+    proofRequirement: 'optional',
     antiPatterns: [],
   }),
 
   t({
-    id: "lessons_learned_05",
-    name: "Lessons From Doing the Work",
-    archetype: "Lessons Learned",
-    variant: "Shipping lesson",
-    bestForRoles: ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Job seeker / career professional", "Marketer"],
-    bestForGoals: ["Grow my audience", "Build authority", "Get job opportunities"],
-    bestForPillars: ["Personal story", "Process / how-I-work", "Career / credibility proof"],
+    id: 'lessons_learned_05',
+    name: 'Lessons From Doing the Work',
+    archetype: 'Lessons Learned',
+    variant: 'Shipping lesson',
+    bestForRoles: [
+      'Founder',
+      'Agency owner',
+      'Consultant',
+      'Freelancer',
+      'Coach',
+      'Creator',
+      'Job seeker / career professional',
+      'Marketer',
+    ],
+    bestForGoals: [
+      'Grow my audience',
+      'Build authority',
+      'Get job opportunities',
+    ],
+    bestForPillars: ['Process / how-I-work'],
     template: `Things you only learn by actually doing [work]:
 
 1. [lesson 1]
@@ -5022,131 +8450,201 @@ Not because theory is useless.
 Because reality gives better feedback.
 
 [cta]`,
-    variables: ["work", "lesson 1", "lesson 2", "lesson 3", "lesson 4", "old assumption", "new realization", "cta"],
+    variables: [
+      'work',
+      'lesson 1',
+      'lesson 2',
+      'lesson 3',
+      'lesson 4',
+      'old assumption',
+      'new realization',
+      'cta',
+    ],
     clarifyingQuestions: [
       {
-        question: "What have you recently shipped, built, tried, or completed?",
-        fills: ["work"],
+        question: 'What have you recently shipped, built, tried, or completed?',
+        fills: ['work'],
       },
       {
-        question: "What did doing the work teach you?",
-        fills: ["lesson 1", "lesson 2", "lesson 3", "lesson 4", "old assumption", "new realization"],
+        question: 'What did doing the work teach you?',
+        fills: [
+          'lesson 1',
+          'lesson 2',
+          'lesson 3',
+          'lesson 4',
+          'old assumption',
+          'new realization',
+        ],
       },
     ],
-    ctaStyles: ["relatable", "career_signal", "conversation"],
-    proofRequirement: "recommended",
+    ctaStyles: ['relatable', 'career_signal', 'conversation'],
+    proofRequirement: 'recommended',
     antiPatterns: [],
   }),
-]
+];
 
 export function getTemplatesForGoal(goal: Goal): PostTemplate[] {
-  return LINKEDIN_POST_TEMPLATES.filter((template) => template.bestForGoals.includes(goal))
+  return LINKEDIN_POST_TEMPLATES.filter((template) =>
+    template.bestForGoals.includes(goal)
+  );
 }
 
 export function getTemplatesForPillar(pillar: PillarCategory): PostTemplate[] {
-  return LINKEDIN_POST_TEMPLATES.filter((template) => template.bestForPillars.includes(pillar))
+  return LINKEDIN_POST_TEMPLATES.filter((template) =>
+    template.bestForPillars.includes(pillar)
+  );
 }
 
-export function getTemplatesForGoalAndPillar(goal: Goal, pillar: PillarCategory): PostTemplate[] {
-  return LINKEDIN_POST_TEMPLATES.filter((template) => template.bestForGoals.includes(goal) && template.bestForPillars.includes(pillar))
+export function getTemplatesForGoalAndPillar(
+  goal: Goal,
+  pillar: PillarCategory
+): PostTemplate[] {
+  return LINKEDIN_POST_TEMPLATES.filter(
+    (template) =>
+      template.bestForGoals.includes(goal) &&
+      template.bestForPillars.includes(pillar)
+  );
 }
 
 export function getCTAOptionsForGoal(goal: Goal): CTAOption[] {
-  return CTA_LIBRARY.filter((cta) => cta.goals.includes(goal))
+  return CTA_LIBRARY.filter((cta) => cta.goals.includes(goal));
 }
 
 export function getTemplateById(id: string): PostTemplate | undefined {
-  return LINKEDIN_POST_TEMPLATES.find((template) => template.id === id)
+  return LINKEDIN_POST_TEMPLATES.find((template) => template.id === id);
 }
 
 export function getTemplatesRequiringProof(): PostTemplate[] {
-  return LINKEDIN_POST_TEMPLATES.filter((template) => template.proofRequirement === "required")
+  return LINKEDIN_POST_TEMPLATES.filter(
+    (template) => template.proofRequirement === 'required'
+  );
 }
 
-export function getTemplatesByProofRequirement(proofRequirement: ProofRequirement): PostTemplate[] {
-  return LINKEDIN_POST_TEMPLATES.filter((template) => template.proofRequirement === proofRequirement)
+export function getTemplatesByProofRequirement(
+  proofRequirement: ProofRequirement
+): PostTemplate[] {
+  return LINKEDIN_POST_TEMPLATES.filter(
+    (template) => template.proofRequirement === proofRequirement
+  );
+}
+
+export function shouldIncludeCTA(template: PostTemplate): boolean {
+  return (
+    template.ctaRequirement === 'required' ||
+    template.ctaRequirement === 'recommended'
+  );
 }
 
 export interface TemplateMatch {
-  template: PostTemplate
-  score: number
-  reasons: string[]
+  template: PostTemplate;
+  score: number;
+  reasons: string[];
 }
 
 export const isGoalEligibleForRole = (role: Role, goal: Goal): boolean => {
-  return GOAL_ELIGIBILITY_BY_ROLE[role]?.includes(goal) ?? false
-}
+  return GOAL_ELIGIBILITY_BY_ROLE[role]?.includes(goal) ?? false;
+};
 
-export const getRoleGoalFit = (template: PostTemplate, role: Role, goal: Goal): RoleGoalFit | undefined => {
-  return template.roleGoalFit?.[role]?.[goal]
-}
+export const getRoleGoalFit = (
+  template: PostTemplate,
+  role: Role,
+  goal: Goal
+): RoleGoalFit | undefined => {
+  return template.roleGoalFit?.[role]?.[goal];
+};
 
-export const scoreTemplateForRoleGoal = (template: PostTemplate, role: Role, goal: Goal, pillar?: PillarCategory): TemplateMatch => {
-  let score = 0
-  const reasons: string[] = []
+export const scoreTemplateForRoleGoal = (
+  template: PostTemplate,
+  role: Role,
+  goal: Goal,
+  pillar?: PillarCategory
+): TemplateMatch => {
+  let score = 0;
+  const reasons: string[] = [];
 
   if (template.bestForRoles.includes(role)) {
-    score += 3
-    reasons.push("role match")
+    score += 3;
+    reasons.push('role match');
   }
 
   if (template.bestForGoals.includes(goal)) {
-    score += 4
-    reasons.push("goal match")
+    score += 4;
+    reasons.push('goal match');
   }
 
   if (pillar && template.bestForPillars.includes(pillar)) {
-    score += 2
-    reasons.push("pillar match")
+    score += 2;
+    reasons.push('pillar match');
   }
 
-  const roleGoalFit = getRoleGoalFit(template, role, goal)
+  const roleGoalFit = getRoleGoalFit(template, role, goal);
 
-  if (roleGoalFit === "native") {
-    score += 3
-    reasons.push("native role-goal fit")
+  if (roleGoalFit === 'native') {
+    score += 3;
+    reasons.push('native role-goal fit');
   }
 
-  if (roleGoalFit === "usable") {
-    score += 1
-    reasons.push("usable role-goal fit")
+  if (roleGoalFit === 'usable') {
+    score += 1;
+    reasons.push('usable role-goal fit');
   }
 
-  if (roleGoalFit === "avoid") {
-    score -= 10
-    reasons.push("avoid role-goal fit")
+  if (roleGoalFit === 'avoid') {
+    score -= 10;
+    reasons.push('avoid role-goal fit');
   }
 
   return {
     template,
     score,
     reasons,
-  }
-}
+  };
+};
 
-export const getScoredTemplatesForRoleAndGoal = (role: Role, goal: Goal, pillar?: PillarCategory): TemplateMatch[] => {
+export const getScoredTemplatesForRoleAndGoal = (
+  role: Role,
+  goal: Goal,
+  pillar?: PillarCategory
+): TemplateMatch[] => {
   if (!isGoalEligibleForRole(role, goal)) {
-    return []
+    return [];
   }
 
-  return LINKEDIN_POST_TEMPLATES.map((template) => scoreTemplateForRoleGoal(template, role, goal, pillar))
+  return LINKEDIN_POST_TEMPLATES.map((template) =>
+    scoreTemplateForRoleGoal(template, role, goal, pillar)
+  )
     .filter((match) => match.score > 0)
-    .sort((a, b) => b.score - a.score)
-}
+    .sort((a, b) => b.score - a.score);
+};
 
-export const getTemplatesForRoleAndGoal = (role: Role, goal: Goal, pillar?: PillarCategory): PostTemplate[] => {
-  return getScoredTemplatesForRoleAndGoal(role, goal, pillar).map((match) => match.template)
-}
+export const getTemplatesForRoleAndGoal = (
+  role: Role,
+  goal: Goal,
+  pillar?: PillarCategory
+): PostTemplate[] => {
+  return getScoredTemplatesForRoleAndGoal(role, goal, pillar).map(
+    (match) => match.template
+  );
+};
 
-export const getCTAOptionsForGoalAndRole = (goal: Goal, role: Role): CTAOption[] => {
+export const getCTAOptionsForGoalAndRole = (
+  goal: Goal,
+  role: Role
+): CTAOption[] => {
   return CTA_LIBRARY.filter((cta) => {
-    const goalMatches = cta.goals.includes(goal)
-    const roleMatches = !cta.roles || cta.roles.includes(role)
+    const goalMatches = cta.goals.includes(goal);
+    const roleMatches = !cta.roles || cta.roles.includes(role);
 
-    return goalMatches && roleMatches
-  })
-}
+    return goalMatches && roleMatches;
+  });
+};
 
-export const getCTAOptionsByAction = (goal: Goal, role: Role, action: CTAAction): CTAOption[] => {
-  return getCTAOptionsForGoalAndRole(goal, role).filter((cta) => cta.action === action)
-}
+export const getCTAOptionsByAction = (
+  goal: Goal,
+  role: Role,
+  action: CTAAction
+): CTAOption[] => {
+  return getCTAOptionsForGoalAndRole(goal, role).filter(
+    (cta) => cta.action === action
+  );
+};
