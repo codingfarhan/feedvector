@@ -89,6 +89,44 @@ type RepurposeGenerateInput = {
   visualContext?: string
 }
 
+type WeeklyCampaignQuestion = {
+  question: string
+  fills: string[]
+}
+
+type WeeklyCampaignPlanItem = {
+  id: string
+  slot: number
+  date?: string
+  templateId: string
+  templateName: string
+  pillar: string
+  proofRequirement: string
+  questions: WeeklyCampaignQuestion[]
+  analyticsRecommended?: boolean
+  why: string
+}
+
+type WeeklyCampaignConfirmedItem = WeeklyCampaignPlanItem & {
+  answers: Array<WeeklyCampaignQuestion & { answer: string }>
+}
+
+type WeeklyCampaignAnalyticsHints = {
+  bestTopic: string
+  bestHook: string
+  bestFormat: string
+  bestCta: string
+  nextAction: string
+}
+
+type LinkedinProfileOptimizationResult = {
+  currentHeadline: string
+  currentAbout: string
+  suggestedHeadline: string
+  suggestedAbout: string
+  desiredPositioning?: string
+}
+
 const LATEST_LINKEDIN_POSTS_KEY = -1
 const WEEKLY_CAMPAIGN_SOURCE = "weekly_dashboard_campaign"
 const ONBOARDING_CAMPAIGN_SOURCE = "onboarding"
@@ -377,6 +415,443 @@ const RepurposeContentModal = ({
   )
 }
 
+const LinkedinProfileOptimizerModal = ({
+  integrationId,
+  picture,
+  role,
+  audience,
+  goal,
+}: {
+  integrationId: string
+  picture?: string
+  role: string
+  audience: string
+  goal: string
+}) => {
+  const fetch = useFetch()
+  const toaster = useToaster()
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
+  const [data, setData] = useState<LinkedinProfileOptimizationResult | null>(null)
+
+  useEffect(() => {
+    let active = true
+
+    const load = async () => {
+      setLoading(true)
+      setError("")
+      try {
+        const response = await fetch("/user/linkedin-profile-optimizer", {
+          method: "POST",
+          body: JSON.stringify({
+            integrationId,
+            role,
+            audience,
+            goal,
+          }),
+        })
+
+        if (!response.ok) {
+          const text = await response.text().catch(() => "")
+          throw new Error(text || "Could not analyze your LinkedIn profile")
+        }
+
+        const result = (await response.json()) as LinkedinProfileOptimizationResult
+        if (active) {
+          setData(result)
+        }
+      } catch (err: any) {
+        if (active) {
+          setError(err?.message || "Could not analyze your LinkedIn profile")
+        }
+      } finally {
+        if (active) {
+          setLoading(false)
+        }
+      }
+    }
+
+    load()
+
+    return () => {
+      active = false
+    }
+  }, [audience, fetch, goal, integrationId, role])
+
+  const copyText = async (value: string, label: string) => {
+    const text = String(value || "").trim()
+    if (!text) {
+      toaster.show(`No ${label.toLowerCase()} to copy`, "warning")
+      return
+    }
+
+    try {
+      await navigator.clipboard.writeText(text)
+      toaster.show(`${label} copied`, "success")
+    } catch {
+      toaster.show(`Could not copy ${label.toLowerCase()}`, "warning")
+    }
+  }
+
+  return (
+    <div className="flex max-h-[78dvh] flex-col gap-[14px] overflow-y-auto text-newTextColor">
+      <div className="flex items-center gap-[12px] rounded-[10px] border border-newTableBorder bg-newBgColorInner p-[12px]">
+        <img
+          src={picture || "/icons/platforms/linkedin.png"}
+          alt="LinkedIn profile"
+          className="h-[52px] w-[52px] rounded-full border border-newTableBorder object-cover"
+        />
+        <div>
+          <div className="text-[16px] font-semibold">Optimize LinkedIn profile</div>
+          <div className="mt-[4px] text-[13px] leading-[19px] text-customColor18">
+            Optimizing your profile can improve conversion from people who visit your LinkedIn profile.
+          </div>
+        </div>
+      </div>
+
+      {loading && <div className="rounded-[10px] border border-newTableBorder bg-newBgColorInner p-[14px] text-[13px] text-customColor18">Analyzing headline and About section...</div>}
+      {error && <div className="rounded-[10px] border border-[#ef4444]/30 bg-[#ef4444]/10 p-[12px] text-[13px] text-[#ef4444]">{error}</div>}
+
+      {!loading && !error && data && (
+        <>
+          <div className="rounded-[10px] border border-newTableBorder bg-newTableHeader p-[12px] text-[12px] leading-[18px] text-customColor18">
+            These are suggested edits based on your role, goal, audience, and LinkedIn profile context. Update them directly on LinkedIn if they fit.
+          </div>
+
+          <div className="grid gap-[12px] lg:grid-cols-2">
+            <section className="rounded-[10px] border border-newTableBorder bg-newBgColorInner p-[12px]">
+              <div className="text-[12px] font-semibold uppercase tracking-[0.08em] text-customColor18">Current headline</div>
+              <div className="mt-[8px] text-[15px] font-semibold leading-[22px]">
+                {data.currentHeadline || "No headline found in the stored LinkedIn profile data."}
+              </div>
+            </section>
+            <section className="rounded-[10px] border border-[#0a66c2]/25 bg-[#0a66c2]/10 p-[12px]">
+              <div className="flex items-start justify-between gap-[10px]">
+                <div className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#0a66c2]">Suggested headline</div>
+                <button
+                  type="button"
+                  onClick={() => copyText(data.suggestedHeadline, "Headline")}
+                  className="rounded-[8px] border border-[#0a66c2]/25 bg-white/70 px-[10px] py-[6px] text-[12px] font-semibold text-[#0a66c2] dark:bg-black/10"
+                >
+                  Copy
+                </button>
+              </div>
+              <div className="mt-[8px] text-[15px] font-semibold leading-[22px] text-newTextColor">{data.suggestedHeadline || "No headline suggestion available."}</div>
+            </section>
+          </div>
+
+          <div className="grid gap-[12px] lg:grid-cols-2">
+            <section className="rounded-[10px] border border-newTableBorder bg-newBgColorInner p-[12px]">
+              <div className="text-[12px] font-semibold uppercase tracking-[0.08em] text-customColor18">Current About</div>
+              <div className="mt-[8px] whitespace-pre-wrap text-[14px] leading-[21px]">
+                {data.currentAbout || "No About section was found in the stored LinkedIn profile data."}
+              </div>
+            </section>
+            <section className="rounded-[10px] border border-[#22c55e]/25 bg-[#22c55e]/10 p-[12px]">
+              <div className="flex items-start justify-between gap-[10px]">
+                <div className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#22c55e]">Suggested About</div>
+                <button
+                  type="button"
+                  onClick={() => copyText(data.suggestedAbout, "About section")}
+                  className="rounded-[8px] border border-[#22c55e]/25 bg-white/70 px-[10px] py-[6px] text-[12px] font-semibold text-[#22c55e] dark:bg-black/10"
+                >
+                  Copy
+                </button>
+              </div>
+              <div className="mt-[8px] whitespace-pre-wrap text-[14px] leading-[21px] text-newTextColor">
+                {data.suggestedAbout || "No About section suggestion available."}
+              </div>
+            </section>
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
+const WeeklyCampaignBuilderModal = ({
+  defaultDates,
+  availablePillars,
+  integrationId,
+  role,
+  audience,
+  goal,
+  analyticsHints,
+  onCreateFromScratch,
+  onGenerate,
+}: {
+  defaultDates: Date[]
+  availablePillars: string[]
+  integrationId: string
+  role: string
+  audience: string
+  goal: string
+  analyticsHints: WeeklyCampaignAnalyticsHints
+  onCreateFromScratch: () => void
+  onGenerate: (items: WeeklyCampaignConfirmedItem[]) => Promise<void>
+}) => {
+  const fetch = useFetch()
+  const [postCount, setPostCount] = useState(1)
+  const [plans, setPlans] = useState<WeeklyCampaignPlanItem[]>([])
+  const [answers, setAnswers] = useState<Record<string, Record<number, string>>>({})
+  const [loading, setLoading] = useState(false)
+  const [generating, setGenerating] = useState(false)
+  const [error, setError] = useState("")
+  const [pillarChangeSlot, setPillarChangeSlot] = useState<number | null>(null)
+
+  const plannedDates = useMemo(() => defaultDates.slice(0, postCount), [defaultDates, postCount])
+
+  const loadRecommendations = useCallback(
+    async (count = postCount) => {
+      if (!integrationId || !role || !audience || !goal) {
+        setError("Complete onboarding before creating posts.")
+        return
+      }
+
+      setLoading(true)
+      setError("")
+      try {
+        const response = await fetch("/user/weekly-campaign/recommendations", {
+          method: "POST",
+          body: JSON.stringify({
+            integrationId,
+            role,
+            audience,
+            goal,
+            count,
+            analyticsHints,
+          }),
+        })
+
+        if (!response.ok) {
+          const text = await response.text().catch(() => "")
+          throw new Error(text || "Could not choose templates")
+        }
+
+        const data = await response.json()
+        const posts = ((data?.posts || []) as WeeklyCampaignPlanItem[]).map((post, index) => ({
+          ...post,
+          date: plannedDates[index] ? formatDateKey(plannedDates[index]) : post.date,
+        }))
+        setPlans(posts)
+        setAnswers({})
+      } catch (err: any) {
+        setError(err?.message || "Could not choose templates")
+      } finally {
+        setLoading(false)
+      }
+    },
+    [analyticsHints, audience, fetch, goal, integrationId, plannedDates, postCount, role],
+  )
+
+  useEffect(() => {
+    loadRecommendations(postCount)
+  }, [loadRecommendations, postCount])
+
+  const replaceTemplate = async (plan: WeeklyCampaignPlanItem, pillar?: string) => {
+    setLoading(true)
+    setError("")
+    try {
+      const response = await fetch("/user/weekly-campaign/recommendations", {
+        method: "POST",
+        body: JSON.stringify({
+          integrationId,
+          role,
+          audience,
+          goal,
+          count: 1,
+          pillar: pillar || plan.pillar,
+          usedTemplateIds: plans.filter((item) => item.id !== plan.id).map((item) => item.templateId),
+          excludedTemplateIds: [plan.templateId],
+          missingFields: plan.questions.flatMap((question) => question.fills || []),
+          avoidRequiredProof: plan.proofRequirement === "required",
+          analyticsHints,
+        }),
+      })
+
+      if (!response.ok) {
+        const text = await response.text().catch(() => "")
+        throw new Error(text || "Choose another pillar for this post.")
+      }
+
+      const data = await response.json()
+      const replacement = data?.posts?.[0] as WeeklyCampaignPlanItem | undefined
+      if (!replacement) {
+        setPillarChangeSlot(plan.slot)
+        return
+      }
+
+      setPlans((current) =>
+        current.map((item) =>
+          item.id === plan.id
+            ? {
+                ...replacement,
+                slot: plan.slot,
+                date: plan.date,
+                analyticsRecommended: plan.analyticsRecommended,
+              }
+            : item,
+        ),
+      )
+      setAnswers((current) => {
+        const next = { ...current }
+        delete next[plan.id]
+        return next
+      })
+      setPillarChangeSlot(null)
+    } catch (err: any) {
+      setError(err?.message || "Choose another pillar for this post.")
+      setPillarChangeSlot(plan.slot)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const submit = async () => {
+    const confirmed = plans.map((plan) => ({
+      ...plan,
+      answers: plan.questions.map((question, index) => ({
+        ...question,
+        answer: (answers[plan.id]?.[index] || "").trim(),
+      })),
+    }))
+    const missing = confirmed.some((plan) => plan.answers.some((answer) => !answer.answer))
+    if (missing) {
+      setError("Please fill the requested details for each post, or change the post format.")
+      return
+    }
+
+    setGenerating(true)
+    setError("")
+    try {
+      await onGenerate(confirmed)
+    } catch (err: any) {
+      setError(err?.message || "Could not generate posts")
+    } finally {
+      setGenerating(false)
+    }
+  }
+
+  const canSubmit = !loading && !generating && plans.length === postCount && plans.length > 0
+
+  return (
+    <div className="flex max-h-[78dvh] flex-col gap-[14px] overflow-y-auto text-newTextColor">
+      <div className="rounded-[10px] border border-newTableBorder bg-newBgColorInner p-[12px] text-[13px] leading-[19px] text-customColor18">
+        Choose how many posts you want to create. We’ll assign default draft dates automatically based on open weekdays and your existing LinkedIn
+        posts.
+      </div>
+
+      <div className="grid gap-[10px] sm:grid-cols-[1fr_180px]">
+        <button
+          type="button"
+          onClick={onCreateFromScratch}
+          className="rounded-[10px] border border-newTableBorder bg-newBgColorInner p-[13px] text-left"
+        >
+          <div className="text-[14px] font-semibold">Create post from scratch</div>
+          <div className="mt-[4px] text-[12px] text-customColor18">Open a blank editor for one post.</div>
+        </button>
+        <label className="flex flex-col gap-[6px] rounded-[10px] border border-[#8b5cf6]/30 bg-[#8b5cf6]/10 p-[13px] text-[13px] font-semibold">
+          Number of posts
+          <input
+            type="number"
+            min={1}
+            max={20}
+            value={postCount}
+            onChange={(event) => setPostCount(Math.max(1, Math.min(20, Number(event.target.value) || 1)))}
+            className="h-[36px] rounded-[8px] border border-newTableBorder bg-newTableHeader px-[10px] text-[14px] outline-none"
+          />
+        </label>
+      </div>
+
+      {error && <div className="rounded-[8px] border border-[#ef4444]/30 bg-[#ef4444]/10 p-[10px] text-[13px] text-[#ef4444]">{error}</div>}
+      {loading && (
+        <div className="rounded-[10px] border border-newTableBorder bg-newBgColorInner p-[14px] text-[13px] text-customColor18">
+          Choosing templates...
+        </div>
+      )}
+
+      <div className="flex flex-col gap-[12px]">
+        {plans.map((plan, index) => (
+          <section key={plan.id} className="rounded-[10px] border border-newTableBorder bg-newBgColorInner p-[13px]">
+            <div className="flex flex-col gap-[10px] sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <div className="text-[14px] font-semibold">Post {index + 1}</div>
+                <div className="mt-[5px] flex flex-wrap gap-[6px]">
+                  <Badge tone="blue">{plan.pillar}</Badge>
+                  <Badge tone="gray">{plan.templateName}</Badge>
+                  {plan.analyticsRecommended && <Badge tone="green">Recommended from past posts</Badge>}
+                  {plan.proofRequirement === "required" && <Badge tone="orange">Needs proof</Badge>}
+                </div>
+                <div className="mt-[7px] text-[12px] leading-[17px] text-customColor18">{plan.why}</div>
+              </div>
+              <button
+                type="button"
+                onClick={() => replaceTemplate(plan)}
+                className="rounded-[8px] border border-newTableBorder bg-newTableHeader px-[10px] py-[7px] text-[12px] font-semibold text-newTextColor"
+              >
+                Don&apos;t have this information? Change post format
+              </button>
+            </div>
+
+            {pillarChangeSlot === plan.slot && (
+              <div className="mt-[10px] rounded-[9px] border border-[#f59e0b]/30 bg-[#f59e0b]/10 p-[10px]">
+                <div className="text-[12px] font-semibold">No easier format was found for this pillar. Choose another pillar.</div>
+                <div className="mt-[8px] flex flex-wrap gap-[6px]">
+                  {availablePillars.map((pillar) => (
+                    <button
+                      key={pillar}
+                      type="button"
+                      onClick={() => replaceTemplate(plan, pillar)}
+                      className="rounded-full border border-newTableBorder bg-newTableHeader px-[9px] py-[5px] text-[12px] font-semibold"
+                    >
+                      {pillar}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="mt-[12px] grid gap-[10px]">
+              {plan.questions.map((question, questionIndex) => (
+                <label key={`${plan.id}-${questionIndex}`} className="flex flex-col gap-[6px] text-[13px] font-semibold">
+                  {question.question}
+                  <textarea
+                    rows={3}
+                    value={answers[plan.id]?.[questionIndex] || ""}
+                    onChange={(event) =>
+                      setAnswers((current) => ({
+                        ...current,
+                        [plan.id]: {
+                          ...(current[plan.id] || {}),
+                          [questionIndex]: event.target.value,
+                        },
+                      }))
+                    }
+                    className="resize-none rounded-[8px] border border-newTableBorder bg-newTableHeader p-[10px] text-[14px] font-normal leading-[20px] outline-none focus:border-[#8b5cf6]"
+                  />
+                </label>
+              ))}
+            </div>
+          </section>
+        ))}
+      </div>
+
+      <div className="sticky bottom-0 flex justify-end gap-[10px] border-t border-newTableBorder bg-newTableHeader py-[12px]">
+        <button
+          type="button"
+          disabled={!canSubmit}
+          onClick={submit}
+          className={`h-[40px] rounded-[8px] px-[14px] text-[13px] font-semibold text-white ${
+            canSubmit ? "bg-[#8b5cf6]" : "cursor-not-allowed bg-newTableBorder text-customColor18"
+          }`}
+        >
+          {generating ? "Creating drafts..." : "Create draft posts"}
+        </button>
+      </div>
+    </div>
+  )
+}
+
 const getAnalyticsValue = (analytics: AnalyticsDataItem[] | undefined, label: string) => {
   const item = analytics?.find((row) => row.label === label)
   if (!item) {
@@ -469,6 +944,24 @@ const getCampaignDates = (campaignStart: Date) => {
     const day = cursor.getDay()
     if (day !== 0 && day !== 6) {
       dates.push(new Date(cursor))
+    }
+    cursor = addDays(cursor, 1)
+  }
+
+  return dates
+}
+
+const getDefaultLinkedinDraftDates = (count: number, existingPosts: CampaignPost[]) => {
+  const dates: Date[] = []
+  const occupiedDates = new Set(existingPosts.map((post) => (post.publishDate ? formatDateKey(new Date(post.publishDate)) : "")).filter(Boolean))
+  let cursor = startOfDay(new Date())
+
+  while (dates.length < count) {
+    const day = cursor.getDay()
+    const key = formatDateKey(cursor)
+    if (day !== 0 && day !== 6 && !occupiedDates.has(key)) {
+      dates.push(new Date(cursor))
+      occupiedDates.add(key)
     }
     cursor = addDays(cursor, 1)
   }
@@ -675,7 +1168,6 @@ export const LinkedinStrategyDashboard = () => {
   const shouldPreviewNextWeekByDate = today.getDay() === 0 || today.getDay() === 5 || today.getDay() === 6
   const campaignStart = useMemo(() => getTargetCampaignStart(), [])
   const campaignStartKey = useMemo(() => formatDateKey(campaignStart), [campaignStart])
-  const campaignDates = useMemo(() => getCampaignDates(campaignStart), [campaignStart])
   const campaignQueryStart = useMemo(() => currentWeekStart.toISOString(), [currentWeekStart])
   const campaignQueryEnd = useMemo(() => getWeekEnd(nextWeekStart).toISOString(), [nextWeekStart])
 
@@ -708,18 +1200,11 @@ export const LinkedinStrategyDashboard = () => {
     [integrations],
   )
   const needsWorkspaceSetup =
-    !!linkedinIntegration &&
-    !!user?.onboardingCompletedAt &&
-    linkedinIntegration.onboardingProfileReady === false &&
-    !skipWorkspaceSetup
+    !!linkedinIntegration && !!user?.onboardingCompletedAt && linkedinIntegration.onboardingProfileReady === false && !skipWorkspaceSetup
   const linkedinProfileStale = !!linkedinIntegration?.onboardingProfileReady && isOlderThan(linkedinIntegration.linkedinProfileFetchedAt)
-  const websiteProfileStale =
-    !!linkedinIntegration?.onboardingWebsiteUrl && isOlderThan(linkedinIntegration.onboardingWebsiteScrapedAt)
+  const websiteProfileStale = !!linkedinIntegration?.onboardingWebsiteUrl && isOlderThan(linkedinIntegration.onboardingWebsiteScrapedAt)
   const hasStaleContentContext = linkedinProfileStale || websiteProfileStale
-  const staleContextLabels = [
-    linkedinProfileStale ? "LinkedIn profile" : "",
-    websiteProfileStale ? "website" : "",
-  ].filter(Boolean)
+  const staleContextLabels = [linkedinProfileStale ? "LinkedIn profile" : "", websiteProfileStale ? "website" : ""].filter(Boolean)
 
   const loadAnalytics = useCallback(async () => {
     if (!linkedinIntegration || isFreeAnalyticsLocked || needsWorkspaceSetup) {
@@ -729,7 +1214,9 @@ export const LinkedinStrategyDashboard = () => {
   }, [fetch, isFreeAnalyticsLocked, linkedinIntegration, needsWorkspaceSetup])
 
   const { data: analytics = [] } = useSWR(
-    linkedinIntegration && !isFreeAnalyticsLocked && !needsWorkspaceSetup ? `/analytics-${linkedinIntegration.id}-${LATEST_LINKEDIN_POSTS_KEY}` : null,
+    linkedinIntegration && !isFreeAnalyticsLocked && !needsWorkspaceSetup
+      ? `/analytics-${linkedinIntegration.id}-${LATEST_LINKEDIN_POSTS_KEY}`
+      : null,
     loadAnalytics,
     {
       revalidateOnFocus: false,
@@ -753,7 +1240,9 @@ export const LinkedinStrategyDashboard = () => {
     isLoading: weeklyPostsLoading,
     mutate: mutateWeeklyPosts,
   } = useSWR(
-    linkedinIntegration && !needsWorkspaceSetup ? `/dashboard-weekly-campaign-${linkedinIntegration.id}-${currentWeekStartKey}-${nextWeekStartKey}` : null,
+    linkedinIntegration && !needsWorkspaceSetup
+      ? `/dashboard-weekly-campaign-${linkedinIntegration.id}-${currentWeekStartKey}-${nextWeekStartKey}`
+      : null,
     loadWeeklyPosts,
     {
       revalidateOnFocus: false,
@@ -803,6 +1292,10 @@ export const LinkedinStrategyDashboard = () => {
 
   const currentWeekLinkedinPosts = useMemo(() => getLinkedinPostsForWeek(currentWeekStart), [currentWeekStart, getLinkedinPostsForWeek])
   const nextWeekLinkedinPosts = useMemo(() => getLinkedinPostsForWeek(nextWeekStart), [getLinkedinPostsForWeek, nextWeekStart])
+  const defaultLinkedinDraftDates = useMemo(
+    () => getDefaultLinkedinDraftDates(20, [...currentWeekLinkedinPosts, ...nextWeekLinkedinPosts]),
+    [currentWeekLinkedinPosts, nextWeekLinkedinPosts],
+  )
 
   const onboardingRole = user?.onboardingPersonaOther || user?.onboardingPersona || ""
   const onboardingAudience = user?.onboardingAudience || ""
@@ -817,43 +1310,40 @@ export const LinkedinStrategyDashboard = () => {
     )
     return uniqueValues([...postPillars, ...getDashboardPillars(onboardingRole, onboardingGoal)]).slice(0, 4)
   }, [currentWeekCampaignPosts, nextWeekCampaignPosts, onboardingGoal, onboardingRole, targetCampaignPosts])
-  const hasCampaignPosts = targetCampaignPosts.length > 0
-  const campaignWeekLabel = campaignStartKey === nextWeekStartKey ? "next week" : "this week"
-  const isCurrentWeekCampaign = campaignStartKey === currentWeekStartKey
-  const isNextWeekCampaign = campaignStartKey === nextWeekStartKey
-  const canBuildCampaign =
-    !!linkedinIntegration && !!onboardingRole && !!onboardingAudience && !!onboardingGoal && !hasCampaignPosts && !buildingCampaign
-  const setupWorkspace = useCallback(async (options?: { refreshLinkedin?: boolean; refreshWebsite?: boolean }) => {
-    if (!linkedinIntegration || workspaceSetupRunning) {
-      return false
-    }
-
-    setWorkspaceSetupRunning(true)
-    setWorkspaceSetupError("")
-    try {
-      const response = await fetch("/user/onboarding/setup-workspace", {
-        method: "POST",
-        body: JSON.stringify({
-          integrationId: linkedinIntegration.id,
-          refreshLinkedin: !!options?.refreshLinkedin,
-          refreshWebsite: !!options?.refreshWebsite,
-        }),
-      })
-
-      if (!response.ok) {
-        const text = await response.text().catch(() => "")
-        throw new Error(text || "Could not set up your workspace")
+  const setupWorkspace = useCallback(
+    async (options?: { refreshLinkedin?: boolean; refreshWebsite?: boolean }) => {
+      if (!linkedinIntegration || workspaceSetupRunning) {
+        return false
       }
 
-      await mutateIntegrations()
-      return true
-    } catch (error: any) {
-      setWorkspaceSetupError(error?.message || "Could not set up your workspace")
-      return false
-    } finally {
-      setWorkspaceSetupRunning(false)
-    }
-  }, [fetch, linkedinIntegration, mutateIntegrations, workspaceSetupRunning])
+      setWorkspaceSetupRunning(true)
+      setWorkspaceSetupError("")
+      try {
+        const response = await fetch("/user/onboarding/setup-workspace", {
+          method: "POST",
+          body: JSON.stringify({
+            integrationId: linkedinIntegration.id,
+            refreshLinkedin: !!options?.refreshLinkedin,
+            refreshWebsite: !!options?.refreshWebsite,
+          }),
+        })
+
+        if (!response.ok) {
+          const text = await response.text().catch(() => "")
+          throw new Error(text || "Could not set up your workspace")
+        }
+
+        await mutateIntegrations()
+        return true
+      } catch (error: any) {
+        setWorkspaceSetupError(error?.message || "Could not set up your workspace")
+        return false
+      } finally {
+        setWorkspaceSetupRunning(false)
+      }
+    },
+    [fetch, linkedinIntegration, mutateIntegrations, workspaceSetupRunning],
+  )
 
   useEffect(() => {
     if (!needsWorkspaceSetup || workspaceSetupRunning || workspaceSetupError) {
@@ -884,136 +1374,7 @@ export const LinkedinStrategyDashboard = () => {
     } finally {
       setRefreshingContentContext(false)
     }
-  }, [
-    hasStaleContentContext,
-    linkedinProfileStale,
-    mutateIntegrations,
-    refreshingContentContext,
-    setupWorkspace,
-    toaster,
-    websiteProfileStale,
-  ])
-
-  const buildWeeklyCampaign = useCallback(async () => {
-    if (!linkedinIntegration) {
-      toaster.show("Connect your personal LinkedIn profile first", "warning")
-      return
-    }
-
-    if (!onboardingRole || !onboardingAudience || !onboardingGoal) {
-      toaster.show("Complete onboarding before building a weekly campaign", "warning")
-      return
-    }
-
-    if (hasCampaignPosts || buildingCampaign) {
-      return
-    }
-
-    setBuildingCampaign(true)
-    try {
-      const suggestionResponse = await fetch("/user/onboarding/suggestions", {
-        method: "POST",
-        body: JSON.stringify({
-          integrationId: linkedinIntegration.id,
-          role: onboardingRole,
-          audience: onboardingAudience,
-          goal: onboardingGoal,
-        }),
-      })
-
-      if (!suggestionResponse.ok) {
-        const text = await suggestionResponse.text().catch(() => "")
-        throw new Error(text || "Could not build this week's campaign")
-      }
-
-      const data = await suggestionResponse.json()
-      const suggestions = ((data?.suggestions || []) as OnboardingSuggestion[]).slice(0, 4)
-
-      if (suggestions.length < 4) {
-        throw new Error("Could not generate enough campaign drafts")
-      }
-
-      for (const [index, suggestion] of suggestions.entries()) {
-        const recommendedDate = campaignDates[index] || addDays(campaignStart, index)
-        const publishDate = new Date(recommendedDate)
-        publishDate.setHours(10, 0, 0, 0)
-        const summary = summarizeContent(suggestion.content)
-        const postType = postTypeForPillar(suggestion.pillar)
-        const funnelStage = funnelForPillar(suggestion.pillar)
-
-        const response = await fetch("/posts", {
-          method: "POST",
-          body: JSON.stringify({
-            type: "draft",
-            shortLink: false,
-            date: publishDate.toISOString(),
-            tags: [],
-            posts: [
-              {
-                integration: {
-                  id: linkedinIntegration.id,
-                },
-                settings: {},
-                generationMetadata: {
-                  source: WEEKLY_CAMPAIGN_SOURCE,
-                  campaignWeekStart: campaignStartKey,
-                  campaignSlot: index + 1,
-                  recommendedDate: formatDateKey(recommendedDate),
-                  postType,
-                  topic: summary.topic,
-                  hookDirection: summary.hook,
-                  goal: suggestion.goal,
-                  audience: suggestion.audience,
-                  role: suggestion.role,
-                  templateId: suggestion.templateId,
-                  templateName: suggestion.templateName,
-                  pillar: suggestion.pillar,
-                  ctaStyle: suggestion.ctaStyle || null,
-                  proofRequirement: suggestion.proofRequirement || null,
-                  funnelStage,
-                  statusReason: suggestion.proofRequirement === "required" ? "Needs proof" : "Draft ready",
-                  generatedAt: new Date().toISOString(),
-                },
-                value: [
-                  {
-                    id: "",
-                    content: suggestion.content,
-                    delay: 0,
-                    image: [],
-                  },
-                ],
-              },
-            ],
-          }),
-        })
-
-        if (!response.ok) {
-          const text = await response.text().catch(() => "")
-          throw new Error(text || "Could not save one of the campaign drafts")
-        }
-      }
-
-      await mutateWeeklyPosts()
-      toaster.show("Weekly campaign drafts created", "success")
-    } catch (error: any) {
-      toaster.show(error?.message || "Could not build this week's campaign", "warning")
-    } finally {
-      setBuildingCampaign(false)
-    }
-  }, [
-    buildingCampaign,
-    campaignDates,
-    campaignStart,
-    campaignStartKey,
-    fetch,
-    hasCampaignPosts,
-    linkedinIntegration,
-    mutateWeeklyPosts,
-    onboardingAudience,
-    onboardingGoal,
-    onboardingRole,
-    toaster,
-  ])
+  }, [hasStaleContentContext, linkedinProfileStale, mutateIntegrations, refreshingContentContext, setupWorkspace, toaster, websiteProfileStale])
 
   const analyticsSummary = useMemo(() => {
     if (isFreeAnalyticsLocked) {
@@ -1115,6 +1476,373 @@ export const LinkedinStrategyDashboard = () => {
     },
     [fetch, integrations, modal, mutateWeeklyPosts, toaster],
   )
+
+  const openPostEditorById = useCallback(
+    async (postId: string) => {
+      try {
+        const response = await fetch(`/posts/${postId}`)
+        if (!response.ok) {
+          const text = await response.text().catch(() => "")
+          throw new Error(text || "Could not open this post")
+        }
+
+        const data = await response.json()
+        const publishDate = dayjs.utc(data.posts?.[0]?.publishDate || new Date()).local()
+
+        modal.closeAll()
+        modal.openModal({
+          id: "add-edit-modal",
+          closeOnClickOutside: false,
+          removeLayout: true,
+          closeOnEscape: false,
+          withCloseButton: false,
+          askClose: true,
+          fullScreen: true,
+          classNames: {
+            modal: "w-[100%] max-w-[1400px] text-textColor",
+          },
+          children: (
+            <ExistingDataContextProvider value={data}>
+              <AddEditModal
+                allIntegrations={integrations.map((integration: any) => ({ ...integration }))}
+                reopenModal={() => openPostEditorById(postId)}
+                mutate={mutateWeeklyPosts}
+                integrations={integrations
+                  .slice(0)
+                  .filter((integration: any) => integration.id === data.integration)
+                  .map((integration: any) => ({
+                    ...integration,
+                    picture: data.integrationPicture,
+                  }))}
+                date={publishDate}
+              />
+            </ExistingDataContextProvider>
+          ),
+          size: "80%",
+          title: "",
+        })
+      } catch (error: any) {
+        toaster.show(error?.message || "Could not open this post", "warning")
+      }
+    },
+    [fetch, integrations, modal, mutateWeeklyPosts, toaster],
+  )
+
+  const openBlankPostEditor = useCallback(async () => {
+    if (!linkedinIntegration) {
+      toaster.show("Connect your personal LinkedIn profile first", "warning")
+      return
+    }
+
+    const slotResponse = await fetch(`/posts/find-slot/${linkedinIntegration.id}`)
+    const slot = slotResponse.ok ? await slotResponse.json() : {}
+    const date = slot?.date ? dayjs.utc(slot.date).local() : dayjs().add(10, "minute")
+
+    modal.closeAll()
+    modal.openModal({
+      id: "add-edit-modal",
+      closeOnClickOutside: false,
+      removeLayout: true,
+      closeOnEscape: false,
+      withCloseButton: false,
+      askClose: true,
+      fullScreen: true,
+      classNames: {
+        modal: "w-[100%] max-w-[1400px] text-textColor",
+      },
+      children: (
+        <AddEditModal
+          allIntegrations={integrations.map((integration: any) => ({
+            ...integration,
+          }))}
+          integrations={integrations.slice(0).map((integration: any) => ({
+            ...integration,
+          }))}
+          selectedChannels={[linkedinIntegration.id]}
+          mutate={mutateWeeklyPosts}
+          date={date}
+          reopenModal={() => openBlankPostEditor()}
+        />
+      ),
+      size: "80%",
+      title: "",
+    })
+  }, [fetch, integrations, linkedinIntegration, modal, mutateWeeklyPosts, toaster])
+
+  const generateWeeklyCampaignFromTemplates = useCallback(
+    async (items: WeeklyCampaignConfirmedItem[]) => {
+      if (!linkedinIntegration) {
+        throw new Error("Connect your personal LinkedIn profile first")
+      }
+
+      if (!onboardingRole || !onboardingAudience || !onboardingGoal) {
+        throw new Error("Complete onboarding before creating posts")
+      }
+
+      setBuildingCampaign(true)
+      try {
+        const generationResponse = await fetch("/user/weekly-campaign/generate", {
+          method: "POST",
+          body: JSON.stringify({
+            integrationId: linkedinIntegration.id,
+            role: onboardingRole,
+            audience: onboardingAudience,
+            goal: onboardingGoal,
+            analyticsHints: {
+              bestTopic: String(analyticsSummary.bestTopic),
+              bestHook: String(analyticsSummary.bestHook),
+              bestFormat: String(analyticsSummary.bestFormat),
+              bestCta: String(analyticsSummary.bestCta),
+              nextAction: analyticsSummary.nextAction,
+            },
+            templates: items.map((item) => ({
+              templateId: item.templateId,
+              pillar: item.pillar,
+              slot: item.slot,
+              date: item.date,
+              analyticsRecommended: !!item.analyticsRecommended,
+              answers: item.answers,
+            })),
+          }),
+        })
+
+        if (!generationResponse.ok) {
+          const text = await generationResponse.text().catch(() => "")
+          throw new Error(text || "Could not generate posts")
+        }
+
+        const data = await generationResponse.json()
+        const generated = (data?.posts || []) as Array<
+          OnboardingSuggestion & {
+            slot?: number
+            date?: string
+            analyticsRecommended?: boolean
+          }
+        >
+
+        if (!generated.length) {
+          throw new Error("Could not generate posts")
+        }
+
+        const savedPostIds: string[] = []
+        for (const [index, suggestion] of generated.entries()) {
+          const plan = items[index]
+          const dateKey = suggestion.date || plan?.date || formatDateKey(defaultLinkedinDraftDates[index] || addDays(new Date(), index))
+          const recommendedDate = new Date(`${dateKey}T00:00:00`)
+          const publishDate = new Date(recommendedDate)
+          publishDate.setHours(10, 0, 0, 0)
+          const summary = summarizeContent(suggestion.content)
+          const postType = postTypeForPillar(suggestion.pillar)
+          const funnelStage = funnelForPillar(suggestion.pillar)
+
+          const response = await fetch("/posts", {
+            method: "POST",
+            body: JSON.stringify({
+              type: "draft",
+              shortLink: false,
+              date: publishDate.toISOString(),
+              tags: [],
+              posts: [
+                {
+                  integration: {
+                    id: linkedinIntegration.id,
+                  },
+                  settings: {},
+                  generationMetadata: {
+                    source: WEEKLY_CAMPAIGN_SOURCE,
+                    campaignWeekStart: formatDateKey(getMonday(recommendedDate)),
+                    campaignSlot: suggestion.slot || plan?.slot || index + 1,
+                    recommendedDate: dateKey,
+                    postType,
+                    topic: summary.topic,
+                    hookDirection: summary.hook,
+                    goal: suggestion.goal,
+                    audience: suggestion.audience,
+                    role: suggestion.role,
+                    templateId: suggestion.templateId,
+                    templateName: suggestion.templateName,
+                    pillar: suggestion.pillar,
+                    ctaStyle: suggestion.ctaStyle || null,
+                    proofRequirement: suggestion.proofRequirement || null,
+                    funnelStage,
+                    analyticsRecommended: !!suggestion.analyticsRecommended,
+                    statusReason: suggestion.proofRequirement === "required" ? "Needs proof" : "Draft ready",
+                    generatedAt: new Date().toISOString(),
+                  },
+                  value: [
+                    {
+                      id: "",
+                      content: suggestion.content,
+                      delay: 0,
+                      image: [],
+                    },
+                  ],
+                },
+              ],
+            }),
+          })
+
+          if (!response.ok) {
+            const text = await response.text().catch(() => "")
+            throw new Error(text || "Could not save one of the draft posts")
+          }
+
+          const saved = await response.json()
+          if (saved?.[0]?.postId) {
+            savedPostIds.push(saved[0].postId)
+          }
+        }
+
+        await mutateWeeklyPosts()
+        toaster.show("Draft posts created", "success")
+        if (savedPostIds[0]) {
+          await openPostEditorById(savedPostIds[0])
+        } else {
+          modal.closeAll()
+        }
+      } finally {
+        setBuildingCampaign(false)
+      }
+    },
+    [
+      analyticsSummary.bestCta,
+      analyticsSummary.bestFormat,
+      analyticsSummary.bestHook,
+      analyticsSummary.bestTopic,
+      analyticsSummary.nextAction,
+      defaultLinkedinDraftDates,
+      fetch,
+      linkedinIntegration,
+      modal,
+      mutateWeeklyPosts,
+      onboardingAudience,
+      onboardingGoal,
+      onboardingRole,
+      openPostEditorById,
+      toaster,
+    ],
+  )
+
+  const openWeeklyCampaignBuilder = useCallback(() => {
+    if (!linkedinIntegration) {
+      toaster.show("Connect your personal LinkedIn profile first", "warning")
+      return
+    }
+
+    modal.closeAll()
+    modal.openModal({
+      closeOnClickOutside: true,
+      withCloseButton: true,
+      classNames: {
+        modal: "w-[100%] max-w-[920px] text-textColor",
+      },
+      title: "Using a template",
+      children: (
+        <WeeklyCampaignBuilderModal
+          defaultDates={defaultLinkedinDraftDates}
+          availablePillars={dashboardPillars}
+          integrationId={linkedinIntegration.id}
+          role={onboardingRole}
+          audience={onboardingAudience}
+          goal={onboardingGoal}
+          analyticsHints={{
+            bestTopic: String(analyticsSummary.bestTopic),
+            bestHook: String(analyticsSummary.bestHook),
+            bestFormat: String(analyticsSummary.bestFormat),
+            bestCta: String(analyticsSummary.bestCta),
+            nextAction: analyticsSummary.nextAction,
+          }}
+          onCreateFromScratch={openBlankPostEditor}
+          onGenerate={generateWeeklyCampaignFromTemplates}
+        />
+      ),
+    })
+  }, [
+    analyticsSummary.bestCta,
+    analyticsSummary.bestFormat,
+    analyticsSummary.bestHook,
+    analyticsSummary.bestTopic,
+    analyticsSummary.nextAction,
+    dashboardPillars,
+    defaultLinkedinDraftDates,
+    generateWeeklyCampaignFromTemplates,
+    linkedinIntegration,
+    modal,
+    onboardingAudience,
+    onboardingGoal,
+    onboardingRole,
+    openBlankPostEditor,
+    toaster,
+  ])
+
+  const buildWeeklyCampaign = useCallback(() => {
+    if (buildingCampaign) {
+      return
+    }
+
+    modal.openModal({
+      closeOnClickOutside: true,
+      withCloseButton: true,
+      classNames: {
+        modal: "w-[100%] max-w-[680px] text-textColor",
+      },
+      title: "Select an option:",
+      children: (
+        <div className="grid gap-[12px] text-newTextColor sm:grid-cols-2">
+          <button
+            type="button"
+            onClick={openWeeklyCampaignBuilder}
+            className="rounded-[12px] border border-[#8b5cf6]/35 bg-[#8b5cf6]/10 p-[16px] text-left"
+          >
+            <Badge tone="purple">Recommended</Badge>
+            <div className="mt-[12px] text-[16px] font-semibold">Using a template</div>
+            <div className="mt-[6px] text-[13px] leading-[19px] text-customColor18">
+              Choose how many posts to create, then add the details each template needs.
+            </div>
+          </button>
+          <button
+            type="button"
+            onClick={openBlankPostEditor}
+            className="rounded-[12px] border border-newTableBorder bg-newBgColorInner p-[16px] text-left"
+          >
+            <Badge tone="gray">Blank post</Badge>
+            <div className="mt-[12px] text-[16px] font-semibold">Create post from scratch</div>
+            <div className="mt-[6px] text-[13px] leading-[19px] text-customColor18">Open the post editor without AI-generated content.</div>
+          </button>
+        </div>
+      ),
+    })
+  }, [buildingCampaign, modal, openBlankPostEditor, openWeeklyCampaignBuilder])
+
+  const openLinkedinProfileOptimizer = useCallback(() => {
+    if (!linkedinIntegration) {
+      toaster.show("Connect your personal LinkedIn profile first", "warning")
+      return
+    }
+
+    if (!onboardingRole || !onboardingAudience || !onboardingGoal) {
+      toaster.show("Complete onboarding before optimizing your profile", "warning")
+      return
+    }
+
+    modal.openModal({
+      closeOnClickOutside: true,
+      withCloseButton: true,
+      classNames: {
+        modal: "w-[100%] max-w-[1100px] text-textColor",
+      },
+      title: "Optimize LinkedIn profile",
+      children: (
+        <LinkedinProfileOptimizerModal
+          integrationId={linkedinIntegration.id}
+          picture={linkedinIntegration.picture}
+          role={onboardingRole}
+          audience={onboardingAudience}
+          goal={onboardingGoal}
+        />
+      ),
+    })
+  }, [linkedinIntegration, modal, onboardingAudience, onboardingGoal, onboardingRole, toaster])
 
   const deletePost = useCallback(
     async (post: Pick<CampaignPost, "group">) => {
@@ -1385,16 +2113,16 @@ export const LinkedinStrategyDashboard = () => {
       <div className="flex flex-1 flex-col overflow-auto bg-newBgColorInner p-[18px] text-newTextColor">
         <div className="mx-auto flex min-h-[calc(100dvh-120px)] w-full max-w-[920px] items-center justify-center">
           <section className="w-full rounded-[16px] border border-newTableBorder bg-newTableHeader p-[24px] text-center shadow-[0_18px_50px_rgba(0,0,0,0.08)]">
-            <div className="mx-auto flex h-[54px] w-[54px] items-center justify-center rounded-full bg-[#0a66c2]/10 text-[#0a66c2]">
-              in
-            </div>
+            <div className="mx-auto flex h-[54px] w-[54px] items-center justify-center rounded-full bg-[#0a66c2]/10 text-[#0a66c2]">in</div>
             <h1 className="mt-[18px] text-[26px] font-semibold leading-[32px]">Connect LinkedIn to build your dashboard</h1>
             <p className="mx-auto mt-[10px] max-w-[620px] text-[14px] leading-[21px] text-customColor18">
-              Your dashboard strategy, suggested posts, repurposing ideas, and “what’s working” insights are based on a connected personal LinkedIn profile.
+              Your dashboard strategy, suggested posts, repurposing ideas, and “what’s working” insights are based on a connected personal LinkedIn
+              profile.
             </p>
             {hasAnyConnectedChannel && freeChannelLimitReached && (
               <div className="mx-auto mt-[16px] max-w-[620px] rounded-[12px] border border-[#f59e0b]/30 bg-[#f59e0b]/10 p-[13px] text-[13px] leading-[19px] text-newTextColor">
-                Your free plan already has its allowed channel connected. You can keep it, but you’ll need to disconnect a channel or upgrade before adding LinkedIn.
+                Your free plan already has its allowed channel connected. You can keep it, but you’ll need to disconnect a channel or upgrade before
+                adding LinkedIn.
               </div>
             )}
             <div className="mt-[20px] flex flex-col items-center justify-center gap-[10px] sm:flex-row">
@@ -1446,33 +2174,16 @@ export const LinkedinStrategyDashboard = () => {
               </div>
             </div>
             <div className="w-full rounded-[10px] bg-newBgColorInner p-[12px] lg:w-[340px]">
-              {isCurrentWeekCampaign ? (
-                <>
-                  <button
-                    type="button"
-                    disabled={!canBuildCampaign}
-                    onClick={buildWeeklyCampaign}
-                    className={`h-[44px] w-full rounded-[10px] px-[16px] text-[14px] font-semibold text-white ${
-                      canBuildCampaign ? "bg-gradient-to-r from-[#622aff] to-[#8b5cf6]" : "cursor-not-allowed bg-newTableBorder text-customColor18"
-                    }`}
-                  >
-                    {buildingCampaign
-                      ? "Generating posts..."
-                      : hasCampaignPosts
-                      ? `Posts already generated for ${campaignWeekLabel}`
-                      : "Generate this week's posts"}
-                  </button>
-                  {!hasCampaignPosts && !buildingCampaign && (
-                    <div className="mt-[8px] text-[12px] leading-[17px] text-customColor18">
-                      Creates 4 LinkedIn drafts for the week starting from {formatDateLabel(campaignStart)}.
-                    </div>
-                  )}
-                </>
-              ) : (
-                <div className="rounded-[10px] text-center p-[12px] text-[13px] leading-[19px] text-customColor18">
-                  You're all caught up for this week ✅
-                </div>
-              )}
+              <button
+                type="button"
+                disabled={buildingCampaign}
+                onClick={buildWeeklyCampaign}
+                className={`h-[44px] w-full rounded-[10px] px-[16px] text-[14px] font-semibold text-white ${
+                  !buildingCampaign ? "bg-gradient-to-r from-[#622aff] to-[#8b5cf6]" : "cursor-not-allowed bg-newTableBorder text-customColor18"
+                }`}
+              >
+                {buildingCampaign ? "Creating drafts..." : "Create LinkedIn Post(s)"}
+              </button>
             </div>
           </div>
         </section>
@@ -1482,7 +2193,8 @@ export const LinkedinStrategyDashboard = () => {
             <div>
               <div className="text-[14px] font-semibold text-newTextColor">Refresh your workspace context</div>
               <p className="mt-[4px] text-[13px] leading-[19px] text-customColor18">
-                Your {staleContextLabels.join(" and ")} data is more than 15 days old. Refresh it so FeedVector can keep your strategy and post ideas current.
+                Your {staleContextLabels.join(" and ")} data is more than 15 days old. Refresh it so FeedVector can keep your strategy and post ideas
+                current.
               </p>
             </div>
             <button
@@ -1539,11 +2251,7 @@ export const LinkedinStrategyDashboard = () => {
                   <div className="mt-[6px] max-w-[620px] text-[13px] leading-[19px] text-customColor18">
                     {postView === "all"
                       ? "Draft, schedule, or generate LinkedIn posts to see them here."
-                      : campaignStartKey === currentWeekStartKey
-                      ? `Click “Generate this week's posts” to generate 4 LinkedIn drafts for the week starting from ${formatDateLabel(
-                          campaignStart,
-                        )}.`
-                      : "No suggested posts remain for this week. Next week's preview is below."}
+                      : "Use “Create LinkedIn Post(s)” above to create drafts from scratch or templates."}
                   </div>
                 </div>
               )}
@@ -1564,20 +2272,6 @@ export const LinkedinStrategyDashboard = () => {
                       </div>
                     </button>
                     <div className="flex shrink-0 items-center gap-[8px]">
-                      {isNextWeekCampaign && (
-                        <button
-                          type="button"
-                          disabled={!canBuildCampaign}
-                          onClick={buildWeeklyCampaign}
-                          className={`h-[34px] rounded-[8px] border px-[12px] text-[12px] font-semibold ${
-                            canBuildCampaign
-                              ? "border-[#8b5cf6]/35 bg-transparent text-[#8b5cf6] hover:bg-[#8b5cf6]/10"
-                              : "cursor-not-allowed border-newTableBorder bg-newTableHeader text-customColor18"
-                          }`}
-                        >
-                          {buildingCampaign ? "Generating..." : hasCampaignPosts ? "Generated" : "Generate next week's posts"}
-                        </button>
-                      )}
                       <button
                         type="button"
                         onClick={() => setNextWeekExpandedOverride((current) => !(current ?? shouldAutoExpandNextWeek))}
@@ -1599,22 +2293,8 @@ export const LinkedinStrategyDashboard = () => {
                         <div className="mt-[5px] max-w-[620px] text-[13px] leading-[19px] text-customColor18">
                           {postView === "all"
                             ? "Any next-week drafts or scheduled LinkedIn posts will show here."
-                            : isNextWeekCampaign
-                            ? `Generate 4 drafts for the week starting from ${formatDateLabel(nextWeekStart)}.`
-                            : `Next week's drafts can be generated closer to ${formatDateLabel(nextWeekStart)}.`}
+                            : `Use “Create LinkedIn Post(s)” above to create drafts from scratch or templates.`}
                         </div>
-                        {postView !== "all" && isNextWeekCampaign && !hasCampaignPosts && (
-                          <button
-                            type="button"
-                            disabled={!canBuildCampaign}
-                            onClick={buildWeeklyCampaign}
-                            className={`mt-[12px] h-[38px] rounded-[8px] px-[14px] text-[13px] font-semibold text-white ${
-                              canBuildCampaign ? "bg-[#8b5cf6]" : "cursor-not-allowed bg-newTableBorder text-customColor18"
-                            }`}
-                          >
-                            {buildingCampaign ? "Generating..." : "Generate next week's posts"}
-                          </button>
-                        )}
                       </div>
                     ))}
                 </div>
@@ -1623,6 +2303,33 @@ export const LinkedinStrategyDashboard = () => {
           </DashboardCard>
 
           <div className="flex flex-col gap-[16px]">
+            {linkedinIntegration && (
+              <DashboardCard title="Optimize LinkedIn profile">
+                <div className="mt-[12px] rounded-[10px] border border-newTableBorder bg-newBgColorInner p-[12px]">
+                  <div className="flex items-center gap-[12px]">
+                    <img
+                      src={linkedinIntegration.picture || "/icons/platforms/linkedin.png"}
+                      alt="LinkedIn profile"
+                      className="h-[52px] w-[52px] rounded-full border border-newTableBorder object-cover"
+                    />
+                    <div className="min-w-0">
+                      <div className="text-[15px] font-semibold text-newTextColor">Optimize LinkedIn profile</div>
+                      <div className="mt-[4px] text-[13px] leading-[19px] text-customColor18">
+                        Optimizing profile will lead to higher conversion among users who visit your LinkedIn profile.
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={openLinkedinProfileOptimizer}
+                    className="mt-[14px] inline-flex h-[40px] w-full items-center justify-center rounded-[9px] bg-[#0a66c2] px-[14px] text-[13px] font-semibold text-white"
+                  >
+                    Optimize LinkedIn profile
+                  </button>
+                </div>
+              </DashboardCard>
+            )}
+
             <DashboardCard title="🔄 Repurpose Content">
               <div className="mt-[12px] flex flex-col gap-[10px]">
                 {repurposeSources.map((item) => (
@@ -1643,7 +2350,7 @@ export const LinkedinStrategyDashboard = () => {
               </div>
             </DashboardCard>
 
-            <DashboardCard title="⚠️ Needs your input">
+            <DashboardCard title="⚠️ Needs attention">
               <div className="mt-[12px] flex flex-col gap-[10px]">
                 {/* {inputItems.slice(0, 2).map((item) => (
                   <div key={item.missing} className="rounded-[10px] bg-newBgColorInner p-[12px]">
@@ -1668,7 +2375,9 @@ export const LinkedinStrategyDashboard = () => {
               ["Avg/post", analyticsSummary.averageEngagement, "Baseline per post", "text-[#22c55e]", "bg-[#22c55e]/10"],
             ].map(([label, value, helper, accentText, accentBg]) => (
               <div key={label} className="min-h-[118px] rounded-[12px] border border-newTableBorder bg-newBgColorInner p-[14px]">
-                <div className={`inline-flex rounded-full px-[8px] py-[3px] text-[11px] font-semibold uppercase tracking-[0.08em] ${accentText} ${accentBg}`}>
+                <div
+                  className={`inline-flex rounded-full px-[8px] py-[3px] text-[11px] font-semibold uppercase tracking-[0.08em] ${accentText} ${accentBg}`}
+                >
                   {label}
                 </div>
                 <div className={`mt-[12px] line-clamp-2 text-[16px] font-semibold leading-[22px] ${accentText}`}>{value}</div>

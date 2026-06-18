@@ -3,6 +3,7 @@ import {
   IsBoolean,
   IsIn,
   IsNumber,
+  IsObject,
   IsOptional,
   IsString,
   Matches,
@@ -171,4 +172,126 @@ export class RepurposePostDto {
   @IsString()
   @MaxLength(800)
   visualContext?: string;
+}
+
+export class WeeklyCampaignRecommendationDto {
+  @IsString()
+  integrationId!: string;
+
+  @IsString()
+  role!: string;
+
+  @IsString()
+  audience!: string;
+
+  @IsString()
+  goal!: string;
+
+  @IsOptional()
+  @IsNumber()
+  count?: number;
+
+  @IsOptional()
+  @IsString()
+  pillar?: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  usedTemplateIds?: string[];
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  excludedTemplateIds?: string[];
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  missingFields?: string[];
+
+  @IsOptional()
+  @IsBoolean()
+  avoidRequiredProof?: boolean;
+
+  @IsOptional()
+  @IsObject()
+  analyticsHints?: Record<string, any>;
+}
+
+export class WeeklyCampaignAnswerDto {
+  @IsString()
+  question!: string;
+
+  @IsArray()
+  @IsString({ each: true })
+  fills!: string[];
+
+  @IsString()
+  answer!: string;
+}
+
+export class WeeklyCampaignGenerateTemplateDto {
+  @IsString()
+  templateId!: string;
+
+  @IsString()
+  pillar!: string;
+
+  @IsOptional()
+  @IsString()
+  date?: string;
+
+  @IsOptional()
+  @IsNumber()
+  slot?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  analyticsRecommended?: boolean;
+
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => WeeklyCampaignAnswerDto)
+  answers!: WeeklyCampaignAnswerDto[];
+}
+
+export class WeeklyCampaignGenerateDto {
+  @IsString()
+  integrationId!: string;
+
+  @IsString()
+  role!: string;
+
+  @IsString()
+  audience!: string;
+
+  @IsString()
+  goal!: string;
+
+  @IsOptional()
+  @IsObject()
+  analyticsHints?: Record<string, any>;
+
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => WeeklyCampaignGenerateTemplateDto)
+  templates!: WeeklyCampaignGenerateTemplateDto[];
+}
+
+export class LinkedinProfileOptimizerDto {
+  @IsString()
+  integrationId!: string;
+
+  @IsString()
+  @MaxLength(120)
+  role!: string;
+
+  @IsString()
+  @MaxLength(120)
+  audience!: string;
+
+  @IsString()
+  @MaxLength(160)
+  goal!: string;
 }

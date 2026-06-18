@@ -42,6 +42,7 @@ import { FalService } from '@gitroom/nestjs-libraries/openai/fal.service';
 import { RefreshIntegrationService } from '@gitroom/nestjs-libraries/integrations/refresh.integration.service';
 import { OnboardingEnrichmentService } from '@gitroom/nestjs-libraries/onboarding/onboarding.enrichment.service';
 import { OnboardingPostSuggestionService } from '@gitroom/nestjs-libraries/onboarding/onboarding.post-suggestion.service';
+import { LinkedinCommentOpportunityService } from '@gitroom/nestjs-libraries/onboarding/linkedin.comment-opportunity.service';
 
 @Global()
 @Module({
@@ -78,6 +79,7 @@ import { OnboardingPostSuggestionService } from '@gitroom/nestjs-libraries/onboa
     RefreshIntegrationService,
     OnboardingEnrichmentService,
     OnboardingPostSuggestionService,
+    LinkedinCommentOpportunityService,
     ExtractContentService,
     OpenaiService,
     FalService,

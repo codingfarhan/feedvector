@@ -7,6 +7,7 @@ import {
   type PostTemplate,
   type Role,
   getCTAOptionsForGoalAndRole,
+  getTemplateById,
 } from '@gitroom/nestjs-libraries/onboarding/linkedin.post.templates';
 
 const GOAL_PILLARS: Record<Goal, PillarCategory[]> = {
@@ -118,6 +119,59 @@ type RepurposePostInput = {
   }>;
   linkedinProfileContext?: any;
   profileFocus?: string;
+};
+
+type WeeklyCampaignAnalyticsHints = {
+  bestTopic?: string;
+  bestHook?: string;
+  bestFormat?: string;
+  bestCta?: string;
+  nextAction?: string;
+};
+
+type WeeklyCampaignRecommendationInput = {
+  role: string;
+  audience: string;
+  goal: string;
+  count: number;
+  linkedinProfileContext: any;
+  websiteProfile?: any;
+  pillar?: string;
+  usedTemplateIds?: string[];
+  excludedTemplateIds?: string[];
+  missingFields?: string[];
+  avoidRequiredProof?: boolean;
+  analyticsHints?: WeeklyCampaignAnalyticsHints;
+};
+
+type WeeklyCampaignAnswer = {
+  question: string;
+  fills: string[];
+  answer: string;
+};
+
+type WeeklyCampaignGenerateInput = {
+  role: string;
+  audience: string;
+  goal: string;
+  linkedinProfileContext: any;
+  websiteProfile?: any;
+  analyticsHints?: WeeklyCampaignAnalyticsHints;
+  templates: Array<{
+    templateId: string;
+    pillar: string;
+    slot?: number;
+    date?: string;
+    analyticsRecommended?: boolean;
+    answers: WeeklyCampaignAnswer[];
+  }>;
+};
+
+type LinkedinProfileOptimizationInput = {
+  role: string;
+  audience: string;
+  goal: string;
+  linkedinProfileContext: any;
 };
 
 @Injectable()
@@ -253,6 +307,174 @@ export class OnboardingPostSuggestionService {
     };
   }
 
+  recommendWeeklyCampaignTemplates(input: WeeklyCampaignRecommendationInput) {
+    const hasProof =
+      !input.avoidRequiredProof &&
+      this.hasProof(input.linkedinProfileContext, input.websiteProfile);
+    const count = Math.max(1, Math.min(input.count || 1, 20));
+    const basePillars = input.pillar
+      ? ([input.pillar] as PillarCategory[])
+      : this.assignPillars(input.role, input.goal, hasProof);
+    const selected = this.selectTemplatesForCount(
+      input.role,
+      input.goal,
+      basePillars,
+      hasProof,
+      count,
+      {
+        usedTemplateIds: input.usedTemplateIds || [],
+        excludedTemplateIds: input.excludedTemplateIds || [],
+        missingFields: input.missingFields || [],
+        avoidRequiredProof: !!input.avoidRequiredProof,
+      }
+    );
+    const hasAnalyticsGuidance = this.hasAnalyticsGuidance(
+      input.analyticsHints
+    );
+
+    return {
+      posts: selected.map(({ template, pillar }, index) =>
+        this.templatePlanItem(template, pillar, index + 1, {
+          analyticsRecommended: hasAnalyticsGuidance && index === 0,
+        })
+      ),
+      availablePillars: this.assignPillars(input.role, input.goal, true),
+      requiresPillarChange: selected.length === 0,
+    };
+  }
+
+  async generateWeeklyCampaignPosts(input: WeeklyCampaignGenerateInput) {
+    const templates = input.templates.map((item, index) => {
+      const template = getTemplateById(item.templateId);
+      if (!template) {
+        throw new Error(`Template ${item.templateId} was not found`);
+      }
+
+      const answers = (item.answers || [])
+        .map((answer) => ({
+          question: answer.question,
+          fills: answer.fills || [],
+          answer: String(answer.answer || '').trim(),
+        }))
+        .filter((answer) => answer.answer);
+
+      if (!answers.length) {
+        throw new Error(`Please add the required details for ${template.name}`);
+      }
+
+      return {
+        template,
+        pillar: item.pillar as PillarCategory,
+        slot: item.slot || index + 1,
+        date: item.date,
+        analyticsRecommended: !!item.analyticsRecommended,
+        answers,
+      };
+    });
+
+    const generated = await this._openaiService.generateOnboardingLinkedinPosts(
+      {
+        role: input.role,
+        audience: input.audience,
+        goal: input.goal,
+        campaignInstructions: [
+          'These posts are part of one weekly LinkedIn campaign created from user-confirmed templates.',
+          'Use the userAnswers for each template as the source of truth for specific details.',
+          'Do not invent missing proof, metrics, clients, revenue, personal stories, or examples.',
+          'Keep the posts strategically related, but make their structures visibly different.',
+          'Do not reuse the same opening pattern across posts.',
+        ],
+        linkedinProfileContext: this.compactLinkedinContext(
+          input.linkedinProfileContext
+        ),
+        websiteProfile: input.websiteProfile,
+        templates: templates.map(
+          ({ template, pillar, answers, analyticsRecommended }) => ({
+            id: template.id,
+            name: template.name,
+            pillar,
+            archetype: template.archetype,
+            hookStyles: template.hookStyles,
+            tensionPattern: template.tensionPattern,
+            intents: template.intents,
+            openingPattern: this.openingPattern(template),
+            template: template.template,
+            variables: template.variables,
+            userAnswers: answers,
+            analyticsGuidance: analyticsRecommended
+              ? input.analyticsHints || {}
+              : undefined,
+            ctaOptions: getCTAOptionsForGoalAndRole(
+              input.goal as Goal,
+              input.role as Role
+            )
+              .filter((cta) => template.ctaStyles.includes(cta.id))
+              .map((cta) => ({
+                id: cta.id,
+                action: cta.action,
+                intensity: cta.intensity,
+                text: cta.text,
+              })),
+            proofRequirement: template.proofRequirement,
+            generationInstructions: template.generationInstructions,
+            antiPatterns: template.antiPatterns,
+          })
+        ),
+      }
+    );
+
+    return templates.map(({ template, pillar, slot, date, analyticsRecommended }) => {
+      const post = generated.find((item) => item.templateId === template.id);
+      const content = this.cleanGeneratedContent(post?.content || '');
+      if (!content) {
+        throw new Error(`Could not generate ${template.name}`);
+      }
+
+      return {
+        id: `${template.id}-${slot}`,
+        templateId: template.id,
+        templateName: template.name,
+        pillar,
+        slot,
+        date,
+        role: input.role,
+        audience: input.audience,
+        goal: input.goal,
+        ctaStyle: this.ctaStyleForGoal(template, input.goal, input.role),
+        proofRequirement: template.proofRequirement,
+        analyticsRecommended,
+        content,
+      };
+    });
+  }
+
+  async optimizeLinkedinProfile(input: LinkedinProfileOptimizationInput) {
+    const currentHeadline = String(input.linkedinProfileContext?.headline || '').trim();
+    const currentAbout = String(input.linkedinProfileContext?.about || '').trim();
+    const desiredPositioning = this.linkedinDesiredPositioning(
+      input.role,
+      input.audience,
+      input.goal
+    );
+    const optimized = await this._openaiService.optimizeLinkedinProfile({
+      role: input.role,
+      audience: input.audience,
+      goal: input.goal,
+      desiredPositioning,
+      currentHeadline,
+      currentAbout,
+      profileData: this.compactLinkedinContext(input.linkedinProfileContext),
+    });
+
+    return {
+      currentHeadline,
+      currentAbout,
+      suggestedHeadline: this.cleanProfileText(optimized.headline),
+      suggestedAbout: this.cleanProfileText(optimized.about),
+      desiredPositioning,
+    };
+  }
+
   private selectTemplates(
     role: string,
     goal: string,
@@ -345,6 +567,120 @@ export class OnboardingPostSuggestionService {
     }
 
     return selected.slice(0, 4);
+  }
+
+  private selectTemplatesForCount(
+    role: string,
+    goal: string,
+    pillars: PillarCategory[],
+    hasProof: boolean,
+    count: number,
+    options: {
+      usedTemplateIds: string[];
+      excludedTemplateIds: string[];
+      missingFields: string[];
+      avoidRequiredProof: boolean;
+    }
+  ) {
+    const selected: Array<{ template: PostTemplate; pillar: PillarCategory }> =
+      [];
+    const used = new Set(options.usedTemplateIds);
+    const excluded = new Set(options.excludedTemplateIds);
+    const missingFields = new Set(
+      options.missingFields.map((field) => field.toLowerCase())
+    );
+
+    for (let index = 0; index < count; index++) {
+      const pillar = pillars[index % Math.max(pillars.length, 1)];
+      const candidates = LINKEDIN_POST_TEMPLATES.filter((template) => {
+        if (used.has(template.id) || excluded.has(template.id)) {
+          return false;
+        }
+
+        if (!template.bestForGoals.includes(goal as Goal)) {
+          return false;
+        }
+
+        if (pillar && !template.bestForPillars.includes(pillar)) {
+          return false;
+        }
+
+        if (
+          (options.avoidRequiredProof || !hasProof) &&
+          template.proofRequirement === 'required'
+        ) {
+          return false;
+        }
+
+        if (this.templateUsesMissingFields(template, missingFields)) {
+          return false;
+        }
+
+        return true;
+      }).sort((a, b) => {
+        const aScore = this.campaignTemplateScore(
+          a,
+          role,
+          goal,
+          hasProof,
+          selected
+        );
+        const bScore = this.campaignTemplateScore(
+          b,
+          role,
+          goal,
+          hasProof,
+          selected
+        );
+        return bScore - aScore || a.id.localeCompare(b.id);
+      });
+
+      const template = candidates[0];
+      if (template) {
+        selected.push({ template, pillar });
+        used.add(template.id);
+        continue;
+      }
+
+      const fallback = LINKEDIN_POST_TEMPLATES.filter((template) => {
+        return (
+          !used.has(template.id) &&
+          !excluded.has(template.id) &&
+          template.bestForGoals.includes(goal as Goal) &&
+          (!options.avoidRequiredProof || template.proofRequirement !== 'required') &&
+          (hasProof || template.proofRequirement !== 'required') &&
+          !this.templateUsesMissingFields(template, missingFields)
+        );
+      }).sort((a, b) => {
+        const aScore = this.campaignTemplateScore(
+          a,
+          role,
+          goal,
+          hasProof,
+          selected
+        );
+        const bScore = this.campaignTemplateScore(
+          b,
+          role,
+          goal,
+          hasProof,
+          selected
+        );
+        return bScore - aScore || a.id.localeCompare(b.id);
+      })[0];
+
+      if (!fallback) {
+        break;
+      }
+
+      selected.push({
+        template: fallback,
+        pillar: fallback.bestForPillars[0],
+      });
+      used.add(fallback.id);
+    }
+
+    return selected;
   }
 
   private templateScore(
@@ -486,6 +822,22 @@ export class OnboardingPostSuggestionService {
     );
   }
 
+  private templateUsesMissingFields(
+    template: PostTemplate,
+    missingFields: Set<string>
+  ) {
+    if (!missingFields.size) {
+      return false;
+    }
+
+    const fields = [
+      ...template.variables,
+      ...template.clarifyingQuestions.flatMap((question) => question.fills),
+    ].map((field) => field.toLowerCase());
+
+    return fields.some((field) => missingFields.has(field));
+  }
+
   private hasProof(linkedinProfileContext: any, websiteProfile?: any) {
     return (
       (linkedinProfileContext?.credibilityPoints || []).length > 0 ||
@@ -503,17 +855,110 @@ export class OnboardingPostSuggestionService {
     );
   }
 
+  private templatePlanItem(
+    template: PostTemplate,
+    pillar: PillarCategory,
+    slot: number,
+    options: { analyticsRecommended: boolean }
+  ) {
+    const variables = template.variables.filter(
+      (variable) => !['cta', 'optional cta'].includes(variable)
+    );
+    const questions = template.clarifyingQuestions.length
+      ? template.clarifyingQuestions
+      : [
+          {
+            question: `What specific details should this ${template.name} post include?`,
+            fills: variables,
+          },
+        ];
+
+    return {
+      id: `${template.id}-${slot}`,
+      slot,
+      templateId: template.id,
+      templateName: template.name,
+      pillar,
+      archetype: template.archetype,
+      hookStyles: template.hookStyles,
+      proofRequirement: template.proofRequirement,
+      variables,
+      questions,
+      analyticsRecommended: options.analyticsRecommended,
+      why: options.analyticsRecommended
+        ? 'Recommended from past posts. We will use your strongest detected patterns while keeping this template distinct.'
+        : `${template.name} fits ${pillar} and adds a different post structure to the week.`,
+    };
+  }
+
+  private hasAnalyticsGuidance(analyticsHints?: WeeklyCampaignAnalyticsHints) {
+    if (!analyticsHints) {
+      return false;
+    }
+
+    return Object.values(analyticsHints).some((value) => {
+      if (!value) {
+        return false;
+      }
+      const text = String(value).toLowerCase();
+      return !text.includes('not enough data') && !text.includes('upgrade');
+    });
+  }
+
   private compactLinkedinContext(context: any) {
     return {
       fullName: context?.fullName,
       headline: context?.headline,
+      about: context?.about,
+      location: context?.location,
       currentRole: context?.currentRole,
+      skills: (context?.skills || []).slice(0, 20),
+      experiences: (context?.experiences || []).slice(0, 8),
+      educationHighlights: (context?.educationHighlights || []).slice(0, 6),
       professionalSummary: context?.professionalSummary,
       expertiseAreas: (context?.expertiseAreas || []).slice(0, 8),
       credibilityPoints: (context?.credibilityPoints || []).slice(0, 8),
       contentAngles: (context?.contentAngles || []).slice(0, 8),
       audienceSignals: (context?.audienceSignals || []).slice(0, 8),
     };
+  }
+
+  private linkedinDesiredPositioning(
+    role: string,
+    audience: string,
+    goal: string
+  ) {
+    const normalizedRole = String(role || '').trim();
+    const normalizedAudience = String(audience || '').trim();
+    const normalizedGoal = String(goal || '').trim().toLowerCase();
+
+    if (normalizedGoal === 'get inbound leads') {
+      return `${normalizedRole} helping ${normalizedAudience} solve meaningful business problems with clear delivery credibility`;
+    }
+
+    if (normalizedGoal === 'get job opportunities') {
+      return `${normalizedRole} with clear proof of impact, strong role fit, and a credible next-step story`;
+    }
+
+    if (normalizedGoal === 'build authority') {
+      return `${normalizedRole} known for informed, experience-backed views that matter to ${normalizedAudience}`;
+    }
+
+    if (normalizedGoal === 'build network') {
+      return `${normalizedRole} worth connecting with for people in ${normalizedAudience}`;
+    }
+
+    if (normalizedGoal === 'recruit / hire talent') {
+      return `${normalizedRole} with a clear mission, standards, and an honest view of the people they want to attract`;
+    }
+
+    return `${normalizedRole} helping ${normalizedAudience} make better decisions and get stronger outcomes`;
+  }
+
+  private cleanProfileText(content: string) {
+    return String(content || '')
+      .trim()
+      .replace(/[ \t]{2,}/g, ' ');
   }
 
   private cleanGeneratedContent(content: string) {

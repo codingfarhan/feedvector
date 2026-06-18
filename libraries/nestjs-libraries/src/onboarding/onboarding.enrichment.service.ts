@@ -521,6 +521,7 @@ export class OnboardingEnrichmentService {
     return {
       fullName: data?.full_name || '',
       headline: data?.headline || '',
+      about: data?.about || '',
       location:
         data?.location ||
         [data?.city, data?.state, data?.country].filter(Boolean).join(', ') ||

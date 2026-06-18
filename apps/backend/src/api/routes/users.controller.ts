@@ -23,10 +23,13 @@ import { UsersService } from '@gitroom/nestjs-libraries/database/prisma/users/us
 import { UserDetailDto } from '@gitroom/nestjs-libraries/dtos/users/user.details.dto';
 import { EmailNotificationsDto } from '@gitroom/nestjs-libraries/dtos/users/email-notifications.dto';
 import {
+  LinkedinProfileOptimizerDto,
   OnboardingCompleteDto,
   OnboardingSuggestionDto,
   OnboardingWorkspaceSetupDto,
   RepurposePostDto,
+  WeeklyCampaignGenerateDto,
+  WeeklyCampaignRecommendationDto,
 } from '@gitroom/nestjs-libraries/dtos/users/onboarding.goal.dto';
 import { HttpForbiddenException } from '@gitroom/nestjs-libraries/services/exception.filter';
 import { RealIP } from 'nestjs-real-ip';
@@ -41,6 +44,7 @@ import {
 import { IntegrationService } from '@gitroom/nestjs-libraries/database/prisma/integrations/integration.service';
 import { OnboardingEnrichmentService } from '@gitroom/nestjs-libraries/onboarding/onboarding.enrichment.service';
 import { OnboardingPostSuggestionService } from '@gitroom/nestjs-libraries/onboarding/onboarding.post-suggestion.service';
+import { LinkedinCommentOpportunityService } from '@gitroom/nestjs-libraries/onboarding/linkedin.comment-opportunity.service';
 
 @ApiTags('User')
 @Controller('/user')
@@ -53,7 +57,8 @@ export class UsersController {
     private _trackService: TrackService,
     private _integrationService: IntegrationService,
     private _onboardingEnrichmentService: OnboardingEnrichmentService,
-    private _onboardingPostSuggestionService: OnboardingPostSuggestionService
+    private _onboardingPostSuggestionService: OnboardingPostSuggestionService,
+    private _linkedinCommentOpportunityService: LinkedinCommentOpportunityService
   ) {}
   @Get('/self')
   async getSelf(
@@ -540,6 +545,204 @@ export class UsersController {
       });
 
     return generated;
+  }
+
+  @Post('/weekly-campaign/recommendations')
+  async recommendWeeklyCampaignTemplates(
+    @GetOrgFromRequest() organization: Organization,
+    @Body() body: WeeklyCampaignRecommendationDto
+  ) {
+    const selectedIntegration = await this.getOnboardingLinkedInIntegration(
+      organization,
+      body.integrationId
+    );
+    const role = body.role.trim();
+    const audience = body.audience.trim();
+    const goal = body.goal.trim();
+
+    if (!role || !audience || !goal) {
+      throw new HttpException('Please complete your positioning first', 400);
+    }
+
+    const storedContext =
+      selectedIntegration as typeof selectedIntegration & {
+        linkedinProfileContext?: any;
+        onboardingWebsiteProfile?: any;
+      };
+    const linkedinProfileContext =
+      storedContext.linkedinProfileContext ||
+      (await this._onboardingEnrichmentService.enrichLinkedinProfile(
+        selectedIntegration.profile
+      ));
+
+    return this._onboardingPostSuggestionService.recommendWeeklyCampaignTemplates(
+      {
+        role,
+        audience,
+        goal,
+        count: body.count || 1,
+        linkedinProfileContext,
+        websiteProfile: storedContext.onboardingWebsiteProfile,
+        pillar: body.pillar?.trim(),
+        usedTemplateIds: body.usedTemplateIds || [],
+        excludedTemplateIds: body.excludedTemplateIds || [],
+        missingFields: body.missingFields || [],
+        avoidRequiredProof: !!body.avoidRequiredProof,
+        analyticsHints: body.analyticsHints,
+      }
+    );
+  }
+
+  @Post('/weekly-campaign/generate')
+  async generateWeeklyCampaignPosts(
+    @GetOrgFromRequest() organization: Organization,
+    @Body() body: WeeklyCampaignGenerateDto
+  ) {
+    const selectedIntegration = await this.getOnboardingLinkedInIntegration(
+      organization,
+      body.integrationId
+    );
+    const role = body.role.trim();
+    const audience = body.audience.trim();
+    const goal = body.goal.trim();
+
+    if (!role || !audience || !goal) {
+      throw new HttpException('Please complete your positioning first', 400);
+    }
+
+    if (!body.templates?.length) {
+      throw new HttpException('Choose at least one template', 400);
+    }
+
+    const storedContext =
+      selectedIntegration as typeof selectedIntegration & {
+        linkedinProfileContext?: any;
+        onboardingWebsiteProfile?: any;
+      };
+    const linkedinProfileContext =
+      storedContext.linkedinProfileContext ||
+      (await this._onboardingEnrichmentService.enrichLinkedinProfile(
+        selectedIntegration.profile
+      ));
+
+    return {
+      posts: await this._onboardingPostSuggestionService.generateWeeklyCampaignPosts(
+        {
+          role,
+          audience,
+          goal,
+          linkedinProfileContext,
+          websiteProfile: storedContext.onboardingWebsiteProfile,
+          analyticsHints: body.analyticsHints,
+          templates: body.templates,
+        }
+      ),
+    };
+  }
+
+  @Post('/linkedin-profile-optimizer')
+  async optimizeLinkedinProfile(
+    @GetOrgFromRequest() organization: Organization,
+    @Body() body: LinkedinProfileOptimizerDto
+  ) {
+    const selectedIntegration = await this.getOnboardingLinkedInIntegration(
+      organization,
+      body.integrationId
+    );
+    const role = body.role.trim();
+    const audience = body.audience.trim();
+    const goal = body.goal.trim();
+
+    if (!role || !audience || !goal) {
+      throw new HttpException('Please complete your positioning first', 400);
+    }
+
+    const storedContext =
+      selectedIntegration as typeof selectedIntegration & {
+        linkedinProfileContext?: any;
+      };
+
+    const shouldRefreshProfileContext =
+      !storedContext.linkedinProfileContext?.headline ||
+      !storedContext.linkedinProfileContext?.about;
+
+    const linkedinProfileContext =
+      shouldRefreshProfileContext || !storedContext.linkedinProfileContext
+        ? await this._onboardingEnrichmentService.enrichLinkedinProfile(
+            selectedIntegration.profile
+          )
+        : storedContext.linkedinProfileContext;
+
+    return this._onboardingPostSuggestionService.optimizeLinkedinProfile({
+      role,
+      audience,
+      goal,
+      linkedinProfileContext,
+    });
+  }
+
+  @Get('/linkedin-comment-opportunities')
+  async getLinkedinCommentOpportunities(
+    @GetOrgFromRequest() organization: Organization,
+    @Query('integrationId') integrationId: string,
+    @Query('refresh') refresh?: string
+  ) {
+    const selectedIntegration = await this.getOnboardingLinkedInIntegration(
+      organization,
+      integrationId
+    );
+    const onboardingState = await this._orgService.getOnboardingState(
+      organization.id
+    );
+
+    const storedContext =
+      selectedIntegration as typeof selectedIntegration & {
+        onboardingRole?: string | null;
+        onboardingAudience?: string | null;
+        onboardingGoal?: string | null;
+        onboardingContentPillars?: any;
+        linkedinProfileContext?: any;
+        onboardingWebsiteProfile?: any;
+      };
+
+    const role = String(
+      storedContext.onboardingRole ||
+        onboardingState?.onboardingPersonaOther ||
+        onboardingState?.onboardingPersona ||
+        ''
+    ).trim();
+    const audience = String(
+      storedContext.onboardingAudience || onboardingState?.onboardingAudience || ''
+    ).trim();
+    const goal = String(
+      storedContext.onboardingGoal || onboardingState?.onboardingGoal || ''
+    ).trim();
+
+    if (!role || !audience || !goal) {
+      throw new HttpException(
+        'Complete your LinkedIn content profile before using this page',
+        400
+      );
+    }
+
+    const linkedinProfileContext =
+      storedContext.linkedinProfileContext ||
+      (await this._onboardingEnrichmentService.enrichLinkedinProfile(
+        selectedIntegration.profile
+      ));
+
+    return this._linkedinCommentOpportunityService.getRecommendations({
+      role,
+      audience,
+      goal,
+      pillars: Array.isArray(storedContext.onboardingContentPillars)
+        ? storedContext.onboardingContentPillars
+        : undefined,
+      linkedinProfileSlug: selectedIntegration.profile,
+      linkedinProfileContext,
+      websiteProfile: storedContext.onboardingWebsiteProfile,
+      refresh: refresh === '1' || refresh === 'true',
+    });
   }
 
   private async getOnboardingLinkedInIntegration(
