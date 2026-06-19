@@ -1,7 +1,7 @@
 "use client"
 
 import useSWR from "swr"
-import { useCallback, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { useFetch } from "@gitroom/helpers/utils/custom.fetch"
 import { Button } from "@gitroom/react/form/button"
 import { LoadingComponent } from "@gitroom/frontend/components/layout/loading"
@@ -35,6 +35,29 @@ type RecommendationResponse = {
   pillars: string[]
   queries: Array<{ category: string; query: string }>
   recommendations: RecommendationItem[]
+  refreshPolicy?: {
+    limited: boolean
+    canRefresh: boolean
+    waitSeconds: number
+    nextRefreshAt?: string
+  }
+}
+
+const formatRefreshWait = (seconds: number) => {
+  const totalMinutes = Math.max(1, Math.ceil(seconds / 60))
+  const hours = Math.floor(totalMinutes / 60)
+  const minutes = totalMinutes % 60
+  const parts: string[] = []
+
+  if (hours > 0) {
+    parts.push(`${hours} hr${hours === 1 ? "" : "s"}`)
+  }
+
+  if (minutes > 0 || !parts.length) {
+    parts.push(`${minutes} min${minutes === 1 ? "" : "s"}`)
+  }
+
+  return parts.join(" ")
 }
 
 export const LinkedinCommentOpportunities = () => {
@@ -42,6 +65,7 @@ export const LinkedinCommentOpportunities = () => {
   const router = useRouter()
   const toaster = useToaster()
   const [refreshing, setRefreshing] = useState(false)
+  const [now, setNow] = useState(() => Date.now())
 
   const loadIntegrations = useCallback(async () => {
     const response = await (await fetch("/integrations/list")).json()
@@ -96,8 +120,31 @@ export const LinkedinCommentOpportunities = () => {
     return new Date(data.generatedAt).toLocaleString()
   }, [data?.generatedAt])
 
+  useEffect(() => {
+    const interval = window.setInterval(() => setNow(Date.now()), 30 * 1000)
+
+    return () => window.clearInterval(interval)
+  }, [])
+
+  const refreshWaitSeconds = useMemo(() => {
+    if (!data?.refreshPolicy?.limited || !data.refreshPolicy.nextRefreshAt) {
+      return 0
+    }
+
+    return Math.max(0, Math.ceil((new Date(data.refreshPolicy.nextRefreshAt).getTime() - now) / 1000))
+  }, [data?.refreshPolicy?.limited, data?.refreshPolicy?.nextRefreshAt, now])
+
+  const refreshDisabled = !!data?.refreshPolicy?.limited && refreshWaitSeconds > 0
+  const refreshWaitMessage = refreshDisabled
+    ? `Free users are allowed to refresh posts every 6 hours. Please wait for ${formatRefreshWait(refreshWaitSeconds)}.`
+    : ""
+
   const refreshRecommendations = useCallback(async () => {
     if (!selectedIntegration?.id) {
+      return
+    }
+
+    if (refreshDisabled) {
       return
     }
 
@@ -116,7 +163,7 @@ export const LinkedinCommentOpportunities = () => {
     } finally {
       setRefreshing(false)
     }
-  }, [fetch, mutate, selectedIntegration?.id, toaster])
+  }, [fetch, mutate, refreshDisabled, selectedIntegration?.id, toaster])
 
   if (loadingIntegrations || (selectedIntegration?.id && loadingRecommendations && !data)) {
     return <LoadingComponent />
@@ -164,10 +211,13 @@ export const LinkedinCommentOpportunities = () => {
             {!!generatedAt && <div className="mt-[12px] text-[12px] text-textItemBlur">Generated {generatedAt}</div>}
           </div>
 
-          <div className="flex items-center gap-[10px]">
-            <Button secondary={true} className="rounded-[10px]" onClick={refreshRecommendations} loading={refreshing}>
-              Refresh list
+          <div className="flex flex-col items-start gap-[8px] lg:items-end">
+            <Button secondary={true} className="rounded-[10px]" onClick={refreshRecommendations} loading={refreshing} disabled={refreshDisabled}>
+              Refresh posts
             </Button>
+            {!!refreshWaitMessage && (
+              <div className="max-w-[360px] text-left text-[12px] leading-[18px] text-textItemBlur lg:text-right">{refreshWaitMessage}</div>
+            )}
           </div>
         </div>
       </section>

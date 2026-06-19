@@ -96,6 +96,14 @@ type CommentOpportunityInput = {
   websiteProfile?: any
   limit?: number
   refresh?: boolean
+  refreshCooldownSeconds?: number
+}
+
+type RefreshPolicy = {
+  limited: boolean
+  canRefresh: boolean
+  waitSeconds: number
+  nextRefreshAt?: string
 }
 
 type SearchExecutionResult = {
@@ -106,8 +114,9 @@ type SearchExecutionResult = {
 
 const QUERY_STRATEGY_VERSION = "llm-v2"
 const CACHE_TTL_SECONDS = 60 * 60 * 24
-const DEFAULT_TOTAL_QUERIES = 12
-const MAX_RESULTS = 20
+const DEFAULT_TOTAL_QUERIES = 18
+const MIN_RESULTS = 25
+const MAX_RESULTS = 40
 const MIN_VALID_SERP_RESULTS = 3
 const SERP_CONCURRENCY = 4
 
@@ -227,7 +236,7 @@ export class LinkedinCommentOpportunityService {
     }
 
     const goal = this.normalizeGoal(input.goal)
-    const limit = Math.min(Math.max(input.limit || MAX_RESULTS, 1), 12)
+    const limit = Math.min(Math.max(input.limit || MIN_RESULTS, MIN_RESULTS), MAX_RESULTS)
 
     const pillars = this.resolvePillars(input.pillars, input.role, goal, input.linkedinProfileContext, input.websiteProfile)
 
@@ -243,15 +252,18 @@ export class LinkedinCommentOpportunityService {
       limit,
     })
 
-    if (!input.refresh) {
-      const cached = await ioRedis.get(cacheKey)
+    const cached = await ioRedis.get(cacheKey)
 
-      if (cached) {
-        try {
-          return this.toPublicResponse(JSON.parse(cached))
-        } catch {
-          // Ignore invalid cached JSON and regenerate.
+    if (cached) {
+      try {
+        const parsedCached = JSON.parse(cached)
+        const refreshPolicy = this.buildRefreshPolicy(parsedCached?.generatedAt, input.refreshCooldownSeconds)
+
+        if (!input.refresh || !refreshPolicy.canRefresh) {
+          return this.toPublicResponse(parsedCached, input.refreshCooldownSeconds)
         }
+      } catch {
+        // Ignore invalid cached JSON and regenerate.
       }
     }
 
@@ -322,18 +334,49 @@ export class LinkedinCommentOpportunityService {
 
     await ioRedis.set(cacheKey, JSON.stringify(response), "EX", CACHE_TTL_SECONDS)
 
-    return response
+    return this.toPublicResponse(response, input.refreshCooldownSeconds)
   }
 
-  private toPublicResponse(response: any) {
+  private toPublicResponse(response: any, refreshCooldownSeconds?: number) {
     return {
       ...response,
       recommendations: this.toPublicRecommendations(Array.isArray(response?.recommendations) ? response.recommendations : []),
+      refreshPolicy: this.buildRefreshPolicy(response?.generatedAt, refreshCooldownSeconds),
     }
   }
 
   private toPublicRecommendations(recommendations: RecommendationResult[]): PublicRecommendationResult[] {
     return recommendations.map(({ reason, ...recommendation }) => recommendation)
+  }
+
+  private buildRefreshPolicy(generatedAt?: string, refreshCooldownSeconds?: number): RefreshPolicy {
+    if (!refreshCooldownSeconds) {
+      return {
+        limited: false,
+        canRefresh: true,
+        waitSeconds: 0,
+      }
+    }
+
+    const generatedAtMs = generatedAt ? new Date(generatedAt).getTime() : 0
+
+    if (!generatedAtMs || Number.isNaN(generatedAtMs)) {
+      return {
+        limited: true,
+        canRefresh: true,
+        waitSeconds: 0,
+      }
+    }
+
+    const nextRefreshAtMs = generatedAtMs + refreshCooldownSeconds * 1000
+    const waitSeconds = Math.max(0, Math.ceil((nextRefreshAtMs - Date.now()) / 1000))
+
+    return {
+      limited: true,
+      canRefresh: waitSeconds <= 0,
+      waitSeconds,
+      nextRefreshAt: new Date(nextRefreshAtMs).toISOString(),
+    }
   }
 
   private resolvePillars(pillars: string[] | undefined, role: string, goal: Goal, linkedinProfileContext?: any, websiteProfile?: any) {
@@ -925,10 +968,18 @@ Prioritize role expectations, candidate problems, hiring practices, team culture
       return false
     }
 
+    if (this.looksLikeHiringPost(`${title} ${result.snippet || ""} ${result.source || ""}`)) {
+      return false
+    }
+
     return true
   }
 
   private calculateNoisePenalty(text: string) {
+    if (this.looksLikeHiringPost(text)) {
+      return 0.35
+    }
+
     const strongNoisePatterns = [
       /\bjob description\b/i,
       /\bapply now\b/i,
@@ -954,6 +1005,25 @@ Prioritize role expectations, candidate problems, hiring practices, team culture
     const mediumMatches = mediumNoisePatterns.filter((pattern) => pattern.test(text)).length
 
     return Math.min(0.3, mediumMatches * 0.12)
+  }
+
+  private looksLikeHiringPost(text: string) {
+    const hiringPatterns = [
+      /#\s*hiring\b/i,
+      /\bwe'?re hiring\b/i,
+      /\bwe are hiring\b/i,
+      /\bwe'?re looking for\b/i,
+      /\bwe are looking for\b/i,
+      /\bi'?m hiring\b/i,
+      /\bi am hiring\b/i,
+      /\bnow hiring\b/i,
+      /\bhiring for\b/i,
+      /\bopen roles?\b/i,
+      /\bjob opening\b/i,
+      /\bapply now\b/i,
+    ]
+
+    return hiringPatterns.some((pattern) => pattern.test(text))
   }
 
   private extractLinkedinEmbedUrn(url: string) {

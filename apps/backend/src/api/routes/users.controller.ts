@@ -46,6 +46,8 @@ import { OnboardingEnrichmentService } from '@gitroom/nestjs-libraries/onboardin
 import { OnboardingPostSuggestionService } from '@gitroom/nestjs-libraries/onboarding/onboarding.post-suggestion.service';
 import { LinkedinCommentOpportunityService } from '@gitroom/nestjs-libraries/onboarding/linkedin.comment-opportunity.service';
 
+const FREE_LINKEDIN_COMMENT_REFRESH_COOLDOWN_SECONDS = 6 * 60 * 60;
+
 @ApiTags('User')
 @Controller('/user')
 export class UsersController {
@@ -730,6 +732,27 @@ export class UsersController {
       (await this._onboardingEnrichmentService.enrichLinkedinProfile(
         selectedIntegration.profile
       ));
+    const subscription = (
+      organization as typeof organization & {
+        subscription?: {
+          subscriptionTier?: string;
+        };
+      }
+    ).subscription;
+    const subscriptionTier =
+      subscription?.subscriptionTier ||
+      (!process.env.RAZORPAY_KEY_ID ? 'ULTIMATE' : 'FREE');
+    const trialEndsAt = organization?.createdAt
+      ? new Date(organization.createdAt.getTime() + 7 * 24 * 60 * 60 * 1000)
+      : null;
+    const trialActive =
+      !!organization?.isTrailing &&
+      !!trialEndsAt &&
+      trialEndsAt.getTime() > Date.now();
+    const shouldLimitRefresh =
+      process.env.NODE_ENV === 'production' &&
+      subscriptionTier === 'FREE' &&
+      !trialActive;
 
     return this._linkedinCommentOpportunityService.getRecommendations({
       role,
@@ -742,6 +765,9 @@ export class UsersController {
       linkedinProfileContext,
       websiteProfile: storedContext.onboardingWebsiteProfile,
       refresh: refresh === '1' || refresh === 'true',
+      refreshCooldownSeconds: shouldLimitRefresh
+        ? FREE_LINKEDIN_COMMENT_REFRESH_COOLDOWN_SECONDS
+        : undefined,
     });
   }
 
