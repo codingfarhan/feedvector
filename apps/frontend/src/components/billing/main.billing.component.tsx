@@ -81,6 +81,39 @@ export const Features: FC<{
 }> = (props) => {
   const { pack } = props
   const features = useMemo(() => {
+    if (pack === "FREE") {
+      return [
+        "1 LinkedIn account",
+        "Plan and schedule LinkedIn posts during the trial",
+        "Try AI-assisted LinkedIn post drafting",
+        "Use LinkedIn post templates",
+        "Repurpose existing ideas into LinkedIn posts",
+        "Test the picture editor for LinkedIn visuals",
+        "2 AI images for LinkedIn posts",
+        "1 AI video for LinkedIn content",
+      ]
+    }
+
+    if (pack === "PRO") {
+      return [
+        "20 social media accounts",
+        "Connect multiple social accounts across Instagram, X, Facebook, YouTube, Bluesky, and more",
+        "Unlimited LinkedIn posts per month",
+        "Daily LinkedIn posts to comment on for audience growth",
+        "LinkedIn analytics that show what to post next",
+        "Recommended topics, formats, hooks, and posting times",
+        "Unlimited team members in your workspace",
+        "Approval workflows for LinkedIn content",
+        "Auto actions for repeat LinkedIn publishing tasks",
+        "Third-party integrations with the FeedVector app",
+        "AI autocomplete for LinkedIn drafts",
+        "AI copilots for LinkedIn content creation",
+        "Advanced picture editor for LinkedIn visuals",
+        "35 AI images per month",
+        "20 AI videos per month",
+      ]
+    }
+
     const currentPricing = pricing[pack]
     const channelsOr = currentPricing.channel
     const postsPerMonth = currentPricing.posts_per_month
@@ -89,12 +122,6 @@ export const Features: FC<{
     list.push(`${postsPerMonth == 1000000 ? "Unlimited" : postsPerMonth} posts per month`)
     // if (currentPricing.team_members) {
     // }
-    if (pack == "PRO") {
-      list.push(`Analytics for all Social Media Platforms`)
-      list.push(`Plugs for creating complex workflows`)
-      list.push(`Third-party integrations with FeedVector app`)
-      list.push(`Unlimited team members`)
-    }
     if (currentPricing?.ai) {
       list.push(`AI auto-complete`)
       list.push(`AI copilots`)
@@ -447,9 +474,9 @@ export const MainBillingComponent: FC<{
                         "Purchase"}
                   </Button>
                 )}
-                {subscription && currentPackage !== name.toUpperCase() && name !== "FREE" && !!name && (
+                {/* {subscription && currentPackage !== name.toUpperCase() && name !== "FREE" && !!name && (
                   <Prorate period={period} pack={name.toUpperCase() as "STANDARD" | "PRO"} />
-                )}
+                )} */}
               </div>
               <Features pack={name.toUpperCase() as "FREE" | "STANDARD" | "PRO"} />
             </div>
