@@ -31,6 +31,7 @@ type SearchQuery = {
   query: string
   topic: string
   audienceTerm?: string
+  authorType?: string
   intentPhrase?: string
   level: 1 | 2 | 3 | 4
   variant: "narrow" | "medium" | "broad"
@@ -41,6 +42,7 @@ type LlmGeneratedQuery = {
   category: QueryCategory
   topic: string
   audienceTerm?: string | null
+  authorType?: string | null
   intentPhrase?: string | null
   query: string
 }
@@ -59,6 +61,7 @@ type RecommendationReason = {
   matchedGoal: Goal
   matchedTopics: string[]
   matchedAudienceTerms: string[]
+  matchedAuthorTypes: string[]
   matchedProblems: string[]
   matchedProducts: string[]
   matchedIndustries: string[]
@@ -94,7 +97,6 @@ type CommentOpportunityInput = {
   linkedinProfileSlug?: string | null
   linkedinProfileContext?: any
   websiteProfile?: any
-  limit?: number
   refresh?: boolean
   refreshCooldownSeconds?: number
 }
@@ -112,7 +114,7 @@ type SearchExecutionResult = {
   results: SerpOrganicResult[]
 }
 
-const QUERY_STRATEGY_VERSION = "llm-v2"
+const QUERY_STRATEGY_VERSION = "llm-v3"
 const CACHE_TTL_SECONDS = 60 * 60 * 24
 const DEFAULT_TOTAL_QUERIES = 18
 const MIN_RESULTS = 25
@@ -174,6 +176,7 @@ const LinkedinCommentOpportunityQueriesPrompt = z.object({
       ]),
       topic: z.string(),
       audienceTerm: z.string().nullable(),
+      authorType: z.string().nullable(),
       intentPhrase: z.string().nullable(),
       query: z.string(),
     }),
@@ -236,7 +239,7 @@ export class LinkedinCommentOpportunityService {
     }
 
     const goal = this.normalizeGoal(input.goal)
-    const limit = Math.min(Math.max(input.limit || MIN_RESULTS, MIN_RESULTS), MAX_RESULTS)
+    const limit = MAX_RESULTS
 
     const pillars = this.resolvePillars(input.pillars, input.role, goal, input.linkedinProfileContext, input.websiteProfile)
 
@@ -492,10 +495,11 @@ Required output:
   "queries": [
     {
       "category": "audience_problem",
-      "topic": "social media automation",
-      "audienceTerm": "marketer",
+      "topic": "LinkedIn content workflow",
+      "audienceTerm": "founder",
+      "authorType": "ghostwriter",
       "intentPhrase": null,
-      "query": "site:linkedin.com/posts/ \\"social media automation\\" marketer"
+      "query": "site:linkedin.com/posts/ \\"LinkedIn content workflow\\" ghostwriter"
     }
   ]
 }
@@ -514,10 +518,63 @@ Use the user's role, target audience, LinkedIn profile, expertise, experience, p
 
 Do not use the user's content pillars.
 
+Author targeting:
+
+Identify the types of people whose posts are most strategically useful for the user's goal.
+
+Possible author types include:
+
+- founder
+- ghostwriter
+- personal branding consultant
+- content strategist
+- social media manager
+- marketer
+- agency owner
+- recruiter
+- hiring manager
+- engineering leader
+- product leader
+- consultant
+- creator
+- industry analyst
+
+Do not assume the target audience and the ideal author type are the same.
+
+The ideal author should satisfy at least one of these:
+
+- They are part of the target audience.
+- They influence the target audience.
+- Their audience overlaps with the target audience.
+- They discuss problems the user's product solves.
+- Engaging with them could create visibility, relationships, leads, hiring opportunities, or authority.
+
+Use a balanced query mix:
+
+- About 40% topic-only queries.
+- About 30% topic + target-audience queries.
+- About 30% topic + author-type queries.
+
+Use author types only when they improve strategic relevance.
+
+Do not confuse:
+
+- topic
+- target audience
+- author type
+
+The topic describes what the post is about.
+
+The target audience describes who the user wants to reach.
+
+The author type describes whose post is strategically useful to comment on.
+
 Important rules:
 
 - Generate queries for posts the user can credibly comment on.
 - Generate queries that support the user's stated goal.
+- Generate some queries for authors whose audiences overlap with the user's target audience.
+- Prefer author types that can create visibility, trust, relationships, or leads.
 - Match each topic to the target audience.
 - Use natural language people actually write on LinkedIn.
 - Prefer concrete problems, workflows, decisions, tools, outcomes, and industry conversations.
@@ -527,6 +584,7 @@ Important rules:
 - Convert audience descriptions into short terms such as founder, marketer, engineering team, recruiter, agency, creator, or SaaS company.
 - Use one main topic per query.
 - Use zero or one short audience term.
+- Use zero or one short author type.
 - Use an intent phrase only when it sounds natural.
 - Do not force intent phrases into every query.
 - Use no more than two quoted phrases.
@@ -565,25 +623,44 @@ Bad:
 Goal guidance:
 
 Get inbound leads:
-Prioritize target-audience problems, buying decisions, objections, product categories, workflows, and desired outcomes.
+Prioritize target-audience problems, buying decisions, objections, product categories, workflows, desired outcomes, potential buyers, and trusted intermediaries who influence those buyers.
 
 Build authority:
-Prioritize technical topics, industry debates, misconceptions, trends, frameworks, and professional problems.
+Prioritize technical topics, industry debates, misconceptions, trends, frameworks, professional problems, respected peers, niche experts, and industry commentators.
 
 Grow my audience:
-Prioritize broad relevant conversations, questions, trends, strong opinions, and topics where the user can add expertise.
+Prioritize broad relevant conversations, questions, trends, strong opinions, topics where the user can add expertise, creators, and experts with relevant audience overlap.
 
 Promote my product/service:
-Prioritize product-category problems, use cases, alternatives, objections, customer outcomes, and buying triggers.
+Prioritize product-category problems, use cases, alternatives, objections, customer outcomes, buying triggers, users, consultants, agencies, and practitioners discussing the problem or product category.
 
 Get job opportunities:
-Prioritize relevant technologies, projects, technical challenges, target industries, engineering leadership, and career conversations.
+Prioritize relevant technologies, projects, technical challenges, target industries, engineering leadership, career conversations, hiring managers, recruiters, engineering leaders, and people at target companies.
 
 Build network:
 Prioritize peers, adjacent experts, collaborators, shared industries, communities, and discussion-oriented posts.
 
 Recruit / hire talent:
-Prioritize role expectations, candidate problems, hiring practices, team culture, leadership, and professional communities.
+Prioritize role expectations, candidate problems, hiring practices, team culture, leadership, relevant professionals, career creators, and community leaders.
+
+Current product-profile guidance:
+
+For a user selling LinkedIn content, social media automation, scheduling, or AI content tools, useful author types may include:
+
+- ghostwriter
+- LinkedIn ghostwriter
+- personal branding consultant
+- social media manager
+- content strategist
+- agency owner
+- founder-led marketing consultant
+- B2B marketer
+- creator
+- founder
+
+Useful query example:
+
+site:linkedin.com/posts/ "LinkedIn content workflow" ghostwriter
 `
   }
 
@@ -630,15 +707,24 @@ Prioritize role expectations, candidate problems, hiring practices, team culture
 
     const audienceTerm = this.normalizeSearchPhrase(value.audienceTerm || "")
 
+    const authorType = this.normalizeSearchPhrase(value.authorType || "")
+
+    if (authorType && this.wordCount(authorType) > 4) {
+      return undefined
+    }
+
     const intentPhrase = this.normalizeSearchPhrase(value.intentPhrase || "")
 
-    const variant: SearchQuery["variant"] = intentPhrase && audienceTerm ? "narrow" : audienceTerm ? "medium" : "broad"
+    const contextTerm = audienceTerm || authorType
+
+    const variant: SearchQuery["variant"] = intentPhrase && contextTerm ? "narrow" : contextTerm ? "medium" : "broad"
 
     return {
       category,
       query,
       topic,
       audienceTerm: audienceTerm || undefined,
+      authorType: authorType || undefined,
       intentPhrase: intentPhrase || undefined,
       level: 1,
       variant,
@@ -773,7 +859,7 @@ Prioritize role expectations, candidate problems, hiring practices, team culture
     const suggestedCommentAngle = this.suggestCommentAngle(normalizedText, pillars, query.category)
 
     return {
-      url: this.normalizeLinkedinPostUrl(url) || url,
+      url: url,
       embedUrl: `https://www.linkedin.com/embed/feed/update/${embedUrn}`,
       embedUrn,
       activityId,
@@ -790,12 +876,15 @@ Prioritize role expectations, candidate problems, hiring practices, team culture
         matchedGoal: goal,
         matchedTopics: [query.topic],
         matchedAudienceTerms: query.audienceTerm ? [query.audienceTerm] : [],
+        matchedAuthorTypes: query.authorType ? [query.authorType] : [],
         matchedProblems: [],
         matchedProducts: [],
         matchedIndustries: [],
         queryCategory: query.category,
         suggestedCommentAngle,
-        explanation: `This post was found through the ${query.category} topic "${query.topic}" for your ${goal} goal.`,
+        explanation: `This post was found while searching for conversations about "${query.topic}"${
+          query.authorType ? ` from ${query.authorType} authors` : ""
+        }.`,
       },
     }
   }
@@ -913,7 +1002,7 @@ Prioritize role expectations, candidate problems, hiring practices, team culture
   private buildFallbackQueries(query: SearchQuery) {
     const topicQuoted = this.quote(query.topic)
 
-    const audience = query.audienceTerm || ""
+    const contextTerm = query.authorType || query.audienceTerm || ""
 
     const broadTopic = query.topic
 
@@ -927,14 +1016,15 @@ Prioritize role expectations, candidate problems, hiring practices, team culture
         {
           ...query,
           level: 2 as const,
-          variant: audience ? ("medium" as const) : ("broad" as const),
-          query: ["site:linkedin.com/posts/", topicQuoted, audience].filter(Boolean).join(" ").trim(),
+          variant: contextTerm ? ("medium" as const) : ("broad" as const),
+          query: ["site:linkedin.com/posts/", topicQuoted, contextTerm].filter(Boolean).join(" ").trim(),
         },
         {
           ...query,
           level: 3 as const,
           variant: "broad" as const,
           audienceTerm: undefined,
+          authorType: undefined,
           intentPhrase: undefined,
           query: ["site:linkedin.com/posts/", topicQuoted].join(" ").trim(),
         },
@@ -943,6 +1033,7 @@ Prioritize role expectations, candidate problems, hiring practices, team culture
           level: 4 as const,
           variant: "broad" as const,
           audienceTerm: undefined,
+          authorType: undefined,
           intentPhrase: undefined,
           query: ["site:linkedin.com/posts/", broadTopic].join(" ").trim(),
         },
@@ -968,7 +1059,7 @@ Prioritize role expectations, candidate problems, hiring practices, team culture
       return false
     }
 
-    if (this.looksLikeHiringPost(`${title} ${result.snippet || ""} ${result.source || ""}`)) {
+    if (this.looksLikeHiringPost(`${title} ${result.snippet || ""} ${result.source || ""} ${result.link || ""}`)) {
       return false
     }
 
@@ -1009,6 +1100,7 @@ Prioritize role expectations, candidate problems, hiring practices, team culture
 
   private looksLikeHiringPost(text: string) {
     const hiringPatterns = [
+      /\bhiring\b/i,
       /#\s*hiring\b/i,
       /\bwe'?re hiring\b/i,
       /\bwe are hiring\b/i,
