@@ -484,7 +484,7 @@ export const MainBillingComponent: FC<{
       </div>
       {/* {!subscription?.id && <PurchaseCrypto />} */}
       {!!subscription?.id && (
-        <div className="flex justify-center mt-[20px] gap-[10px]">
+        <div className="flex flex-col items-center justify-center mt-[20px] gap-[10px]">
           <div className="text-[14px] text-textItemBlur flex items-center">
             For any questions reach us at{" "}
             <a className="underline hover:text-newTextColor" href="mailto:contact@feedvector.com">
