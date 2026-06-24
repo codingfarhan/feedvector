@@ -2354,7 +2354,7 @@ export const LinkedinStrategyDashboard = () => {
                         {item.button}
                       </button>
                     </div>
-                    <div className="mt-[8px] text-[9px] leading-[19px] text-customColor18 text-white pl-3">{item.shortDescription}</div>
+                    <div className="mt-[8px] pl-3 text-[9px] leading-[19px] text-black dark:text-white">{item.shortDescription}</div>
                   </div>
                 ))}
               </div>
