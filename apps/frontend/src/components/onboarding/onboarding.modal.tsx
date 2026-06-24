@@ -43,6 +43,7 @@ const goalOptions = [
 const websiteUrlPattern = /^(https?:\/\/)?([a-z0-9-]+\.)+[a-z]{2,}(:\d{2,5})?(\/[^\s]*)?$/i
 const onboardingSuggestionsStorageKey = "feedvector:onboarding:suggestions:v1"
 const onboardingSuggestionsTtlMs = 24 * 60 * 60 * 1000
+const onboardingLoadingMinimumMs = 20 * 1000
 
 type OnboardingStep = "channels" | "positioning" | "website" | "loading" | "suggestions"
 
@@ -235,6 +236,14 @@ export const OnboardingModal: FC<OnboardingModalProps> = ({ onClose }) => {
   }, [cacheIdentity, cacheMatchesInputs])
 
   const generateSuggestions = useCallback(async () => {
+    const loadingStartedAt = Date.now()
+    const waitForMinimumLoading = async () => {
+      const remainingMs = onboardingLoadingMinimumMs - (Date.now() - loadingStartedAt)
+      if (remainingMs > 0) {
+        await new Promise((resolve) => setTimeout(resolve, remainingMs))
+      }
+    }
+
     if (!connectedLinkedIn) {
       toaster.show("Connect your personal LinkedIn account first", "warning")
       setStep("channels")
@@ -247,6 +256,7 @@ export const OnboardingModal: FC<OnboardingModalProps> = ({ onClose }) => {
       setReviewedSuggestions(cache!.reviewedSuggestions || [])
       setEditedContent(cache!.editedContent || {})
       setSuggestionIndex(Math.min(cache!.currentIndex || 0, Math.max(0, cache!.suggestions.length - 1)))
+      await waitForMinimumLoading()
       setStep("suggestions")
       return true
     }
@@ -284,6 +294,7 @@ export const OnboardingModal: FC<OnboardingModalProps> = ({ onClose }) => {
       editedContent: {},
       createdAt: new Date().toISOString(),
     })
+    await waitForMinimumLoading()
     setStep("suggestions")
     return true
   }, [cacheIdentity, cacheMatchesInputs, connectedLinkedIn, fetch, toaster, websiteUrl])
@@ -938,7 +949,14 @@ const OnboardingSuggestionStep: FC<{
   )
 }
 
-const loadingMessages = ["setting up your workspace", "understanding your niche", "creating drafts that would work well for you"]
+const loadingMessages = [
+  "Setting up your workspace...",
+  "Reading your LinkedIn profile...",
+  "Understanding your niche...",
+  "Getting your info...",
+  "Creating drafts that would work well for you. Please wait...",
+]
+const loadingMessageIntervalMs = 4 * 1000
 
 const OnboardingLoadingStep: FC<{
   onComplete: () => Promise<boolean>
@@ -949,12 +967,6 @@ const OnboardingLoadingStep: FC<{
     let cancelled = false
 
     const run = async () => {
-      for (let i = 0; i < loadingMessages.length; i += 1) {
-        if (cancelled) return
-        setIndex(i)
-        await new Promise((resolve) => setTimeout(resolve, 1300))
-      }
-
       if (!cancelled) {
         await onComplete()
       }
@@ -967,12 +979,48 @@ const OnboardingLoadingStep: FC<{
     }
   }, [onComplete])
 
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      setIndex((current) => Math.min(current + 1, loadingMessages.length - 1))
+    }, loadingMessageIntervalMs)
+
+    return () => window.clearInterval(interval)
+  }, [])
+
+  const isLastMessage = index === loadingMessages.length - 1
+
   return (
     <div className="min-h-[420px] flex flex-col items-center justify-center gap-[22px] text-center">
-      <div className="h-[54px] w-[54px] rounded-full border-[4px] border-newTableBorder border-t-[#8b5cf6] animate-spin" />
-      <div className="flex flex-col gap-[8px]">
+      <style>{`
+        @keyframes onboardingLoadingMessageFade {
+          0% { opacity: 0; transform: translateY(4px); }
+          12% { opacity: 1; transform: translateY(0); }
+          86% { opacity: 1; transform: translateY(0); }
+          100% { opacity: 0; transform: translateY(-4px); }
+        }
+
+        @keyframes onboardingLoadingProgress {
+          from { transform: scaleX(0); }
+          to { transform: scaleX(1); }
+        }
+      `}</style>
+      <div className="flex w-full max-w-[420px] flex-col items-center gap-[18px]">
+        <div className="h-[54px] w-[54px] rounded-full border-[4px] border-newTableBorder border-t-[#8b5cf6] animate-spin" />
         <div className="text-[24px] font-semibold">Setting up your Workspace</div>
-        <div className="text-[15px] text-customColor18">{loadingMessages[index]}...</div>
+        <div className="h-[22px] text-[15px] text-customColor18">
+          <span
+            key={index}
+            style={isLastMessage ? undefined : { animation: `onboardingLoadingMessageFade ${loadingMessageIntervalMs}ms ease-in-out` }}
+          >
+            {loadingMessages[index]}
+          </span>
+        </div>
+        <div className="h-[9px] w-full overflow-hidden rounded-full bg-newTableHeader">
+          <div
+            className="h-full w-full origin-left rounded-full bg-gradient-to-r from-[#622aff] to-[#8b5cf6]"
+            style={{ animation: `onboardingLoadingProgress ${onboardingLoadingMinimumMs}ms linear forwards` }}
+          />
+        </div>
       </div>
     </div>
   )

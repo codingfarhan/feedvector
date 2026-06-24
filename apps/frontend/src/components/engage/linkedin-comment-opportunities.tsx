@@ -208,7 +208,11 @@ export const LinkedinCommentOpportunities = () => {
             <div className="mt-[8px] max-w-[760px] text-[14px] leading-[22px] text-textItemBlur">
               Fresh posts from the last 24 hours. Open any post on LinkedIn to read, react, or join the conversation.
             </div>
-            {!!generatedAt && <div className="mt-[12px] text-[12px] text-textItemBlur">Generated {generatedAt}</div>}
+            {!!generatedAt && (
+              <div className="mt-[12px] inline-flex rounded-full border border-[#8b5cf6]/25 bg-[#8b5cf6]/10 px-[10px] py-[5px] text-[12px] font-[600] text-[#6d28d9] dark:bg-[#8b5cf6]/15 dark:text-[#c4b5fd]">
+                Last updated: {generatedAt}
+              </div>
+            )}
           </div>
 
           <div className="flex flex-col items-start gap-[8px] lg:items-end">

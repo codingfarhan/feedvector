@@ -418,12 +418,14 @@ const RepurposeContentModal = ({
 const LinkedinProfileOptimizerModal = ({
   integrationId,
   picture,
+  profileName,
   role,
   audience,
   goal,
 }: {
   integrationId: string
   picture?: string
+  profileName?: string
   role: string
   audience: string
   goal: string
@@ -502,14 +504,18 @@ const LinkedinProfileOptimizerModal = ({
           className="h-[52px] w-[52px] rounded-full border border-newTableBorder object-cover"
         />
         <div>
-          <div className="text-[16px] font-semibold">Optimize LinkedIn profile</div>
+          <div className="text-[16px] font-semibold">{profileName || "LinkedIn profile"}</div>
           <div className="mt-[4px] text-[13px] leading-[19px] text-customColor18">
             Optimizing your profile can improve conversion from people who visit your LinkedIn profile.
           </div>
         </div>
       </div>
 
-      {loading && <div className="rounded-[10px] border border-newTableBorder bg-newBgColorInner p-[14px] text-[13px] text-customColor18">Analyzing headline and About section...</div>}
+      {loading && (
+        <div className="rounded-[10px] border border-newTableBorder bg-newBgColorInner p-[14px] text-[13px] text-customColor18">
+          Analyzing headline and About section...
+        </div>
+      )}
       {error && <div className="rounded-[10px] border border-[#ef4444]/30 bg-[#ef4444]/10 p-[12px] text-[13px] text-[#ef4444]">{error}</div>}
 
       {!loading && !error && data && (
@@ -536,7 +542,9 @@ const LinkedinProfileOptimizerModal = ({
                   Copy
                 </button>
               </div>
-              <div className="mt-[8px] text-[15px] font-semibold leading-[22px] text-newTextColor">{data.suggestedHeadline || "No headline suggestion available."}</div>
+              <div className="mt-[8px] text-[15px] font-semibold leading-[22px] text-newTextColor">
+                {data.suggestedHeadline || "No headline suggestion available."}
+              </div>
             </section>
           </div>
 
@@ -1141,7 +1149,7 @@ const getDashboardStrategyCopy = (role?: string, audience?: string, goal?: strin
     `${resolvedAudience} should understand what you believe, what you solve, and why your perspective is worth following.`
 
   return {
-    goalSentence: `As a ${resolvedRole}, your goal is to reach ${resolvedAudience} and ${normalizedGoal}.`,
+    goalSentence: `Goal: Reach ${resolvedAudience} and ${normalizedGoal}.`,
     narrative: `Core narrative: ${narrative}`,
   }
 }
@@ -1199,6 +1207,7 @@ export const LinkedinStrategyDashboard = () => {
     () => integrations.find((integration: any) => integration.identifier === "linkedin" && !integration.inBetweenSteps),
     [integrations],
   )
+  const linkedinProfileName = String(linkedinIntegration?.name || "").trim() || "LinkedIn profile"
   const needsWorkspaceSetup =
     !!linkedinIntegration && !!user?.onboardingCompletedAt && linkedinIntegration.onboardingProfileReady === false && !skipWorkspaceSetup
   const linkedinProfileStale = !!linkedinIntegration?.onboardingProfileReady && isOlderThan(linkedinIntegration.linkedinProfileFetchedAt)
@@ -1831,11 +1840,12 @@ export const LinkedinStrategyDashboard = () => {
       classNames: {
         modal: "w-[100%] max-w-[1100px] text-textColor",
       },
-      title: "Optimize LinkedIn profile",
+      title: "Optimize Your LinkedIn profile",
       children: (
         <LinkedinProfileOptimizerModal
           integrationId={linkedinIntegration.id}
           picture={linkedinIntegration.picture}
+          profileName={linkedinProfileName}
           role={onboardingRole}
           audience={onboardingAudience}
           goal={onboardingGoal}
@@ -2304,7 +2314,7 @@ export const LinkedinStrategyDashboard = () => {
 
           <div className="flex flex-col gap-[16px]">
             {linkedinIntegration && (
-              <DashboardCard title="Optimize LinkedIn profile">
+              <DashboardCard title="Optimize Your LinkedIn profile">
                 <div className="mt-[12px] rounded-[10px] border border-newTableBorder bg-newBgColorInner p-[12px]">
                   <div className="flex items-center gap-[12px]">
                     <img
@@ -2313,7 +2323,7 @@ export const LinkedinStrategyDashboard = () => {
                       className="h-[52px] w-[52px] rounded-full border border-newTableBorder object-cover"
                     />
                     <div className="min-w-0">
-                      <div className="text-[15px] font-semibold text-newTextColor">Optimize LinkedIn profile</div>
+                      <div className="truncate text-[15px] font-semibold text-newTextColor">{linkedinProfileName}</div>
                       <div className="mt-[4px] text-[13px] leading-[19px] text-customColor18">
                         Optimizing profile will lead to higher conversion among users who visit your LinkedIn profile.
                       </div>
@@ -2330,7 +2340,7 @@ export const LinkedinStrategyDashboard = () => {
               </DashboardCard>
             )}
 
-            <DashboardCard title="🔄 Repurpose Content">
+            <DashboardCard title="Repurpose Content">
               <div className="mt-[12px] flex flex-col gap-[10px]">
                 {repurposeSources.map((item) => (
                   <div key={item.id} className="rounded-[10px] border border-newTableBorder bg-newBgColorInner p-[12px]">
@@ -2344,23 +2354,23 @@ export const LinkedinStrategyDashboard = () => {
                         {item.button}
                       </button>
                     </div>
-                    <div className="mt-[8px] text-[13px] leading-[19px] text-customColor18 text-gray">{item.shortDescription}</div>
+                    <div className="mt-[8px] text-[9px] leading-[19px] text-customColor18 text-white pl-3">{item.shortDescription}</div>
                   </div>
                 ))}
               </div>
             </DashboardCard>
 
-            <DashboardCard title="⚠️ Needs attention">
+            {/* <DashboardCard title="⚠️ Needs attention">
               <div className="mt-[12px] flex flex-col gap-[10px]">
-                {/* {inputItems.slice(0, 2).map((item) => (
+                {inputItems.slice(0, 2).map((item) => (
                   <div key={item.missing} className="rounded-[10px] bg-newBgColorInner p-[12px]">
                     <div className="text-[13px] font-semibold">{item.missing}</div>
                     <div className="mt-[5px] text-[12px] leading-[18px] text-customColor18">{item.fix}</div>
                   </div>
-                ))} */}
+                ))}
                 <div className="text-center text-[10px] my-10">No items.</div>
               </div>
-            </DashboardCard>
+            </DashboardCard> */}
           </div>
         </div>
 
@@ -2385,8 +2395,9 @@ export const LinkedinStrategyDashboard = () => {
               </div>
             ))}
           </div>
-          <div className="mt-[14px] rounded-[12px] border border-[#8b5cf6]/20 bg-[#8b5cf6]/10 p-[13px] text-[13px] leading-[19px] text-newTextColor">
-            <span className="font-semibold text-[#8b5cf6]">💡 Remember this for your next post:</span> {analyticsSummary.nextAction}
+          <div className="mt-[14px] flex flex-col gap-[6px] rounded-[12px] border border-[#8b5cf6]/20 bg-[#8b5cf6]/10 p-[13px] text-[13px] leading-[19px] text-newTextColor text-center">
+            <div className="font-semibold text-[#8b5cf6]">💡 Remember this for your next post:</div>
+            <div>{analyticsSummary.nextAction}</div>
           </div>
         </DashboardCard>
 
