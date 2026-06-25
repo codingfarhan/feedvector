@@ -496,7 +496,7 @@ const LinkedinProfileOptimizerModal = ({
   }
 
   return (
-    <div className="flex max-h-[78dvh] flex-col gap-[14px] overflow-y-auto text-newTextColor">
+    <div className="flex flex-col gap-[14px] text-newTextColor">
       <div className="flex items-center gap-[12px] rounded-[10px] border border-newTableBorder bg-newBgColorInner p-[12px]">
         <img
           src={picture || "/icons/platforms/linkedin.png"}
@@ -844,7 +844,7 @@ const WeeklyCampaignBuilderModal = ({
         ))}
       </div>
 
-      <div className="sticky bottom-0 flex justify-end gap-[10px] border-t border-newTableBorder bg-newTableHeader py-[12px]">
+      <div className="flex justify-end gap-[10px] border-t border-newTableBorder bg-newTableHeader py-[12px]">
         <button
           type="button"
           disabled={!canSubmit}
