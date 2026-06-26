@@ -1191,7 +1191,7 @@ export const LinkedinStrategyDashboard = () => {
   const modal = useModals()
   const user = useUser()
   const [buildingCampaign, setBuildingCampaign] = useState(false)
-  const [postView, setPostView] = useState<"suggested" | "all">("suggested")
+  const [postView, setPostView] = useState<"suggested" | "all">("all")
   const [nextWeekExpandedOverride, setNextWeekExpandedOverride] = useState<boolean | null>(null)
   const [workspaceSetupRunning, setWorkspaceSetupRunning] = useState(false)
   const [workspaceSetupError, setWorkspaceSetupError] = useState("")
