@@ -14,6 +14,7 @@ import { ExistingDataContextProvider } from "@gitroom/frontend/components/launch
 import { deleteDialog } from "@gitroom/react/helpers/delete.dialog"
 import { ChevronDownIcon, TrashIcon } from "@gitroom/frontend/components/ui/icons"
 import { useAddProvider } from "@gitroom/frontend/components/launches/add.provider.component"
+import { Slider } from "@gitroom/react/form/slider"
 
 type AnalyticsDataItem = {
   key?: string
@@ -109,6 +110,7 @@ type WeeklyCampaignPlanItem = {
 
 type WeeklyCampaignConfirmedItem = WeeklyCampaignPlanItem & {
   answers: Array<WeeklyCampaignQuestion & { answer: string }>
+  useContextFromProfileAndWebsite?: boolean
 }
 
 type WeeklyCampaignAnalyticsHints = {
@@ -602,6 +604,7 @@ const WeeklyCampaignBuilderModal = ({
   const [postCount, setPostCount] = useState(1)
   const [plans, setPlans] = useState<WeeklyCampaignPlanItem[]>([])
   const [answers, setAnswers] = useState<Record<string, Record<number, string>>>({})
+  const [contextByPlan, setContextByPlan] = useState<Record<string, boolean>>({})
   const [loading, setLoading] = useState(false)
   const [generating, setGenerating] = useState(false)
   const [error, setError] = useState("")
@@ -643,6 +646,7 @@ const WeeklyCampaignBuilderModal = ({
         }))
         setPlans(posts)
         setAnswers({})
+        setContextByPlan({})
       } catch (err: any) {
         setError(err?.message || "Could not choose templates")
       } finally {
@@ -706,6 +710,11 @@ const WeeklyCampaignBuilderModal = ({
         delete next[plan.id]
         return next
       })
+      setContextByPlan((current) => {
+        const next = { ...current }
+        delete next[plan.id]
+        return next
+      })
       setPillarChangeSlot(null)
     } catch (err: any) {
       setError(err?.message || "Choose another pillar for this post.")
@@ -718,12 +727,13 @@ const WeeklyCampaignBuilderModal = ({
   const submit = async () => {
     const confirmed = plans.map((plan) => ({
       ...plan,
+      useContextFromProfileAndWebsite: !!contextByPlan[plan.id],
       answers: plan.questions.map((question, index) => ({
         ...question,
         answer: (answers[plan.id]?.[index] || "").trim(),
       })),
     }))
-    const missing = confirmed.some((plan) => plan.answers.some((answer) => !answer.answer))
+    const missing = confirmed.some((plan) => !plan.useContextFromProfileAndWebsite && plan.answers.some((answer) => !answer.answer))
     if (missing) {
       setError("Please fill the requested details for each post, or change the post format.")
       return
@@ -743,7 +753,7 @@ const WeeklyCampaignBuilderModal = ({
   const canSubmit = !loading && !generating && plans.length === postCount && plans.length > 0
 
   return (
-    <div className="flex max-h-[78dvh] flex-col gap-[14px] overflow-y-auto text-newTextColor">
+    <div className="flex flex-col gap-[18px] text-newTextColor">
       <div className="rounded-[10px] border border-newTableBorder bg-newBgColorInner p-[12px] text-[13px] leading-[19px] text-customColor18">
         Choose how many posts you want to create. We’ll assign default draft dates automatically based on open weekdays and your existing LinkedIn
         posts.
@@ -778,10 +788,10 @@ const WeeklyCampaignBuilderModal = ({
         </div>
       )}
 
-      <div className="flex flex-col gap-[12px]">
+      <div className="flex flex-col gap-[18px]">
         {plans.map((plan, index) => (
-          <section key={plan.id} className="rounded-[10px] border border-newTableBorder bg-newBgColorInner p-[13px]">
-            <div className="flex flex-col gap-[10px] sm:flex-row sm:items-start sm:justify-between">
+          <section key={plan.id} className="rounded-[10px] border border-newTableBorder bg-newBgColorInner p-[16px]">
+            <div className="flex flex-col gap-[14px] sm:flex-row sm:items-start sm:justify-between">
               <div>
                 <div className="text-[14px] font-semibold">Post {index + 1}</div>
                 <div className="mt-[5px] flex flex-wrap gap-[6px]">
@@ -795,9 +805,9 @@ const WeeklyCampaignBuilderModal = ({
               <button
                 type="button"
                 onClick={() => replaceTemplate(plan)}
-                className="rounded-[8px] border border-newTableBorder bg-newTableHeader px-[10px] py-[7px] text-[12px] font-semibold text-newTextColor"
+                className="rounded-[8px] border border-[#8b5cf6]/40 bg-[#8b5cf6] px-[12px] py-[8px] text-[12px] font-semibold text-white hover:bg-[#7c3aed]"
               >
-                Don&apos;t have this information? Change post format
+                Change post format
               </button>
             </div>
 
@@ -819,10 +829,31 @@ const WeeklyCampaignBuilderModal = ({
               </div>
             )}
 
-            <div className="mt-[12px] grid gap-[10px]">
+            <div className="mt-[16px] flex items-center justify-between gap-[14px] rounded-[10px] border border-newTableBorder bg-newTableHeader p-[12px]">
+              <span className="min-w-0 text-[13px] font-semibold leading-[18px]">
+                Use context from LinkedIn profile and Website content (if provided)?
+              </span>
+              <div className={`shrink-0 rounded-[100px] ${contextByPlan[plan.id] ? "" : "[&>div]:!bg-newBgColorInner"}`}>
+                <Slider
+                  value={contextByPlan[plan.id] ? "on" : "off"}
+                  fill={true}
+                  onChange={(value) =>
+                    setContextByPlan((current) => ({
+                      ...current,
+                      [plan.id]: value === "on",
+                    }))
+                  }
+                />
+              </div>
+            </div>
+
+            <div className="mt-[16px] grid gap-[14px]">
               {plan.questions.map((question, questionIndex) => (
-                <label key={`${plan.id}-${questionIndex}`} className="flex flex-col gap-[6px] text-[13px] font-semibold">
-                  {question.question}
+                <label key={`${plan.id}-${questionIndex}`} className="flex flex-col gap-[8px] text-[13px] font-semibold">
+                  <span>
+                    {question.question}
+                    {contextByPlan[plan.id] && <span className="font-normal text-customColor18"> Optional</span>}
+                  </span>
                   <textarea
                     rows={3}
                     value={answers[plan.id]?.[questionIndex] || ""}
@@ -844,7 +875,7 @@ const WeeklyCampaignBuilderModal = ({
         ))}
       </div>
 
-      <div className="flex justify-end gap-[10px] border-t border-newTableBorder bg-newTableHeader py-[12px]">
+      <div className="flex justify-center gap-[10px] border-t border-newTableBorder bg-newTableHeader py-[12px]">
         <button
           type="button"
           disabled={!canSubmit}
@@ -1610,6 +1641,7 @@ export const LinkedinStrategyDashboard = () => {
               slot: item.slot,
               date: item.date,
               analyticsRecommended: !!item.analyticsRecommended,
+              useContextFromProfileAndWebsite: !!item.useContextFromProfileAndWebsite,
               answers: item.answers,
             })),
           }),

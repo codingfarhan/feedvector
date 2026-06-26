@@ -250,6 +250,10 @@ export class WeeklyCampaignGenerateTemplateDto {
   @IsBoolean()
   analyticsRecommended?: boolean;
 
+  @IsOptional()
+  @IsBoolean()
+  useContextFromProfileAndWebsite?: boolean;
+
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => WeeklyCampaignAnswerDto)
