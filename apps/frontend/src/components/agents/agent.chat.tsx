@@ -54,13 +54,13 @@ export const AgentChat: FC = () => {
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="bg-newBgColorInner/90 border border-newTableBorder rounded-[12px] px-[24px] py-[20px] text-center max-w-[460px] shadow-lg">
             <div className="text-[20px] font-semibold mb-[6px]">
-              {t("upgrade_to_use_agent", "Upgrade to Pro to use the AI Agent for managing social media")}
+              {t("upgrade_to_use_agent", "Upgrade your plan to use the AI Agent for managing social media")}
             </div>
             <div className="text-[14px] text-newTableText mb-[16px]">
               {t("trial_agent_cta", "Create posts, schedule content, and automate workflows with your AI assistant.")}
             </div>
             <div className="flex justify-center">
-              <Button onClick={() => router.push("/billing")}>{t("upgrade_to_pro", "Upgrade to Pro")}</Button>
+              <Button onClick={() => router.push("/billing")}>{t("upgrade_plan", "Upgrade plan")}</Button>
             </div>
           </div>
         </div>

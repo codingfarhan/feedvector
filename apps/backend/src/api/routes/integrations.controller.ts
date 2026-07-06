@@ -90,7 +90,7 @@ export class IntegrationsController {
             internalId: p.internalId,
             disabled: p.disabled,
             onboardingProfileReady:
-              p.providerIdentifier !== 'linkedin' ||
+              !['linkedin', 'linkedin-page'].includes(p.providerIdentifier) ||
               (!!p.linkedinProfileContext &&
                 !!p.onboardingRole &&
                 !!p.onboardingAudience &&
@@ -98,6 +98,9 @@ export class IntegrationsController {
             linkedinProfileFetchedAt: p.linkedinProfileFetchedAt,
             onboardingWebsiteUrl: p.onboardingWebsiteUrl,
             onboardingWebsiteScrapedAt: p.onboardingWebsiteScrapedAt,
+            onboardingRole: p.onboardingRole,
+            onboardingAudience: p.onboardingAudience,
+            onboardingGoal: p.onboardingGoal,
             editor: findIntegration?.editor,
             picture: p.picture || '/no-picture.jpg',
             identifier: p.providerIdentifier,

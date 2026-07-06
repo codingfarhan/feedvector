@@ -4,8 +4,8 @@ import React from "react"
 import { useT } from "@gitroom/react/translation/get.transation.service.client"
 import { Button } from "@gitroom/react/form/button"
 import { useRouter } from "next/navigation"
-import clsx from "clsx"
 import { Features } from "@gitroom/frontend/components/billing/main.billing.component"
+import { pricing } from "@gitroom/nestjs-libraries/database/prisma/subscriptions/pricing"
 
 export const PricingComponent = () => {
   const t = useT()
@@ -22,26 +22,27 @@ export const PricingComponent = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-[20px]">
           <div className="border border-newTableBorder rounded-[14px] p-[24px] bg-newTableHeader flex flex-col gap-[18px]">
             <div className="flex items-center justify-between">
-              <div className="text-[20px] font-semibold">{t("free_plan", "Free")}</div>
-              <div className="text-[20px] font-semibold">$0</div>
+              <div className="text-[20px] font-semibold">Essential</div>
+              <div className="text-[20px] font-semibold">${pricing.ESSENTIAL.month_price}</div>
             </div>
             <div className="text-[14px] text-newTableText">{t("per_month", "per month")}</div>
             <div className="h-[1px] bg-newTableBorder" />
-            <Features pack="FREE" />
+            <Features pack="ESSENTIAL" />
+            <div className="pt-[6px]">
+              <Button onClick={() => router.push("/billing")}>Choose Essential</Button>
+            </div>
           </div>
 
-          <div
-            className={clsx("border border-[#612bd3]/50 rounded-[14px] p-[24px] bg-newTableHeader flex flex-col gap-[18px] relative overflow-hidden")}
-          >
+          <div className="border border-[#612bd3]/50 rounded-[14px] p-[24px] bg-newTableHeader flex flex-col gap-[18px] relative overflow-hidden">
             <div className="flex items-center justify-between">
-              <div className="text-[20px] font-semibold">{t("pro_plan", "Pro")}</div>
-              <div className="text-[20px] font-semibold">$29</div>
+              <div className="text-[20px] font-semibold">Growth</div>
+              <div className="text-[20px] font-semibold">${pricing.GROWTH.month_price}</div>
             </div>
             <div className="text-[14px] text-newTableText">{t("per_month", "per month")}</div>
             <div className="h-[1px] bg-newTableBorder" />
-            <Features pack="PRO" />
+            <Features pack="GROWTH" />
             <div className="pt-[6px]">
-              <Button onClick={() => router.push("/billing")}>{t("upgrade_to_pro", "Upgrade to Pro")}</Button>
+              <Button onClick={() => router.push("/billing")}>Choose Growth</Button>
             </div>
           </div>
         </div>

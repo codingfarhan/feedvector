@@ -49,6 +49,7 @@ type LinkedinProfilePost = {
   resharer_comment?: string
   text?: string
   urn?: string
+  url?: string
   video?: { duration?: number; stream_url?: string }
 }
 
@@ -654,7 +655,7 @@ export class LinkedinProvider extends SocialAbstract implements SocialProvider {
     return [this.createPostResponse(commentPostId, commentPost.id, false)]
   }
 
-  private linkedinProfileUrl(profile?: string | null) {
+  protected linkedinProfileUrl(profile?: string | null) {
     if (!profile) {
       return ""
     }
@@ -664,6 +665,10 @@ export class LinkedinProvider extends SocialAbstract implements SocialProvider {
     }
 
     return `https://www.linkedin.com/in/${profile.replace(/^@/, "")}/`
+  }
+
+  protected linkedinPostsEndpoint(linkedinUrl: string) {
+    return `https://fresh-linkedin-profile-data.p.rapidapi.com/get-profile-posts?linkedin_url=${encodeURIComponent(linkedinUrl)}&type=posts`
   }
 
   private profilePostActivityDate(post: LinkedinProfilePost) {
@@ -678,15 +683,11 @@ export class LinkedinProvider extends SocialAbstract implements SocialProvider {
     }
 
     if (post.reshared) {
-      if (!post.repost_stats) {
-        return undefined
-      }
-
       return {
         post,
-        stats: post.repost_stats,
+        stats: post.repost_stats || post,
         date,
-        text: post.resharer_comment || "",
+        text: post.resharer_comment || post.text || "",
         reshared: true,
       }
     }
@@ -702,7 +703,24 @@ export class LinkedinProvider extends SocialAbstract implements SocialProvider {
 
   private profilePostEngagement(post: LinkedinProfilePerformancePost) {
     const stats = post.stats
-    return Number(stats.num_reactions || 0) + Number(stats.num_comments || 0) + Number(stats.num_reposts || 0)
+    return this.profilePostReactions(stats) + Number(stats.num_comments || 0) + Number(stats.num_reposts || 0)
+  }
+
+  private profilePostReactions(stats: Partial<LinkedinProfilePost>) {
+    const explicitReactions = Number(stats.num_reactions || 0)
+    if (explicitReactions > 0) {
+      return explicitReactions
+    }
+
+    return (
+      Number(stats.num_likes || 0) +
+      Number(stats.num_praises || 0) +
+      Number(stats.num_empathy || 0) +
+      Number(stats.num_interests || 0) +
+      Number(stats.num_appreciations || 0) +
+      Number(stats.num_entertainments || 0) +
+      Number(stats.num_maybe || 0)
+    )
   }
 
   private profilePostMediaType(post: LinkedinProfilePerformancePost) {
@@ -730,7 +748,7 @@ export class LinkedinProvider extends SocialAbstract implements SocialProvider {
   }
 
   private profilePostLabel(post: LinkedinProfilePerformancePost) {
-    const text = (post.text || post.post.text || post.post.post_url || post.post.urn || "Post").replace(/\s+/g, " ").trim()
+    const text = (post.text || post.post.text || post.post.post_url || post.post.url || post.post.urn || "Post").replace(/\s+/g, " ").trim()
 
     return text.length > 72 ? `${text.slice(0, 69)}...` : text
   }
@@ -955,7 +973,7 @@ export class LinkedinProvider extends SocialAbstract implements SocialProvider {
 
     try {
       const response = await this.fetch(
-        `https://fresh-linkedin-profile-data.p.rapidapi.com/get-profile-posts?linkedin_url=${encodeURIComponent(linkedinUrl)}&type=posts`,
+        this.linkedinPostsEndpoint(linkedinUrl),
         {
           method: "GET",
           headers: {
@@ -1025,7 +1043,7 @@ export class LinkedinProvider extends SocialAbstract implements SocialProvider {
       const totals = posts.reduce(
         (all, post) => {
           const stats = post.stats
-          all.reactions += Number(stats.num_reactions || 0)
+          all.reactions += this.profilePostReactions(stats)
           all.comments += Number(stats.num_comments || 0)
           all.reposts += Number(stats.num_reposts || 0)
           all.textLength += post.text.length
@@ -1116,14 +1134,14 @@ export class LinkedinProvider extends SocialAbstract implements SocialProvider {
           total: this.profilePostEngagement(post),
           comments: Number(post.stats.num_comments || 0),
           reposts: Number(post.stats.num_reposts || 0),
-          reactions: Number(post.stats.num_reactions || 0),
+          reactions: this.profilePostReactions(post.stats),
           format: this.profilePostMediaType(post),
           topic: classificationFor(post).topic,
           hookStyle: classificationFor(post).hookStyle,
           classificationConfidence: classificationFor(post).confidence,
           ctaStyle: this.profilePostCtaStyle(post),
           reshared: post.reshared,
-          postUrl: post.post.post_url,
+          postUrl: post.post.post_url || post.post.url,
           publishedAt: dayjs.utc(post.date).utcOffset(timezone).format("ddd, MMM D [at] h:mm A"),
           timestamp: dayjs.utc(post.date).utcOffset(timezone).valueOf(),
           vsAverage: averageEngagement ? Number((this.profilePostEngagement(post) / averageEngagement).toFixed(1)) : 0,
@@ -1160,7 +1178,7 @@ export class LinkedinProvider extends SocialAbstract implements SocialProvider {
             classificationConfidence: classificationFor(bestPost).confidence,
             format: this.profilePostMediaType(bestPost),
             publishedAt: dayjs.utc(bestPost.date).utcOffset(timezone).format("dddd [at] h:mm A"),
-            postUrl: bestPost.post.post_url,
+            postUrl: bestPost.post.post_url || bestPost.post.url,
           }
         : undefined
       const nextDecision = {
@@ -1200,11 +1218,11 @@ export class LinkedinProvider extends SocialAbstract implements SocialProvider {
         single("Engagement on your best post", bestPostEngagement, "best_post_engagement", bestPostMeta),
         single("Most-commented on post", Number(mostCommentedPost?.stats.num_comments || 0), "most_commented_post", {
           preview: mostCommentedPost ? this.profilePostLabel(mostCommentedPost) : "",
-          postUrl: mostCommentedPost?.post.post_url,
+          postUrl: mostCommentedPost?.post.post_url || mostCommentedPost?.post.url,
         }),
         single("Your post with most Reposts", Number(mostRepostedPost?.stats.num_reposts || 0), "most_reposted_post", {
           preview: mostRepostedPost ? this.profilePostLabel(mostRepostedPost) : "",
-          postUrl: mostRepostedPost?.post.post_url,
+          postUrl: mostRepostedPost?.post.post_url || mostRepostedPost?.post.url,
         }),
         single("Average posts per week", postsPerWeek.toFixed(1), "posts_per_week", {
           postsAnalyzed: activityPosts.length,

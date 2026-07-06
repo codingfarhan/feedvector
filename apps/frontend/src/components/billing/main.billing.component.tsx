@@ -10,7 +10,7 @@ import { deleteDialog } from "@gitroom/react/helpers/delete.dialog"
 import { useToaster } from "@gitroom/react/toaster/toaster"
 import dayjs from "dayjs"
 import clsx from "clsx"
-import { pricing } from "@gitroom/nestjs-libraries/database/prisma/subscriptions/pricing"
+import { ActiveBillingPlan, ACTIVE_BILLING_PLANS, pricing } from "@gitroom/nestjs-libraries/database/prisma/subscriptions/pricing"
 import { FAQComponent } from "@gitroom/frontend/components/billing/faq.component"
 import { useSWRConfig } from "swr"
 import { useUser } from "@gitroom/frontend/components/layout/user.context"
@@ -32,7 +32,7 @@ import { openRazorpayCheckout } from "@gitroom/frontend/components/billing/razor
 
 export const Prorate: FC<{
   period: "MONTHLY" | "YEARLY"
-  pack: "STANDARD" | "PRO"
+  pack: ActiveBillingPlan
 }> = (props) => {
   const { period, pack } = props
   const t = useT()
@@ -76,11 +76,70 @@ export const Prorate: FC<{
     </div>
   )
 }
+
+const billingPlanDescriptions: Record<ActiveBillingPlan, string> = {
+  ESSENTIAL: "For teams that already have a LinkedIn strategy and need one place to execute it.",
+  GROWTH: "For B2B founders and teams that want a structured LinkedIn growth system, not another tool to configure alone.",
+}
+
+const billingPlanFeatures: Record<ActiveBillingPlan, string[]> = {
+  ESSENTIAL: [
+    "5 social media channels",
+    "Invite 2 more users to your team",
+    "Full self-service FeedVector software",
+    "One onboarding call",
+    "Content planning and scheduling",
+    "Approval workflows",
+    "Engagement discovery",
+    "LinkedIn analytics and recommendations",
+    "AI-assisted post drafting",
+    "LinkedIn post templates",
+    "Website, profile, and past-post repurposing",
+    "Recommended LinkedIn posts to comment on",
+    "Auto actions for repeat publishing tasks",
+    "Third-party integrations with the FeedVector app",
+    "AI autocomplete for LinkedIn drafts",
+    "AI copilots for LinkedIn content creation",
+    "Advanced picture editor for LinkedIn visuals",
+    "100 AI images per month",
+    "35 AI videos per month",
+    "Support",
+  ],
+  GROWTH: [
+    "Everything in Essential",
+    "Full FeedVector software access, without limits",
+    "Unlimited social media channels and users",
+    "Invite unlimited users to your team",
+    "Professionally configured brand strategy",
+    "Guided onboarding",
+    "Trackable content goals",
+    "200 AI images per month",
+    "50 AI videos per month",
+    "Monthly review call",
+    "24/7 Priority support",
+  ],
+}
+
+const doneForYouFeatures = [
+  "Fully manage 1 Founder profile",
+  "Fully manage 1 Company page",
+  "Content planning",
+  "Writing and editing",
+  "Scheduling",
+  "Monthly reporting",
+  "Ongoing performance reviews",
+  "Monthly review call",
+]
+
 export const Features: FC<{
-  pack: "FREE" | "STANDARD" | "PRO"
+  pack: "FREE" | "STANDARD" | "PRO" | ActiveBillingPlan
 }> = (props) => {
   const { pack } = props
   const features = useMemo(() => {
+    if (pack === "ESSENTIAL" || pack === "GROWTH") {
+      return billingPlanFeatures[pack]
+    }
+
     if (pack === "FREE") {
       return [
         "1 LinkedIn account",
@@ -243,6 +302,8 @@ export const MainBillingComponent: FC<{
   const [loading, setLoading] = useState<boolean>(false)
   const period: "MONTHLY" = "MONTHLY"
   const [initialChannels, setInitialChannels] = useState(sub?.totalChannels || 1)
+  const doneForYouBookingUrl =
+    process.env.NEXT_PUBLIC_DONE_FOR_YOU_BOOKING_URL || "mailto:contact@feedvector.com?subject=Done-for-you%20FeedVector%20service"
   useEffect(() => {
     if (initialChannels !== sub?.totalChannels) {
       setInitialChannels(sub?.totalChannels || 1)
@@ -255,8 +316,42 @@ export const MainBillingComponent: FC<{
     }
     return subscription?.subscriptionTier
   }, [subscription, initialChannels])
+  const getPlanLimitMessages = useCallback(
+    async (billing: ActiveBillingPlan) => {
+      const targetPricing = pricing[billing]
+      const [{ integrations }, team] = await Promise.all([
+        (await fetch("/integrations/list")).json(),
+        (await fetch("/settings/team")).json(),
+      ])
+      const activeChannels = (integrations || []).filter(
+        (integration: any) => !integration.disabled && !integration.inBetweenSteps,
+      ).length
+      const teamMembers = (team?.users || []).length
+      const channelLimit = targetPricing.channel || 0
+      const teamMemberLimit = targetPricing.team_member_limit || 0
+      const planName = billing === "ESSENTIAL" ? "Essential" : "Growth"
+      const messages: string[] = []
+
+      if (channelLimit && activeChannels > channelLimit) {
+        const excessChannels = activeChannels - channelLimit
+        messages.push(
+          `${planName} allows ${channelLimit} ${channelLimit === 1 ? "channel" : "channels"}. You currently have ${activeChannels}. Please remove ${excessChannels} ${excessChannels === 1 ? "channel" : "channels"} before changing plans.`,
+        )
+      }
+
+      if (teamMemberLimit && teamMembers > teamMemberLimit) {
+        const excessTeamMembers = teamMembers - teamMemberLimit
+        messages.push(
+          `${planName} allows ${teamMemberLimit} team members including you. You currently have ${teamMembers}. Please remove ${excessTeamMembers} ${excessTeamMembers === 1 ? "team member" : "team members"} before changing plans.`,
+        )
+      }
+
+      return messages
+    },
+    [fetch],
+  )
   const moveToCheckout = useCallback(
-    (billing: "STANDARD" | "PRO" | "FREE", reactivate = false) =>
+    (billing: ActiveBillingPlan | "FREE", reactivate = false) =>
       async () => {
         if (reactivate) {
           fireEvents("billing_reactivate_clicked", {
@@ -359,10 +454,30 @@ export const MainBillingComponent: FC<{
           period,
           from_plan: subscription?.subscriptionTier,
         })
+        const planLimitMessages = await getPlanLimitMessages(billing)
+        if (planLimitMessages.length) {
+          toast.show(planLimitMessages.join(" "), "warning")
+          return
+        }
         if (messages.length && !(await deleteDialog(messages.join(", "), "Yes, continue"))) {
           return
         }
         setLoading(true)
+        const subscribeResponse = await fetch("/billing/subscribe", {
+          method: "POST",
+          body: JSON.stringify({
+            period: "MONTHLY",
+            utm,
+            billing,
+            ...(dub ? { dub } : {}),
+          }),
+        })
+        const subscribeJson = await subscribeResponse.json()
+        if (!subscribeResponse.ok) {
+          toast.show(subscribeJson?.message || subscribeJson?.msg || "Could not start checkout", "warning")
+          setLoading(false)
+          return
+        }
         const {
           subscriptionId,
           keyId,
@@ -370,17 +485,7 @@ export const MainBillingComponent: FC<{
           currency,
           name: planName,
           description,
-        } = await (
-          await fetch("/billing/subscribe", {
-            method: "POST",
-            body: JSON.stringify({
-              period: "MONTHLY",
-              utm,
-              billing,
-              ...(dub ? { dub } : {}),
-            }),
-          })
-        ).json()
+        } = subscribeJson
         if (subscriptionId && keyId) {
           await track(TrackEnum.InitiateCheckout, {
             value: pricing[billing].month_price,
@@ -403,14 +508,14 @@ export const MainBillingComponent: FC<{
               })
               setSubscription((subs) => ({
                 ...subs!,
-                subscriptionTier: billing,
+                subscriptionTier: billing as any,
                 cancelAt: null,
               }))
               mutate(
                 "/user/self",
                 {
                   ...user,
-                  tier: billing,
+                  tier: pricing[billing],
                 },
                 {
                   revalidate: false,
@@ -422,12 +527,12 @@ export const MainBillingComponent: FC<{
         }
         setLoading(false)
       },
-    [subscription, user, utm, fireEvents],
+    [subscription, user, utm, fireEvents, getPlanLimitMessages, toast],
   )
-  if (user?.isLifetime) {
-    router.replace("/")
-    return null
-  }
+  // if (user?.isLifetime) {
+  //   router.replace("/")
+  //   return null
+  // }
   return (
     <div className="flex flex-col gap-[16px]">
       <div className="flex flex-row">
@@ -436,51 +541,66 @@ export const MainBillingComponent: FC<{
 
       {finishTrial && <FinishTrial close={() => setFinishTrial(false)} />}
       <div className="flex gap-[16px] [@media(max-width:1024px)]:flex-col [@media(max-width:1024px)]:text-center">
-        {Object.entries(pricing)
-          .filter((f) => ["FREE", "PRO"].includes(f[0]))
-          .map(([name, values]) => (
-            <div
-              key={name}
-              className="flex-1 bg-sixth border border-customColor6 rounded-[4px] p-[24px] gap-[16px] flex flex-col [@media(max-width:1024px)]:items-center"
-            >
-              <div className="text-[18px]">{name}</div>
-              <div className="text-[38px] flex gap-[2px] items-center">
-                <div>${values.month_price}</div>
-                <div className={`text-[14px] text-customColor18`}>/month</div>
-              </div>
-              <div className="text-[14px] flex gap-[10px]">
-                {currentPackage === name.toUpperCase() && subscription?.cancelAt ? (
-                  <div className="gap-[3px] flex flex-col">
-                    <div>
-                      <Button onClick={moveToCheckout("FREE", true)} loading={loading}>
-                        {t("reactivate_subscription", "Reactivate subscription")}
-                      </Button>
-                    </div>
+        {ACTIVE_BILLING_PLANS.map((name) => [name, pricing[name]] as const).map(([name, values]) => (
+          <div
+            key={name}
+            className={clsx(
+              "flex-1 bg-sixth border border-customColor6 rounded-[4px] p-[24px] gap-[16px] flex flex-col [@media(max-width:1024px)]:items-center",
+              name === "GROWTH" && "border-[#8b5cf6]/60",
+            )}
+          >
+            <div className="flex items-center gap-[8px]">
+              <div className="text-[18px]">{name === "ESSENTIAL" ? "Essential" : "Growth"}</div>
+              {name === "GROWTH" && (
+                <div className="rounded-full bg-[#8b5cf6]/15 px-[8px] py-[3px] text-[11px] font-semibold text-[#8b5cf6]">Popular</div>
+              )}
+            </div>
+            <div className="min-h-[44px] text-[13px] leading-[20px] text-customColor18">{billingPlanDescriptions[name]}</div>
+            <div className="text-[38px] flex gap-[2px] items-center">
+              <div>${values.month_price}</div>
+              <div className={`text-[14px] text-customColor18`}>/month</div>
+            </div>
+            <div className="text-[14px] flex gap-[10px]">
+              {currentPackage === name.toUpperCase() && subscription?.cancelAt ? (
+                <div className="gap-[3px] flex flex-col">
+                  <div>
+                    <Button onClick={moveToCheckout("FREE", true)} loading={loading}>
+                      {t("reactivate_subscription", "Reactivate subscription")}
+                    </Button>
                   </div>
-                ) : (
-                  <Button
-                    loading={loading}
-                    disabled={(!!subscription?.cancelAt && name.toUpperCase() === "FREE") || currentPackage === name.toUpperCase()}
-                    className={clsx(subscription && name.toUpperCase() === "FREE" && "!bg-red-500")}
-                    onClick={moveToCheckout(name.toUpperCase() as "STANDARD" | "PRO")}
-                  >
-                    {currentPackage === name.toUpperCase()
-                      ? "Current Plan"
-                      : name.toUpperCase() === "FREE"
-                      ? subscription?.cancelAt
-                        ? `Downgrade on ${dayjs.utc(subscription?.cancelAt).local().format("D MMM, YYYY")}`
-                        : "Cancel subscription"
-                      : // @ts-ignore
-                        "Purchase"}
-                  </Button>
-                )}
-                {/* {subscription && currentPackage !== name.toUpperCase() && name !== "FREE" && !!name && (
-                  <Prorate period={period} pack={name.toUpperCase() as "STANDARD" | "PRO"} />
+                </div>
+              ) : (
+                <Button loading={loading} disabled={currentPackage === name} onClick={moveToCheckout(name)}>
+                  {currentPackage === name ? "Current Plan" : name === "ESSENTIAL" ? "Choose Essential" : "Choose Growth"}
+                </Button>
+              )}
+              {/* {subscription && currentPackage !== name && !!name && (
+                  <Prorate period={period} pack={name} />
                 )} */}
-              </div>
-              <Features pack={name.toUpperCase() as "FREE" | "STANDARD" | "PRO"} />
+            </div>
+            <Features pack={name} />
+          </div>
+        ))}
+      </div>
+      <div className="rounded-[4px] border border-[#8b5cf6]/35 bg-sixth p-[24px]">
+        <div className="flex flex-col gap-[16px] lg:flex-row lg:items-start lg:justify-between">
+          <div>
+            <div className="text-[18px] font-semibold">Done-for-you service</div>
+            <div className="mt-[6px] text-[30px] font-semibold">$1,499+/month</div>
+            <div className="mt-[6px] max-w-[620px] text-[13px] leading-[20px] text-customColor18">
+              For founders and teams that want FeedVector to manage the LinkedIn growth system with them.
+            </div>
+          </div>
+          <Button onClick={() => window.open(doneForYouBookingUrl, "_blank")}>Book a call</Button>
+        </div>
+        <div className="mt-[18px] grid gap-[10px] text-[15px] text-customColor18 md:grid-cols-2">
+          {doneForYouFeatures.map((feature) => (
+            <div key={feature} className="flex gap-[10px]">
+              <span className="text-[#8b5cf6]">•</span>
+              <span>{feature}</span>
             </div>
           ))}
+        </div>
       </div>
       {/* {!subscription?.id && <PurchaseCrypto />} */}
       {!!subscription?.id && (

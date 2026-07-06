@@ -18,6 +18,7 @@ import { OrganizationService } from '@gitroom/nestjs-libraries/database/prisma/o
 import { CheckPolicies } from '@gitroom/backend/services/auth/permissions/permissions.ability';
 import { getCookieUrlFromDomain } from '@gitroom/helpers/subdomain/subdomain.management';
 import { pricing } from '@gitroom/nestjs-libraries/database/prisma/subscriptions/pricing';
+import { isActiveBillingPlan } from '@gitroom/nestjs-libraries/database/prisma/subscriptions/pricing';
 import { ApiTags } from '@nestjs/swagger';
 import { UsersService } from '@gitroom/nestjs-libraries/database/prisma/users/users.service';
 import { UserDetailDto } from '@gitroom/nestjs-libraries/dtos/users/user.details.dto';
@@ -25,6 +26,8 @@ import { EmailNotificationsDto } from '@gitroom/nestjs-libraries/dtos/users/emai
 import {
   LinkedinProfileOptimizerDto,
   OnboardingCompleteDto,
+  OnboardingPlanSubscribeDto,
+  OnboardingPlanVerifyDto,
   OnboardingSuggestionDto,
   OnboardingWorkspaceSetupDto,
   RepurposePostDto,
@@ -45,8 +48,16 @@ import { IntegrationService } from '@gitroom/nestjs-libraries/database/prisma/in
 import { OnboardingEnrichmentService } from '@gitroom/nestjs-libraries/onboarding/onboarding.enrichment.service';
 import { OnboardingPostSuggestionService } from '@gitroom/nestjs-libraries/onboarding/onboarding.post-suggestion.service';
 import { LinkedinCommentOpportunityService } from '@gitroom/nestjs-libraries/onboarding/linkedin.comment-opportunity.service';
+import { RazorpayService } from '@gitroom/nestjs-libraries/services/razorpay.service';
 
 const FREE_LINKEDIN_COMMENT_REFRESH_COOLDOWN_SECONDS = 6 * 60 * 60;
+
+type OnboardingWebsiteContextResult = {
+  normalizedUrl: string;
+  pages: any;
+  profile: any;
+  scrapedAt?: Date | null;
+};
 
 @ApiTags('User')
 @Controller('/user')
@@ -60,7 +71,8 @@ export class UsersController {
     private _integrationService: IntegrationService,
     private _onboardingEnrichmentService: OnboardingEnrichmentService,
     private _onboardingPostSuggestionService: OnboardingPostSuggestionService,
-    private _linkedinCommentOpportunityService: LinkedinCommentOpportunityService
+    private _linkedinCommentOpportunityService: LinkedinCommentOpportunityService,
+    private _razorpayService: RazorpayService
   ) {}
   @Get('/self')
   async getSelf(
@@ -73,9 +85,19 @@ export class UsersController {
     }
 
     const impersonate = req.cookies.impersonate || req.headers.impersonate;
-    // @ts-ignore
-    const trialEndsAt = organization?.createdAt
-      ? new Date(organization.createdAt.getTime() + 7 * 24 * 60 * 60 * 1000)
+    const subscription = (
+      organization as typeof organization & {
+        subscription?: {
+          createdAt?: Date;
+          totalChannels?: number;
+          subscriptionTier?: string;
+          isLifetime?: boolean;
+        };
+      }
+    ).subscription;
+    const trialAnchor = subscription?.createdAt || organization?.createdAt;
+    const trialEndsAt = trialAnchor
+      ? new Date(trialAnchor.getTime() + 7 * 24 * 60 * 60 * 1000)
       : null;
     const trialActive =
       !!organization?.isTrailing &&
@@ -90,16 +112,6 @@ export class UsersController {
     const onboardingState = await this._orgService.getOnboardingState(
       organization.id
     );
-    const subscription = (
-      organization as typeof organization & {
-        subscription?: {
-          totalChannels?: number;
-          subscriptionTier?: string;
-          isLifetime?: boolean;
-        };
-      }
-    ).subscription;
-
     return {
       ...user,
       orgId: organization.id,
@@ -110,7 +122,7 @@ export class UsersController {
       // @ts-ignore
       tier:
         subscription?.subscriptionTier ||
-        (!process.env.RAZORPAY_KEY_ID ? 'ULTIMATE' : 'FREE'),
+        (!process.env.RAZORPAY_KEY_ID ? 'GROWTH' : 'FREE'),
       // @ts-ignore
       role,
       // @ts-ignore
@@ -164,19 +176,32 @@ export class UsersController {
         onboardingWebsitePages?: any;
         onboardingWebsiteScrapedAt?: Date | null;
       };
-    let websiteContext:
-      | {
-          normalizedUrl: string;
-          pages: any;
-          profile: any;
-        }
-      | undefined;
+    let websiteContext: OnboardingWebsiteContextResult | undefined;
     let reusedWebsiteContext = false;
-    const normalizedWebsite = websiteUrl
-      ? this._onboardingEnrichmentService.normalizeWebsiteUrl(websiteUrl)
+
+    const getLinkedinProfileContext = async () => {
+      return (
+        storedOnboarding.linkedinProfileContext ||
+        (await this.enrichLinkedInIdentity(selectedIntegration))
+      );
+    };
+
+    const linkedinProfileContext = await getLinkedinProfileContext();
+    const inferredCompanyWebsite =
+      selectedIntegration.providerIdentifier === 'linkedin-page'
+        ? linkedinProfileContext?.company?.website ||
+          linkedinProfileContext?.company?.domain
+        : undefined;
+    const websiteUrlForContext = websiteUrl || inferredCompanyWebsite;
+    const normalizedWebsite = websiteUrlForContext
+      ? this._onboardingEnrichmentService.normalizeWebsiteUrl(
+          websiteUrlForContext
+        )
       : undefined;
 
-    const getWebsiteContext = async () => {
+    const getWebsiteContext = async (): Promise<
+      OnboardingWebsiteContextResult | undefined
+    > => {
       if (!normalizedWebsite) {
         return undefined;
       }
@@ -187,28 +212,44 @@ export class UsersController {
         !!storedOnboarding.onboardingWebsiteProfile;
       reusedWebsiteContext = canReuseWebsiteContext;
 
-      return canReuseWebsiteContext
-        ? {
-            normalizedUrl: normalizedWebsite.normalizedUrl,
-            pages: storedOnboarding.onboardingWebsitePages || [],
-            profile: storedOnboarding.onboardingWebsiteProfile,
-          }
-        : await this._onboardingEnrichmentService.scrapeWebsite(websiteUrl);
-    };
+      if (canReuseWebsiteContext) {
+        return {
+          normalizedUrl: normalizedWebsite.normalizedUrl,
+          pages: storedOnboarding.onboardingWebsitePages || [],
+          profile: storedOnboarding.onboardingWebsiteProfile,
+          scrapedAt: storedOnboarding.onboardingWebsiteScrapedAt || null,
+        };
+      }
 
-    const getLinkedinProfileContext = async () => {
-      return (
-        storedOnboarding.linkedinProfileContext ||
-        (await this._onboardingEnrichmentService.enrichLinkedinProfile(
-          selectedIntegration.profile
-        ))
+      const reusableWebsiteContext =
+        (await this._integrationService.getOnboardingWebsiteContextByUrl(
+          organization.id,
+          normalizedWebsite.normalizedUrl,
+          selectedIntegration.id
+        )) as
+          | {
+              onboardingWebsiteProfile?: any;
+              onboardingWebsitePages?: any;
+              onboardingWebsiteScrapedAt?: Date | null;
+            }
+          | null;
+
+      if (reusableWebsiteContext?.onboardingWebsiteProfile) {
+        reusedWebsiteContext = true;
+        return {
+          normalizedUrl: normalizedWebsite.normalizedUrl,
+          pages: reusableWebsiteContext.onboardingWebsitePages || [],
+          profile: reusableWebsiteContext.onboardingWebsiteProfile,
+          scrapedAt: reusableWebsiteContext.onboardingWebsiteScrapedAt || null,
+        };
+      }
+
+      return await this._onboardingEnrichmentService.scrapeWebsite(
+        websiteUrlForContext
       );
     };
 
-    const [resolvedWebsiteContext, linkedinProfileContext] = await Promise.all([
-      getWebsiteContext(),
-      getLinkedinProfileContext(),
-    ]);
+    const resolvedWebsiteContext = await getWebsiteContext();
     websiteContext = resolvedWebsiteContext;
     const suggestions =
       await this._onboardingPostSuggestionService.generateSuggestions({
@@ -227,15 +268,16 @@ export class UsersController {
         role: onboardingRole,
         audience: onboardingAudience,
         goal: onboardingGoal,
-        websiteUrl: websiteContext?.normalizedUrl || websiteUrl || undefined,
+        websiteUrl:
+          websiteContext?.normalizedUrl || websiteUrlForContext || undefined,
         linkedinProfileContext,
-        websiteProfile: websiteUrl ? websiteContext?.profile : null,
-        websitePages: websiteUrl ? websiteContext?.pages : null,
-        websiteScrapeStatus: websiteUrl ? 'success' : null,
+        websiteProfile: websiteUrlForContext ? websiteContext?.profile : null,
+        websitePages: websiteUrlForContext ? websiteContext?.pages : null,
+        websiteScrapeStatus: websiteUrlForContext ? 'success' : null,
         websiteScrapeError: null,
-        websiteScrapedAt: websiteUrl
+        websiteScrapedAt: websiteUrlForContext
           ? reusedWebsiteContext
-            ? storedOnboarding.onboardingWebsiteScrapedAt || new Date()
+            ? websiteContext?.scrapedAt || new Date()
             : new Date()
           : null,
         contentPillars,
@@ -252,6 +294,82 @@ export class UsersController {
   async completeOnboarding(
     @GetOrgFromRequest() organization: Organization,
     @Body() body: OnboardingCompleteDto
+  ) {
+    if (process.env.RAZORPAY_KEY_ID) {
+      const subscription =
+        await this._subscriptionService.getSubscriptionByOrganizationId(
+          organization.id
+        );
+      if (!subscription?.subscriptionTier) {
+        throw new HttpException(
+          'Please choose a plan and add a card before completing onboarding',
+          402
+        );
+      }
+    }
+
+    return this.completeOnboardingAfterChecks(organization, body);
+  }
+
+  @Post('/onboarding/subscribe')
+  async subscribeToOnboardingPlan(
+    @GetOrgFromRequest() organization: Organization,
+    @GetUserFromRequest() user: User,
+    @Body() body: OnboardingPlanSubscribeDto
+  ) {
+    if (!isActiveBillingPlan(body.billing)) {
+      throw new HttpException('Only Essential and Growth plans are supported', 400);
+    }
+
+    const subscription = await this._razorpayService.createMonthlySubscription(
+      organization.id,
+      user.id,
+      body.billing,
+      { trialDays: 7 }
+    );
+
+    return {
+      subscriptionId: subscription.subscriptionId,
+      keyId: this._razorpayService.getCheckoutKeyId(),
+      amount: subscription.amount,
+      currency: subscription.currency,
+      name: 'FeedVector',
+      description: `${body.billing === 'ESSENTIAL' ? 'Essential' : 'Growth'} Plan - 7-day trial`,
+    };
+  }
+
+  @Post('/onboarding/verify')
+  async verifyOnboardingPlan(
+    @GetOrgFromRequest() organization: Organization,
+    @Body() body: OnboardingPlanVerifyDto
+  ) {
+    if (!isActiveBillingPlan(body.billing)) {
+      throw new HttpException('Only Essential and Growth plans are supported', 400);
+    }
+
+    const isValid = this._razorpayService.verifyCheckoutSignature(
+      body.paymentId,
+      body.subscriptionId,
+      body.signature
+    );
+
+    if (!isValid) {
+      throw new HttpException('Invalid payment signature', 400);
+    }
+
+    await this._razorpayService.activateSubscription(
+      organization.id,
+      body.subscriptionId,
+      body.billing,
+      true
+    );
+
+    return this.completeOnboardingAfterChecks(organization, body);
+  }
+
+  private async completeOnboardingAfterChecks(
+    organization: Organization,
+    body: OnboardingCompleteDto
   ) {
     await this.getOnboardingLinkedInIntegration(
       organization,
@@ -297,25 +415,8 @@ export class UsersController {
     const onboardingState = await this._orgService.getOnboardingState(
       organization.id
     );
-    const onboardingRole = String(
-      onboardingState?.onboardingPersonaOther ||
-        onboardingState?.onboardingPersona ||
-        ''
-    ).trim();
-    const onboardingAudience = String(
-      onboardingState?.onboardingAudience || ''
-    ).trim();
-    const onboardingGoal = String(onboardingState?.onboardingGoal || '').trim();
-
     if (!onboardingState?.onboardingCompletedAt) {
       throw new HttpException('Please complete onboarding first', 400);
-    }
-
-    if (!onboardingRole || !onboardingAudience || !onboardingGoal) {
-      throw new HttpException(
-        'Your onboarding context is incomplete. Please complete onboarding again.',
-        400
-      );
     }
 
     const currentContext = selectedIntegration as typeof selectedIntegration & {
@@ -331,6 +432,29 @@ export class UsersController {
       onboardingWebsiteScrapedAt?: Date | null;
       onboardingContentPillars?: any;
     };
+    const onboardingRole = String(
+      body.role ||
+        currentContext.onboardingRole ||
+        onboardingState?.onboardingPersonaOther ||
+        onboardingState?.onboardingPersona ||
+        ''
+    ).trim();
+    const onboardingAudience = String(
+      body.audience ||
+        currentContext.onboardingAudience ||
+        onboardingState?.onboardingAudience ||
+        ''
+    ).trim();
+    const onboardingGoal = String(
+      body.goal || currentContext.onboardingGoal || onboardingState?.onboardingGoal || ''
+    ).trim();
+
+    if (!onboardingRole || !onboardingAudience || !onboardingGoal) {
+      throw new HttpException(
+        'Confirm the content profile for this LinkedIn identity first.',
+        400
+      );
+    }
 
     const hasCurrentContext =
       !!currentContext.linkedinProfileContext &&
@@ -370,9 +494,7 @@ export class UsersController {
     const linkedinProfileContext =
       !body.refreshLinkedin && currentContext.linkedinProfileContext
         ? currentContext.linkedinProfileContext
-        : await this._onboardingEnrichmentService.enrichLinkedinProfile(
-            selectedIntegration.profile
-          );
+        : await this.enrichLinkedInIdentity(selectedIntegration);
     const previousPillars =
       previousContext?.onboardingRole === onboardingRole &&
       previousContext?.onboardingGoal === onboardingGoal &&
@@ -387,14 +509,19 @@ export class UsersController {
             onboardingGoal,
             true
           );
+    const submittedWebsiteUrl = body.websiteUrl?.trim();
     const existingWebsiteUrl =
+      submittedWebsiteUrl ||
       currentContext.onboardingWebsiteUrl ||
       previousContext?.onboardingWebsiteUrl ||
       undefined;
     const refreshedWebsiteContext =
-      body.refreshWebsite && existingWebsiteUrl
-        ? await this._onboardingEnrichmentService.scrapeWebsite(
-            existingWebsiteUrl
+      (submittedWebsiteUrl || body.refreshWebsite) && existingWebsiteUrl
+        ? await this.getWebsiteContextWithReuse(
+            organization.id,
+            selectedIntegration.id,
+            existingWebsiteUrl,
+            currentContext
           )
         : undefined;
     const websiteUrl =
@@ -425,7 +552,7 @@ export class UsersController {
       : null;
     const websiteScrapedAt = websiteUrl
       ? refreshedWebsiteContext
-        ? new Date()
+        ? refreshedWebsiteContext.scrapedAt || new Date()
         : currentContext.onboardingWebsiteScrapedAt ||
           previousContext?.onboardingWebsiteScrapedAt ||
           null
@@ -487,9 +614,7 @@ export class UsersController {
     const linkedinProfileContext =
       storedContext.linkedinProfileContext ||
       (body.sourceType === 'profile'
-        ? await this._onboardingEnrichmentService.enrichLinkedinProfile(
-            selectedIntegration.profile
-          )
+        ? await this.enrichLinkedInIdentity(selectedIntegration)
         : undefined);
 
     let websiteContext:
@@ -573,9 +698,7 @@ export class UsersController {
       };
     const linkedinProfileContext =
       storedContext.linkedinProfileContext ||
-      (await this._onboardingEnrichmentService.enrichLinkedinProfile(
-        selectedIntegration.profile
-      ));
+      (await this.enrichLinkedInIdentity(selectedIntegration));
 
     return this._onboardingPostSuggestionService.recommendWeeklyCampaignTemplates(
       {
@@ -623,9 +746,7 @@ export class UsersController {
       };
     const linkedinProfileContext =
       storedContext.linkedinProfileContext ||
-      (await this._onboardingEnrichmentService.enrichLinkedinProfile(
-        selectedIntegration.profile
-      ));
+      (await this.enrichLinkedInIdentity(selectedIntegration));
 
     return {
       posts: await this._onboardingPostSuggestionService.generateWeeklyCampaignPosts(
@@ -665,14 +786,14 @@ export class UsersController {
       };
 
     const shouldRefreshProfileContext =
-      !storedContext.linkedinProfileContext?.headline ||
-      !storedContext.linkedinProfileContext?.about;
+      selectedIntegration.providerIdentifier === 'linkedin-page'
+        ? !storedContext.linkedinProfileContext?.company?.description
+        : !storedContext.linkedinProfileContext?.headline ||
+          !storedContext.linkedinProfileContext?.about;
 
     const linkedinProfileContext =
       shouldRefreshProfileContext || !storedContext.linkedinProfileContext
-        ? await this._onboardingEnrichmentService.enrichLinkedinProfile(
-            selectedIntegration.profile
-          )
+        ? await this.enrichLinkedInIdentity(selectedIntegration)
         : storedContext.linkedinProfileContext;
 
     return this._onboardingPostSuggestionService.optimizeLinkedinProfile({
@@ -729,21 +850,21 @@ export class UsersController {
 
     const linkedinProfileContext =
       storedContext.linkedinProfileContext ||
-      (await this._onboardingEnrichmentService.enrichLinkedinProfile(
-        selectedIntegration.profile
-      ));
+      (await this.enrichLinkedInIdentity(selectedIntegration));
     const subscription = (
       organization as typeof organization & {
         subscription?: {
+          createdAt?: Date;
           subscriptionTier?: string;
         };
       }
     ).subscription;
     const subscriptionTier =
       subscription?.subscriptionTier ||
-      (!process.env.RAZORPAY_KEY_ID ? 'ULTIMATE' : 'FREE');
-    const trialEndsAt = organization?.createdAt
-      ? new Date(organization.createdAt.getTime() + 7 * 24 * 60 * 60 * 1000)
+      (!process.env.RAZORPAY_KEY_ID ? 'GROWTH' : 'FREE');
+    const trialAnchor = subscription?.createdAt || organization?.createdAt;
+    const trialEndsAt = trialAnchor
+      ? new Date(trialAnchor.getTime() + 7 * 24 * 60 * 60 * 1000)
       : null;
     const trialActive =
       !!organization?.isTrailing &&
@@ -792,17 +913,88 @@ export class UsersController {
     const selectedIntegration = connectedIntegrations.find(
       (integration) =>
         integration.id === integrationId &&
-        integration.providerIdentifier === 'linkedin'
+        ['linkedin', 'linkedin-page'].includes(integration.providerIdentifier)
     );
 
     if (!selectedIntegration) {
       throw new HttpException(
-        'Connect your personal LinkedIn account first',
+        'Connect your LinkedIn profile or company page first',
         400
       );
     }
 
     return selectedIntegration;
+  }
+
+  private enrichLinkedInIdentity(selectedIntegration: {
+    providerIdentifier: string;
+    profile?: string | null;
+    internalId?: string | null;
+    rootInternalId?: string | null;
+  }) {
+    const profile =
+      selectedIntegration.profile ||
+      selectedIntegration.rootInternalId ||
+      selectedIntegration.internalId;
+
+    if (selectedIntegration.providerIdentifier === 'linkedin-page') {
+      return this._onboardingEnrichmentService.enrichLinkedinCompanyPage(
+        profile
+      );
+    }
+
+    return this._onboardingEnrichmentService.enrichLinkedinProfile(profile);
+  }
+
+  private async getWebsiteContextWithReuse(
+    organizationId: string,
+    integrationId: string,
+    websiteUrl: string,
+    currentContext?: {
+      onboardingWebsiteUrl?: string | null;
+      onboardingWebsiteProfile?: any;
+      onboardingWebsitePages?: any;
+      onboardingWebsiteScrapedAt?: Date | null;
+    }
+  ): Promise<OnboardingWebsiteContextResult> {
+    const normalizedWebsite =
+      this._onboardingEnrichmentService.normalizeWebsiteUrl(websiteUrl);
+
+    if (
+      currentContext?.onboardingWebsiteUrl === normalizedWebsite.normalizedUrl &&
+      currentContext?.onboardingWebsiteProfile
+    ) {
+      return {
+        normalizedUrl: normalizedWebsite.normalizedUrl,
+        pages: currentContext.onboardingWebsitePages || [],
+        profile: currentContext.onboardingWebsiteProfile,
+        scrapedAt: currentContext.onboardingWebsiteScrapedAt || null,
+      };
+    }
+
+    const reusableWebsiteContext =
+      (await this._integrationService.getOnboardingWebsiteContextByUrl(
+        organizationId,
+        normalizedWebsite.normalizedUrl,
+        integrationId
+      )) as
+        | {
+            onboardingWebsiteProfile?: any;
+            onboardingWebsitePages?: any;
+            onboardingWebsiteScrapedAt?: Date | null;
+          }
+        | null;
+
+    if (reusableWebsiteContext?.onboardingWebsiteProfile) {
+      return {
+        normalizedUrl: normalizedWebsite.normalizedUrl,
+        pages: reusableWebsiteContext.onboardingWebsitePages || [],
+        profile: reusableWebsiteContext.onboardingWebsiteProfile,
+        scrapedAt: reusableWebsiteContext.onboardingWebsiteScrapedAt || null,
+      };
+    }
+
+    return this._onboardingEnrichmentService.scrapeWebsite(websiteUrl);
   }
 
   @Get('/personal')

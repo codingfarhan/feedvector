@@ -347,6 +347,28 @@ export class OnboardingPostSuggestionService {
   }
 
   async optimizeLinkedinProfile(input: LinkedinProfileOptimizationInput) {
+    if (input.linkedinProfileContext?.type === "company-page") {
+      const currentDescription = String(input.linkedinProfileContext?.company?.description || input.linkedinProfileContext?.about || "").trim()
+      const desiredPositioning = this.linkedinDesiredPositioning(input.role, input.audience, input.goal)
+      const optimized = await this._openaiService.optimizeLinkedinCompanyDescription({
+        role: input.role,
+        audience: input.audience,
+        goal: input.goal,
+        desiredPositioning,
+        currentDescription,
+        companyData: this.compactLinkedinContext(input.linkedinProfileContext),
+      })
+
+      return {
+        currentHeadline: "",
+        currentAbout: currentDescription,
+        suggestedHeadline: "",
+        suggestedAbout: this.cleanProfileText(optimized.description),
+        desiredPositioning,
+        type: "company-page",
+      }
+    }
+
     const currentHeadline = String(input.linkedinProfileContext?.headline || "").trim()
     const currentAbout = String(input.linkedinProfileContext?.about || "").trim()
     const desiredPositioning = this.linkedinDesiredPositioning(input.role, input.audience, input.goal)

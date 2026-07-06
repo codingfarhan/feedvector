@@ -6,6 +6,14 @@ import {
 import dayjs from 'dayjs';
 import { Organization } from '@prisma/client';
 
+type StoredSubscriptionTier =
+  | 'ESSENTIAL'
+  | 'GROWTH'
+  | 'STANDARD'
+  | 'PRO'
+  | 'TEAM'
+  | 'ULTIMATE';
+
 @Injectable()
 export class SubscriptionRepository {
   constructor(
@@ -164,7 +172,7 @@ export class SubscriptionRepository {
     identifier: string,
     customerId: string,
     totalChannels: number,
-    billing: 'STANDARD' | 'PRO',
+    billing: StoredSubscriptionTier,
     period: 'MONTHLY' | 'YEARLY',
     cancelAt: number | null,
     code?: string,

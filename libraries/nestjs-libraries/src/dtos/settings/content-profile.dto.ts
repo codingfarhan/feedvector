@@ -1,6 +1,10 @@
-import { IsNotEmpty, IsString, MaxLength } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
 
 export class ContentProfileDto {
+  @IsOptional()
+  @IsString()
+  integrationId?: string;
+
   @IsString()
   @IsNotEmpty()
   @MaxLength(120)

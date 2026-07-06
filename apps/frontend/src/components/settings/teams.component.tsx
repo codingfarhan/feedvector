@@ -126,6 +126,8 @@ export const TeamsComponent = () => {
     revalidateOnReconnect: false,
     revalidateIfStale: false,
   })
+  const teamMemberLimit = user?.tier?.team_member_limit
+  const teamMemberLimitReached = !!teamMemberLimit && (data || []).length >= teamMemberLimit
   const remove = useCallback(
     (toRemove: {
         user: {
@@ -184,8 +186,13 @@ export const TeamsComponent = () => {
             </div>
           ))}
         </div>
-        <div>
-          <Button onClick={addMember}>{t("add_another_member", "Add another member")}</Button>
+        <div className="flex flex-col gap-[8px]">
+          {teamMemberLimitReached && (
+            <div className="text-[13px] text-customColor18">
+              {t("team_member_limit_reached", "Your current plan has reached its team member limit. Remove a team member or upgrade your plan to invite more.")}
+            </div>
+          )}
+          <Button disabled={teamMemberLimitReached} onClick={addMember}>{t("add_another_member", "Add another member")}</Button>
         </div>
       </div>
     </div>

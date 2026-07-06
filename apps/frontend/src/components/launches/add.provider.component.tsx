@@ -48,12 +48,11 @@ export const AddProviderButton: FC<{
   const user = useUser()
   const toaster = useToaster()
   const { data: integrations } = useIntegrationList()
-  const isFreePlan = user?.tier.current == "FREE"
   const activeIntegrations = (integrations || []).filter((integration: any) => !integration.disabled && !integration.inBetweenSteps)
   const channelLimit = user?.totalChannels || 1
-  const limitReached = isFreePlan && activeIntegrations.length >= channelLimit
+  const limitReached = activeIntegrations.length >= channelLimit
 
-  const limitMessage = t("free_plan_channel_limit", "Free plan is limited to 1 channel. Upgrade to Pro to add more.")
+  const limitMessage = t("plan_channel_limit", `Your plan can connect up to ${channelLimit} ${channelLimit === 1 ? "channel" : "channels"}. Upgrade your plan to add more.`)
 
   const handleAddClick = useCallback(() => {
     if (limitReached) {
@@ -524,7 +523,7 @@ export const AddProviderComponent: FC<{
           )}
         >
           {social
-            .filter((item) => !onboarding || item.identifier === "linkedin")
+            .filter((item) => !onboarding || ["linkedin", "linkedin-page"].includes(item.identifier))
             .filter((item) => {
               if (!props.invite) {
                 return true

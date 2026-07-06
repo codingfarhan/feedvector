@@ -1,6 +1,6 @@
 "use client"
 
-import React, { FC, useCallback, useMemo } from "react"
+import React, { FC, useCallback, useMemo, useState } from "react"
 import { useFetch } from "@gitroom/helpers/utils/custom.fetch"
 import { useVariables } from "@gitroom/react/helpers/variable.context"
 import { OrganizationSelector } from "@gitroom/frontend/components/layout/organization.selector"
@@ -9,8 +9,7 @@ import { AttachToFeedbackIcon } from "@gitroom/frontend/components/new-layout/se
 import NotificationComponent from "@gitroom/frontend/components/notifications/notification.component"
 import dynamic from "next/dynamic"
 import { LogoTextComponent } from "@gitroom/frontend/components/ui/logo-text.component"
-import { pricing } from "@gitroom/nestjs-libraries/database/prisma/subscriptions/pricing"
-import { capitalize } from "lodash"
+import { ActiveBillingPlan, ACTIVE_BILLING_PLANS, pricing } from "@gitroom/nestjs-libraries/database/prisma/subscriptions/pricing"
 import clsx from "clsx"
 import { Button } from "@gitroom/react/form/button"
 import { CheckIconComponent } from "@gitroom/frontend/components/ui/check.icon.component"
@@ -32,7 +31,7 @@ export const FirstBillingComponent = () => {
   const { razorpayKeyId } = useVariables()
   const user = useUser()
   const dub = useDubClickId()
-  const tier = "PRO"
+  const [tier, setTier] = useState<ActiveBillingPlan>("GROWTH")
   const period: "MONTHLY" = "MONTHLY"
   const fetch = useFetch()
   const modals = useModals()
@@ -96,7 +95,7 @@ export const FirstBillingComponent = () => {
     })
   }, [razorpayKeyId, tier, period, datafast_visitor_id, datafast_session_id, dub, user])
 
-  const price = useMemo(() => Object.entries(pricing).filter(([key]) => key === "PRO"), [])
+  const price = useMemo(() => ACTIVE_BILLING_PLANS.map((key) => [key, pricing[key]] as const), [])
 
   const JoinOver = () => {
     return (
@@ -169,9 +168,11 @@ export const FirstBillingComponent = () => {
             <JoinOver />
           </div>
           <div className="flex flex-col gap-[16px]">
-            <div className="text-[18px] text-customColor18">{t("billing_pro_monthly", "Pro - $29/month")}</div>
+            <div className="text-[18px] text-customColor18">
+              {tier === "ESSENTIAL" ? "Essential" : "Growth"} - ${pricing[tier].month_price}/month
+            </div>
             <Button onClick={startCheckout} disabled={!razorpayKeyId}>
-              {t("upgrade_to_pro", "Upgrade to Pro")}
+              {tier === "ESSENTIAL" ? "Choose Essential" : "Choose Growth"}
             </Button>
           </div>
         </div>
@@ -194,10 +195,12 @@ export const FirstBillingComponent = () => {
                   <div
                     key={key}
                     className={clsx(
-                      "select-none w-[266px] h-[138px] tablet:w-full tablet:h-[124px] p-[24px] tablet:p-[15px] rounded-[20px] flex flex-col border-[1.5px] border-[#618DFF]",
+                      "select-none cursor-pointer w-[266px] h-[138px] tablet:w-full tablet:h-[124px] p-[24px] tablet:p-[15px] rounded-[20px] flex flex-col border-[1.5px]",
+                      tier === key ? "border-[#618DFF]" : "border-newColColor",
                     )}
+                    onClick={() => setTier(key)}
                   >
-                    <div className="text-[20px] mobile:text-[18px] font-[500]">{capitalize(key)}</div>
+                    <div className="text-[20px] mobile:text-[18px] font-[500]">{key === "ESSENTIAL" ? "Essential" : "Growth"}</div>
                     <div className="text-[24px] mobile:text-[18px] font-[400]">
                       <span className="text-[44px] mobile:text-[30px] font-[600]">${value.month_price}</span> {t("billing_per_month", "/ month")}
                     </div>
@@ -246,7 +249,12 @@ export const BillingFeatures: FC<{ tier: string }> = ({ tier }) => {
       prefix: currentPricing.posts_per_month > 10000 ? "unlimited" : currentPricing.posts_per_month,
     })
 
-    if (currentPricing.team_members) {
+    if (currentPricing.team_member_limit && currentPricing.team_member_limit < 1000000) {
+      list.push({
+        key: "billing_limited_team_members",
+        defaultValue: `Invite ${Math.max(0, currentPricing.team_member_limit - 1)} more users to your team`,
+      })
+    } else if (currentPricing.team_members) {
       list.push({
         key: "billing_unlimited_team_members",
         defaultValue: "Unlimited team members",

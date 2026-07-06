@@ -8,6 +8,13 @@ import { ApiTags } from '@nestjs/swagger';
 import { GetUserFromRequest } from '@gitroom/nestjs-libraries/user/user.from.request';
 import { NotificationService } from '@gitroom/nestjs-libraries/database/prisma/notifications/notification.service';
 import { Nowpayments } from '@gitroom/nestjs-libraries/crypto/nowpayments';
+import {
+  ActiveBillingPlan,
+  isActiveBillingPlan,
+  pricing,
+} from '@gitroom/nestjs-libraries/database/prisma/subscriptions/pricing';
+import { IntegrationService } from '@gitroom/nestjs-libraries/database/prisma/integrations/integration.service';
+import { OrganizationService } from '@gitroom/nestjs-libraries/database/prisma/organizations/organization.service';
 
 @ApiTags('Billing')
 @Controller('/billing')
@@ -16,7 +23,9 @@ export class BillingController {
     private _subscriptionService: SubscriptionService,
     private _razorpayService: RazorpayService,
     private _notificationService: NotificationService,
-    private _nowpayments: Nowpayments
+    private _nowpayments: Nowpayments,
+    private _integrationService: IntegrationService,
+    private _organizationService: OrganizationService
   ) {}
 
   @Get('/check/:id')
@@ -73,12 +82,16 @@ export class BillingController {
     @GetUserFromRequest() user: User,
     @Body() body: BillingSubscribeDto
   ) {
-    if (body.billing !== 'PRO' || body.period !== 'MONTHLY') {
-      throw new HttpException('Only PRO monthly plan is supported', 400);
+    if (!isActiveBillingPlan(body.billing) || body.period !== 'MONTHLY') {
+      throw new HttpException('Only Essential and Growth monthly plans are supported', 400);
     }
-    const subscription = await this._razorpayService.createProMonthlySubscription(
+
+    await this.validatePlanUsageBeforeCheckout(org.id, body.billing);
+
+    const subscription = await this._razorpayService.createMonthlySubscription(
       org.id,
-      user.id
+      user.id,
+      body.billing
     );
     return {
       subscriptionId: subscription.subscriptionId,
@@ -86,7 +99,7 @@ export class BillingController {
       amount: subscription.amount,
       currency: subscription.currency,
       name: 'FeedVector',
-      description: 'Pro Plan - $29/month',
+      description: `${body.billing === 'ESSENTIAL' ? 'Essential' : 'Growth'} Plan - $${pricing[body.billing].month_price}/month`,
     };
   }
 
@@ -183,5 +196,55 @@ export class BillingController {
   @Get('/crypto')
   async crypto(@GetOrgFromRequest() org: Organization) {
     return this._nowpayments.createPaymentPage(org.id);
+  }
+
+  private async validatePlanUsageBeforeCheckout(
+    orgId: string,
+    billing: ActiveBillingPlan
+  ) {
+    const targetPricing = pricing[billing];
+    const channelLimit = targetPricing.channel || 0;
+    const teamMemberLimit = targetPricing.team_member_limit || 0;
+    const integrations = await this._integrationService.getIntegrationsList(
+      orgId
+    );
+    const activeChannels = integrations.filter(
+      (integration) => !integration.disabled && !integration.inBetweenSteps
+    ).length;
+    const team = await this._organizationService.getTeam(orgId);
+    const teamMembers = team?.users?.length || 0;
+    const violations: string[] = [];
+
+    if (channelLimit && activeChannels > channelLimit) {
+      violations.push(
+        `${billing === 'ESSENTIAL' ? 'Essential' : 'Growth'} allows ${channelLimit} ${
+          channelLimit === 1 ? 'channel' : 'channels'
+        }. You currently have ${activeChannels}. Please remove ${
+          activeChannels - channelLimit
+        } ${activeChannels - channelLimit === 1 ? 'channel' : 'channels'} before changing plans.`
+      );
+    }
+
+    if (teamMemberLimit && teamMembers > teamMemberLimit) {
+      violations.push(
+        `${billing === 'ESSENTIAL' ? 'Essential' : 'Growth'} allows ${teamMemberLimit} team members including you. You currently have ${teamMembers}. Please remove ${
+          teamMembers - teamMemberLimit
+        } ${teamMembers - teamMemberLimit === 1 ? 'team member' : 'team members'} before changing plans.`
+      );
+    }
+
+    if (violations.length) {
+      throw new HttpException(
+        {
+          message: violations.join(' '),
+          code: 'PLAN_LIMIT_EXCEEDED',
+          activeChannels,
+          channelLimit,
+          teamMembers,
+          teamMemberLimit,
+        },
+        406
+      );
+    }
   }
 }

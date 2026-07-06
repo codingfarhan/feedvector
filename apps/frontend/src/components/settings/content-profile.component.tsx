@@ -5,8 +5,27 @@ import { useSWRConfig } from "swr"
 import { useFetch } from "@gitroom/helpers/utils/custom.fetch"
 import { useUser } from "@gitroom/frontend/components/layout/user.context"
 import { useToaster } from "@gitroom/react/toaster/toaster"
+import { useIntegrationList } from "@gitroom/frontend/components/launches/helpers/use.integration.list"
 
 const roleOptions = ["Founder", "Agency owner", "Consultant", "Freelancer", "Coach", "Creator", "Marketer", "Job seeker / career professional"]
+const companyRoleOptions = [
+  "an accounting services firm",
+  "a legal services firm",
+  "a marketing agency",
+  "a consulting services firm",
+  "a software company",
+  "a SaaS company",
+  "an IT services company",
+  "a financial services firm",
+  "a real estate business",
+  "a healthcare practice",
+  "an HR / recruiting firm",
+  "an ecommerce brand",
+  "a design studio",
+  "a coaching business",
+  "a B2B service provider",
+  "a local services business",
+]
 const audienceOptions = [
   "Founders",
   "Business owners",
@@ -19,6 +38,21 @@ const audienceOptions = [
   "Potential clients",
   "Industry peers",
 ]
+const companyAudienceOptions = [
+  "Small business owners",
+  "Startup founders",
+  "B2B companies",
+  "Local businesses",
+  "Professional services firms",
+  "Marketing teams",
+  "Sales teams",
+  "Finance teams",
+  "Operations leaders",
+  "HR / recruiting teams",
+  "Enterprise buyers",
+  "Potential clients",
+  "Industry partners",
+]
 const goalOptions = [
   "Get inbound leads",
   "Build authority",
@@ -28,6 +62,20 @@ const goalOptions = [
   "Build network",
   "Recruit / hire talent",
 ]
+const companyGoalOptions = goalOptions.filter((goal) => goal !== "Get job opportunities")
+
+type IntegrationItem = {
+  id: string
+  name: string
+  identifier: string
+  picture?: string
+  inBetweenSteps?: boolean
+  onboardingRole?: string | null
+  onboardingAudience?: string | null
+  onboardingGoal?: string | null
+}
+
+const optionsWithCurrentValue = (options: string[], value: string) => (value && !options.includes(value) ? [value, ...options] : options)
 
 const ProfileSelect = ({
   label,
@@ -64,16 +112,51 @@ export const ContentProfileComponent = () => {
   const fetch = useFetch()
   const toaster = useToaster()
   const { mutate } = useSWRConfig()
+  const { data: integrations = [] } = useIntegrationList()
+  const linkedInIntegrations = useMemo(
+    () => integrations.filter((integration: IntegrationItem) => ["linkedin", "linkedin-page"].includes(integration.identifier) && !integration.inBetweenSteps),
+    [integrations],
+  )
+  const [selectedIntegrationId, setSelectedIntegrationId] = useState("")
+  const selectedIntegration =
+    linkedInIntegrations.find((integration: IntegrationItem) => integration.id === selectedIntegrationId) || linkedInIntegrations[0]
+  const isCompanyPage = selectedIntegration?.identifier === "linkedin-page"
   const initialValues = useMemo(
     () => ({
-      role: user?.onboardingPersonaOther || user?.onboardingPersona || "",
-      audience: user?.onboardingAudience || "",
-      goal: user?.onboardingGoal || "",
+      role: selectedIntegration?.onboardingRole || user?.onboardingPersonaOther || user?.onboardingPersona || "",
+      audience: selectedIntegration?.onboardingAudience || user?.onboardingAudience || "",
+      goal: selectedIntegration?.onboardingGoal || user?.onboardingGoal || "",
     }),
-    [user?.onboardingAudience, user?.onboardingGoal, user?.onboardingPersona, user?.onboardingPersonaOther],
+    [
+      selectedIntegration?.onboardingAudience,
+      selectedIntegration?.onboardingGoal,
+      selectedIntegration?.onboardingRole,
+      user?.onboardingAudience,
+      user?.onboardingGoal,
+      user?.onboardingPersona,
+      user?.onboardingPersonaOther,
+    ],
+  )
+  const resolvedRoleOptions = useMemo(
+    () => optionsWithCurrentValue(isCompanyPage ? companyRoleOptions : roleOptions, initialValues.role),
+    [initialValues.role, isCompanyPage],
+  )
+  const resolvedAudienceOptions = useMemo(
+    () => optionsWithCurrentValue(isCompanyPage ? companyAudienceOptions : audienceOptions, initialValues.audience),
+    [initialValues.audience, isCompanyPage],
+  )
+  const resolvedGoalOptions = useMemo(
+    () => optionsWithCurrentValue(isCompanyPage ? companyGoalOptions : goalOptions, initialValues.goal),
+    [initialValues.goal, isCompanyPage],
   )
   const [values, setValues] = useState(initialValues)
   const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    if (!selectedIntegrationId && linkedInIntegrations[0]?.id) {
+      setSelectedIntegrationId(linkedInIntegrations[0].id)
+    }
+  }, [linkedInIntegrations, selectedIntegrationId])
 
   useEffect(() => {
     setValues(initialValues)
@@ -89,7 +172,10 @@ export const ContentProfileComponent = () => {
     try {
       const response = await fetch("/settings/content-profile", {
         method: "POST",
-        body: JSON.stringify(values),
+        body: JSON.stringify({
+          integrationId: selectedIntegration?.id,
+          ...values,
+        }),
       })
 
       if (!response.ok) {
@@ -98,6 +184,7 @@ export const ContentProfileComponent = () => {
       }
 
       await mutate("/user/self")
+      await mutate("/integrations/list")
       toaster.show("Content profile updated", "success")
     } catch (error: any) {
       toaster.show(error?.message || "Could not update content profile", "warning")
@@ -110,17 +197,41 @@ export const ContentProfileComponent = () => {
     <div className="w-full rounded-[12px] border border-newTableBorder bg-newTableHeader p-[18px] text-newTextColor">
       <div className="mb-[18px]">
         <h2 className="text-[20px] font-semibold">Content profile</h2>
+        <p className="mt-[6px] text-[13px] leading-[20px] text-customColor18">
+          Choose the LinkedIn identity whose content profile you want to edit.
+        </p>
       </div>
 
       <div className="grid gap-[14px]">
-        <ProfileSelect label="Role" value={values.role} options={roleOptions} onChange={(role) => setValues((current) => ({ ...current, role }))} />
+        {linkedInIntegrations.length > 0 && (
+          <label className="flex flex-col gap-[8px]">
+            <span className="text-[13px] font-semibold text-newTextColor">LinkedIn identity</span>
+            <select
+              value={selectedIntegration?.id || ""}
+              onChange={(event) => setSelectedIntegrationId(event.target.value)}
+              className="h-[44px] rounded-[10px] border border-newTableBorder bg-newTableHeader px-[12px] text-[14px] text-newTextColor outline-none focus:border-[#8b5cf6]"
+            >
+              {linkedInIntegrations.map((integration: IntegrationItem) => (
+                <option key={integration.id} value={integration.id}>
+                  {integration.name} ({integration.identifier === "linkedin-page" ? "Company page" : "Personal profile"})
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
+        <ProfileSelect
+          label={isCompanyPage ? "Company type" : "Role"}
+          value={values.role}
+          options={resolvedRoleOptions}
+          onChange={(role) => setValues((current) => ({ ...current, role }))}
+        />
         <ProfileSelect
           label="Audience"
           value={values.audience}
-          options={audienceOptions}
+          options={resolvedAudienceOptions}
           onChange={(audience) => setValues((current) => ({ ...current, audience }))}
         />
-        <ProfileSelect label="Goal" value={values.goal} options={goalOptions} onChange={(goal) => setValues((current) => ({ ...current, goal }))} />
+        <ProfileSelect label="Goal" value={values.goal} options={resolvedGoalOptions} onChange={(goal) => setValues((current) => ({ ...current, goal }))} />
       </div>
 
       <div className="mt-[18px] flex justify-end">

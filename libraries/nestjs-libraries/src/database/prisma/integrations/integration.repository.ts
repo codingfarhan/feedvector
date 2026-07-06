@@ -119,7 +119,9 @@ export class IntegrationRepository {
       where: {
         id,
         organizationId: org,
-        providerIdentifier: 'linkedin',
+        providerIdentifier: {
+          in: ['linkedin', 'linkedin-page'],
+        },
       },
       data: {
         onboardingRole: data.role,
@@ -163,7 +165,9 @@ export class IntegrationRepository {
     const profiles = await this._integration.model.integration.findMany({
       where: {
         organizationId: org,
-        providerIdentifier: 'linkedin',
+        providerIdentifier: {
+          in: ['linkedin', 'linkedin-page'],
+        },
         ...(excludeIntegrationId ? { id: { not: excludeIntegrationId } } : {}),
         ...(rootInternalId
           ? {
@@ -205,11 +209,40 @@ export class IntegrationRepository {
     );
   }
 
-  updateContentProfile(org: string, role: string, audience: string, goal: string) {
+  getOnboardingWebsiteContextByUrl(
+    org: string,
+    normalizedWebsiteUrl: string,
+    excludeIntegrationId?: string
+  ) {
+    return this._integration.model.integration.findFirst({
+      where: {
+        organizationId: org,
+        providerIdentifier: {
+          in: ['linkedin', 'linkedin-page'],
+        },
+        onboardingWebsiteUrl: normalizedWebsiteUrl,
+        ...(excludeIntegrationId ? { id: { not: excludeIntegrationId } } : {}),
+      },
+      orderBy: [{ updatedAt: 'desc' }, { createdAt: 'desc' }],
+      select: {
+        onboardingWebsiteUrl: true,
+        onboardingWebsiteProfile: true,
+        onboardingWebsitePages: true,
+        onboardingWebsiteScrapeStatus: true,
+        onboardingWebsiteScrapeError: true,
+        onboardingWebsiteScrapedAt: true,
+      } as any,
+    });
+  }
+
+  updateContentProfile(org: string, role: string, audience: string, goal: string, integrationId?: string) {
     return this._integration.model.integration.updateMany({
       where: {
         organizationId: org,
-        providerIdentifier: 'linkedin',
+        providerIdentifier: {
+          in: ['linkedin', 'linkedin-page'],
+        },
+        ...(integrationId ? { id: integrationId } : {}),
         deletedAt: null,
       },
       data: {

@@ -38,6 +38,75 @@ type OnboardingSuggestion = {
   content: string
 }
 
+const contentProfileRoleOptions = [
+  "Founder",
+  "Agency owner",
+  "Consultant",
+  "Freelancer",
+  "Coach",
+  "Creator",
+  "Marketer",
+  "Job seeker / career professional",
+]
+const companyContentProfileRoleOptions = [
+  "an accounting services firm",
+  "a legal services firm",
+  "a marketing agency",
+  "a consulting services firm",
+  "a software company",
+  "a SaaS company",
+  "an IT services company",
+  "a financial services firm",
+  "a real estate business",
+  "a healthcare practice",
+  "an HR / recruiting firm",
+  "an ecommerce brand",
+  "a design studio",
+  "a coaching business",
+  "a B2B service provider",
+  "a local services business",
+]
+const contentProfileAudienceOptions = [
+  "Founders",
+  "Business owners",
+  "Marketers",
+  "Sales professionals",
+  "Recruiters / hiring managers",
+  "Developers / technical people",
+  "Creators",
+  "Consultants / freelancers",
+  "Potential clients",
+  "Industry peers",
+]
+const companyContentProfileAudienceOptions = [
+  "Small business owners",
+  "Startup founders",
+  "B2B companies",
+  "Local businesses",
+  "Professional services firms",
+  "Marketing teams",
+  "Sales teams",
+  "Finance teams",
+  "Operations leaders",
+  "HR / recruiting teams",
+  "Enterprise buyers",
+  "Potential clients",
+  "Industry partners",
+]
+const contentProfileGoalOptions = [
+  "Get inbound leads",
+  "Build authority",
+  "Grow my audience",
+  "Promote my product/service",
+  "Get job opportunities",
+  "Build network",
+  "Recruit / hire talent",
+]
+const companyContentProfileGoalOptions = contentProfileGoalOptions.filter((goal) => goal !== "Get job opportunities")
+const optionsWithCurrentContentProfileValue = (options: string[], value: string) =>
+  value && !options.includes(value) ? [value, ...options] : options
+const dashboardWebsiteUrlPattern = /^(https?:\/\/)?([a-z0-9-]+\.)+[a-z]{2,}(:\d{2,5})?(\/[^\s]*)?$/i
+
 type CampaignPost = {
   id: string
   group?: string
@@ -127,6 +196,7 @@ type LinkedinProfileOptimizationResult = {
   suggestedHeadline: string
   suggestedAbout: string
   desiredPositioning?: string
+  type?: "company-page"
 }
 
 const LATEST_LINKEDIN_POSTS_KEY = -1
@@ -421,6 +491,7 @@ const LinkedinProfileOptimizerModal = ({
   integrationId,
   picture,
   profileName,
+  integrationType,
   role,
   audience,
   goal,
@@ -428,6 +499,7 @@ const LinkedinProfileOptimizerModal = ({
   integrationId: string
   picture?: string
   profileName?: string
+  integrationType?: string
   role: string
   audience: string
   goal: string
@@ -437,6 +509,7 @@ const LinkedinProfileOptimizerModal = ({
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
   const [data, setData] = useState<LinkedinProfileOptimizationResult | null>(null)
+  const isCompanyPage = integrationType === "linkedin-page" || data?.type === "company-page"
 
   useEffect(() => {
     let active = true
@@ -508,14 +581,16 @@ const LinkedinProfileOptimizerModal = ({
         <div>
           <div className="text-[16px] font-semibold">{profileName || "LinkedIn profile"}</div>
           <div className="mt-[4px] text-[13px] leading-[19px] text-customColor18">
-            Optimizing your profile can improve conversion from people who visit your LinkedIn profile.
+            {isCompanyPage
+              ? "Optimizing your company page description can improve conversion from people who visit your LinkedIn page."
+              : "Optimizing your profile can improve conversion from people who visit your LinkedIn profile."}
           </div>
         </div>
       </div>
 
       {loading && (
         <div className="rounded-[10px] border border-newTableBorder bg-newBgColorInner p-[14px] text-[13px] text-customColor18">
-          Analyzing headline and About section...
+          {isCompanyPage ? "Analyzing company page description..." : "Analyzing headline and About section..."}
         </div>
       )}
       {error && <div className="rounded-[10px] border border-[#ef4444]/30 bg-[#ef4444]/10 p-[12px] text-[13px] text-[#ef4444]">{error}</div>}
@@ -523,53 +598,64 @@ const LinkedinProfileOptimizerModal = ({
       {!loading && !error && data && (
         <>
           <div className="rounded-[10px] border border-newTableBorder bg-newTableHeader p-[12px] text-[12px] leading-[18px] text-customColor18">
-            These are suggested edits based on your role, goal, audience, and LinkedIn profile context. Update them directly on LinkedIn if they fit.
+            {isCompanyPage
+              ? "These are suggested edits based on your role, goal, audience, and LinkedIn company page context. Update the page description on LinkedIn if it fits."
+              : "These are suggested edits based on your role, goal, audience, and LinkedIn profile context. Update them directly on LinkedIn if they fit."}
           </div>
+
+          {!isCompanyPage && (
+            <div className="grid gap-[12px] lg:grid-cols-2">
+              <section className="rounded-[10px] border border-newTableBorder bg-newBgColorInner p-[12px]">
+                <div className="text-[12px] font-semibold uppercase tracking-[0.08em] text-customColor18">Current headline</div>
+                <div className="mt-[8px] text-[15px] font-semibold leading-[22px]">
+                  {data.currentHeadline || "No headline found in the stored LinkedIn profile data."}
+                </div>
+              </section>
+              <section className="rounded-[10px] border border-[#0a66c2]/25 bg-[#0a66c2]/10 p-[12px]">
+                <div className="flex items-start justify-between gap-[10px]">
+                  <div className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#0a66c2]">Suggested headline</div>
+                  <button
+                    type="button"
+                    onClick={() => copyText(data.suggestedHeadline, "Headline")}
+                    className="rounded-[8px] border border-[#0a66c2]/25 bg-white/70 px-[10px] py-[6px] text-[12px] font-semibold text-[#0a66c2] dark:bg-black/10"
+                  >
+                    Copy
+                  </button>
+                </div>
+                <div className="mt-[8px] text-[15px] font-semibold leading-[22px] text-newTextColor">
+                  {data.suggestedHeadline || "No headline suggestion available."}
+                </div>
+              </section>
+            </div>
+          )}
 
           <div className="grid gap-[12px] lg:grid-cols-2">
             <section className="rounded-[10px] border border-newTableBorder bg-newBgColorInner p-[12px]">
-              <div className="text-[12px] font-semibold uppercase tracking-[0.08em] text-customColor18">Current headline</div>
-              <div className="mt-[8px] text-[15px] font-semibold leading-[22px]">
-                {data.currentHeadline || "No headline found in the stored LinkedIn profile data."}
+              <div className="text-[12px] font-semibold uppercase tracking-[0.08em] text-customColor18">
+                {isCompanyPage ? "Current description" : "Current About"}
               </div>
-            </section>
-            <section className="rounded-[10px] border border-[#0a66c2]/25 bg-[#0a66c2]/10 p-[12px]">
-              <div className="flex items-start justify-between gap-[10px]">
-                <div className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#0a66c2]">Suggested headline</div>
-                <button
-                  type="button"
-                  onClick={() => copyText(data.suggestedHeadline, "Headline")}
-                  className="rounded-[8px] border border-[#0a66c2]/25 bg-white/70 px-[10px] py-[6px] text-[12px] font-semibold text-[#0a66c2] dark:bg-black/10"
-                >
-                  Copy
-                </button>
-              </div>
-              <div className="mt-[8px] text-[15px] font-semibold leading-[22px] text-newTextColor">
-                {data.suggestedHeadline || "No headline suggestion available."}
-              </div>
-            </section>
-          </div>
-
-          <div className="grid gap-[12px] lg:grid-cols-2">
-            <section className="rounded-[10px] border border-newTableBorder bg-newBgColorInner p-[12px]">
-              <div className="text-[12px] font-semibold uppercase tracking-[0.08em] text-customColor18">Current About</div>
               <div className="mt-[8px] whitespace-pre-wrap text-[14px] leading-[21px]">
-                {data.currentAbout || "No About section was found in the stored LinkedIn profile data."}
+                {data.currentAbout ||
+                  (isCompanyPage
+                    ? "No company description was found in the stored LinkedIn page data."
+                    : "No About section was found in the stored LinkedIn profile data.")}
               </div>
             </section>
             <section className="rounded-[10px] border border-[#22c55e]/25 bg-[#22c55e]/10 p-[12px]">
               <div className="flex items-start justify-between gap-[10px]">
-                <div className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#22c55e]">Suggested About</div>
+                <div className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#22c55e]">
+                  {isCompanyPage ? "Suggested description" : "Suggested About"}
+                </div>
                 <button
                   type="button"
-                  onClick={() => copyText(data.suggestedAbout, "About section")}
+                  onClick={() => copyText(data.suggestedAbout, isCompanyPage ? "Description" : "About section")}
                   className="rounded-[8px] border border-[#22c55e]/25 bg-white/70 px-[10px] py-[6px] text-[12px] font-semibold text-[#22c55e] dark:bg-black/10"
                 >
                   Copy
                 </button>
               </div>
               <div className="mt-[8px] whitespace-pre-wrap text-[14px] leading-[21px] text-newTextColor">
-                {data.suggestedAbout || "No About section suggestion available."}
+                {data.suggestedAbout || (isCompanyPage ? "No description suggestion available." : "No About section suggestion available.")}
               </div>
             </section>
           </div>
@@ -1181,7 +1267,7 @@ const getDashboardStrategyCopy = (role?: string, audience?: string, goal?: strin
 
   return {
     goalSentence: `Goal: Reach ${resolvedAudience} and ${normalizedGoal}.`,
-    narrative: `Core narrative: ${narrative}`,
+    narrative: narrative,
   }
 }
 
@@ -1197,6 +1283,14 @@ export const LinkedinStrategyDashboard = () => {
   const [workspaceSetupError, setWorkspaceSetupError] = useState("")
   const [skipWorkspaceSetup, setSkipWorkspaceSetup] = useState(false)
   const [refreshingContentContext, setRefreshingContentContext] = useState(false)
+  const [selectedLinkedInIntegrationId, setSelectedLinkedInIntegrationId] = useState("")
+  const [showWebsiteReadyPostCta, setShowWebsiteReadyPostCta] = useState(false)
+  const [workspaceProfileValues, setWorkspaceProfileValues] = useState({
+    role: "",
+    audience: "",
+    goal: "",
+    websiteUrl: "",
+  })
   const today = useMemo(() => new Date(), [])
   const currentWeekStart = useMemo(() => getMonday(today), [today])
   const currentWeekStartKey = useMemo(() => formatDateKey(currentWeekStart), [currentWeekStart])
@@ -1234,11 +1328,76 @@ export const LinkedinStrategyDashboard = () => {
   const channelLimit = user?.totalChannels || 1
   const freeChannelLimitReached = user?.tier?.current === "FREE" && activeIntegrations.length >= channelLimit
 
-  const linkedinIntegration = useMemo(
-    () => integrations.find((integration: any) => integration.identifier === "linkedin" && !integration.inBetweenSteps),
+  const linkedInIntegrations = useMemo(
+    () => integrations.filter((integration: any) => ["linkedin", "linkedin-page"].includes(integration.identifier) && !integration.inBetweenSteps),
     [integrations],
   )
+  const linkedinIntegration = useMemo(
+    () => linkedInIntegrations.find((integration: any) => integration.id === selectedLinkedInIntegrationId) || linkedInIntegrations[0],
+    [linkedInIntegrations, selectedLinkedInIntegrationId],
+  )
+
+  useEffect(() => {
+    if (!selectedLinkedInIntegrationId && linkedInIntegrations[0]?.id) {
+      setSelectedLinkedInIntegrationId(linkedInIntegrations[0].id)
+    }
+  }, [linkedInIntegrations, selectedLinkedInIntegrationId])
+
   const linkedinProfileName = String(linkedinIntegration?.name || "").trim() || "LinkedIn profile"
+  const linkedinIdentityLabel = linkedinIntegration?.identifier === "linkedin-page" ? "LinkedIn company page" : "Personal LinkedIn profile"
+  const sameTypePrefillIntegration = useMemo(() => {
+    if (!linkedinIntegration) {
+      return undefined
+    }
+
+    return linkedInIntegrations.find(
+      (integration: any) =>
+        integration.id !== linkedinIntegration.id &&
+        integration.identifier === linkedinIntegration.identifier &&
+        integration.onboardingProfileReady &&
+        (!!integration.onboardingRole || !!integration.onboardingAudience || !!integration.onboardingGoal),
+    )
+  }, [linkedInIntegrations, linkedinIntegration])
+  const fallbackOnboardingRole = user?.onboardingPersonaOther || user?.onboardingPersona || ""
+  const fallbackOnboardingAudience = user?.onboardingAudience || ""
+  const fallbackOnboardingGoal = user?.onboardingGoal || ""
+  const selectedIntegrationRole = String(linkedinIntegration?.onboardingRole || "").trim()
+  const selectedIntegrationAudience = String(linkedinIntegration?.onboardingAudience || "").trim()
+  const selectedIntegrationGoal = String(linkedinIntegration?.onboardingGoal || "").trim()
+  const onboardingRole = selectedIntegrationRole || fallbackOnboardingRole
+  const onboardingAudience = selectedIntegrationAudience || fallbackOnboardingAudience
+  const onboardingGoal = selectedIntegrationGoal || fallbackOnboardingGoal
+  const sameTypePrefillRole = String(sameTypePrefillIntegration?.onboardingRole || "").trim()
+  const sameTypePrefillAudience = String(sameTypePrefillIntegration?.onboardingAudience || "").trim()
+  const sameTypePrefillGoal = String(sameTypePrefillIntegration?.onboardingGoal || "").trim()
+  const sameTypePrefillWebsiteUrl =
+    sameTypePrefillIntegration?.onboardingWebsiteUrl && sameTypePrefillIntegration?.onboardingWebsiteScrapedAt
+      ? String(sameTypePrefillIntegration.onboardingWebsiteUrl).trim()
+      : ""
+  const workspaceSetupRole = workspaceProfileValues.role
+  const workspaceSetupAudience = workspaceProfileValues.audience
+  const workspaceSetupGoal = workspaceProfileValues.goal
+  const workspaceSetupWebsiteUrl = workspaceProfileValues.websiteUrl.trim()
+  const workspaceSetupWebsiteInvalid = !!workspaceSetupWebsiteUrl && !dashboardWebsiteUrlPattern.test(workspaceSetupWebsiteUrl)
+  const workspaceSetupCanSave =
+    !!workspaceSetupRole.trim() &&
+    !!workspaceSetupAudience.trim() &&
+    !!workspaceSetupGoal.trim() &&
+    !workspaceSetupWebsiteInvalid &&
+    !workspaceSetupRunning
+  const workspaceSetupIsCompanyPage = linkedinIntegration?.identifier === "linkedin-page"
+  const workspaceSetupRoleOptions = optionsWithCurrentContentProfileValue(
+    workspaceSetupIsCompanyPage ? companyContentProfileRoleOptions : contentProfileRoleOptions,
+    workspaceSetupRole,
+  )
+  const workspaceSetupAudienceOptions = optionsWithCurrentContentProfileValue(
+    workspaceSetupIsCompanyPage ? companyContentProfileAudienceOptions : contentProfileAudienceOptions,
+    workspaceSetupAudience,
+  )
+  const workspaceSetupGoalOptions = optionsWithCurrentContentProfileValue(
+    workspaceSetupIsCompanyPage ? companyContentProfileGoalOptions : contentProfileGoalOptions,
+    workspaceSetupGoal,
+  )
   const needsWorkspaceSetup =
     !!linkedinIntegration && !!user?.onboardingCompletedAt && linkedinIntegration.onboardingProfileReady === false && !skipWorkspaceSetup
   const linkedinProfileStale = !!linkedinIntegration?.onboardingProfileReady && isOlderThan(linkedinIntegration.linkedinProfileFetchedAt)
@@ -1337,9 +1496,6 @@ export const LinkedinStrategyDashboard = () => {
     [currentWeekLinkedinPosts, nextWeekLinkedinPosts],
   )
 
-  const onboardingRole = user?.onboardingPersonaOther || user?.onboardingPersona || ""
-  const onboardingAudience = user?.onboardingAudience || ""
-  const onboardingGoal = user?.onboardingGoal || ""
   const strategyCopy = useMemo(
     () => getDashboardStrategyCopy(onboardingRole, onboardingAudience, onboardingGoal),
     [onboardingAudience, onboardingGoal, onboardingRole],
@@ -1359,10 +1515,16 @@ export const LinkedinStrategyDashboard = () => {
       setWorkspaceSetupRunning(true)
       setWorkspaceSetupError("")
       try {
+        const shouldShowWebsiteReadyPostCta =
+          needsWorkspaceSetup && !!workspaceSetupWebsiteUrl && !options?.refreshLinkedin && !options?.refreshWebsite
         const response = await fetch("/user/onboarding/setup-workspace", {
           method: "POST",
           body: JSON.stringify({
             integrationId: linkedinIntegration.id,
+            role: (needsWorkspaceSetup ? workspaceSetupRole : onboardingRole).trim(),
+            audience: (needsWorkspaceSetup ? workspaceSetupAudience : onboardingAudience).trim(),
+            goal: (needsWorkspaceSetup ? workspaceSetupGoal : onboardingGoal).trim(),
+            websiteUrl: needsWorkspaceSetup ? workspaceSetupWebsiteUrl || undefined : undefined,
             refreshLinkedin: !!options?.refreshLinkedin,
             refreshWebsite: !!options?.refreshWebsite,
           }),
@@ -1374,6 +1536,9 @@ export const LinkedinStrategyDashboard = () => {
         }
 
         await mutateIntegrations()
+        if (shouldShowWebsiteReadyPostCta) {
+          setShowWebsiteReadyPostCta(true)
+        }
         return true
       } catch (error: any) {
         setWorkspaceSetupError(error?.message || "Could not set up your workspace")
@@ -1382,16 +1547,33 @@ export const LinkedinStrategyDashboard = () => {
         setWorkspaceSetupRunning(false)
       }
     },
-    [fetch, linkedinIntegration, mutateIntegrations, workspaceSetupRunning],
+    [
+      fetch,
+      linkedinIntegration,
+      mutateIntegrations,
+      needsWorkspaceSetup,
+      onboardingAudience,
+      onboardingGoal,
+      onboardingRole,
+      workspaceSetupAudience,
+      workspaceSetupGoal,
+      workspaceSetupRole,
+      workspaceSetupWebsiteUrl,
+      workspaceSetupRunning,
+    ],
   )
 
   useEffect(() => {
-    if (!needsWorkspaceSetup || workspaceSetupRunning || workspaceSetupError) {
+    if (!needsWorkspaceSetup) {
       return
     }
-
-    setupWorkspace()
-  }, [needsWorkspaceSetup, setupWorkspace, workspaceSetupError, workspaceSetupRunning])
+    setWorkspaceProfileValues({
+      role: sameTypePrefillRole,
+      audience: sameTypePrefillAudience,
+      goal: sameTypePrefillGoal,
+      websiteUrl: sameTypePrefillWebsiteUrl,
+    })
+  }, [linkedinIntegration?.id, needsWorkspaceSetup, sameTypePrefillAudience, sameTypePrefillGoal, sameTypePrefillRole, sameTypePrefillWebsiteUrl])
 
   const refreshStaleContentContext = useCallback(async () => {
     if (!hasStaleContentContext || refreshingContentContext) {
@@ -1425,7 +1607,7 @@ export const LinkedinStrategyDashboard = () => {
         bestCta: "Upgrade required",
         totalEngagement: "Locked",
         averageEngagement: "Locked",
-        nextAction: "Upgrade to Pro to see what is working from your LinkedIn posts and get analytics-backed content recommendations.",
+        nextAction: "Upgrade your plan to see what is working from your LinkedIn posts and get analytics-backed content recommendations.",
       }
     }
 
@@ -1857,12 +2039,12 @@ export const LinkedinStrategyDashboard = () => {
 
   const openLinkedinProfileOptimizer = useCallback(() => {
     if (!linkedinIntegration) {
-      toaster.show("Connect your personal LinkedIn profile first", "warning")
+      toaster.show("Connect your LinkedIn profile or company page first", "warning")
       return
     }
 
     if (!onboardingRole || !onboardingAudience || !onboardingGoal) {
-      toaster.show("Complete onboarding before optimizing your profile", "warning")
+      toaster.show("Complete onboarding before optimizing this LinkedIn identity", "warning")
       return
     }
 
@@ -1872,19 +2054,20 @@ export const LinkedinStrategyDashboard = () => {
       classNames: {
         modal: "w-[100%] max-w-[1100px] text-textColor",
       },
-      title: "Optimize Your LinkedIn profile",
+      title: linkedinIntegration.identifier === "linkedin-page" ? "Optimize Your LinkedIn company page" : "Optimize Your LinkedIn profile",
       children: (
         <LinkedinProfileOptimizerModal
           integrationId={linkedinIntegration.id}
           picture={linkedinIntegration.picture}
           profileName={linkedinProfileName}
+          integrationType={linkedinIntegration.identifier}
           role={onboardingRole}
           audience={onboardingAudience}
           goal={onboardingGoal}
         />
       ),
     })
-  }, [linkedinIntegration, modal, onboardingAudience, onboardingGoal, onboardingRole, toaster])
+  }, [linkedinIntegration, linkedinProfileName, modal, onboardingAudience, onboardingGoal, onboardingRole, toaster])
 
   const deletePost = useCallback(
     async (post: Pick<CampaignPost, "group">) => {
@@ -2107,10 +2290,94 @@ export const LinkedinStrategyDashboard = () => {
                 "in"
               )}
             </div>
-            <h1 className="mt-[18px] text-[26px] font-semibold leading-[32px]">Setting up your workspace</h1>
+            <h1 className="mt-[18px] text-[26px] font-semibold leading-[32px]">Review this content profile</h1>
             <p className="mx-auto mt-[10px] max-w-[620px] text-[14px] leading-[21px] text-customColor18">
-              We’re refreshing your LinkedIn profile context and restoring your content strategy from your completed onboarding setup.
+              {sameTypePrefillIntegration
+                ? `We prefilled these values from another ${
+                    workspaceSetupIsCompanyPage ? "LinkedIn company page" : "personal LinkedIn profile"
+                  }. Confirm or edit them before using this LinkedIn identity.`
+                : `Confirm the content profile for this ${
+                    workspaceSetupIsCompanyPage ? "LinkedIn company page" : "personal LinkedIn profile"
+                  } before using it.`}
             </p>
+
+            <div className="mx-auto mt-[18px] grid max-w-[620px] gap-[12px] text-left">
+              <label className="flex flex-col gap-[7px]">
+                <span className="text-[13px] font-semibold text-newTextColor">{workspaceSetupIsCompanyPage ? "Company type" : "Role"}</span>
+                <select
+                  value={workspaceSetupRole}
+                  onChange={(event) => setWorkspaceProfileValues((current) => ({ ...current, role: event.target.value }))}
+                  className="h-[44px] rounded-[10px] border border-newTableBorder bg-newBgColorInner px-[12px] text-[14px] text-newTextColor outline-none focus:border-[#8b5cf6]"
+                >
+                  <option value="" disabled>
+                    Select {workspaceSetupIsCompanyPage ? "company type" : "role"}
+                  </option>
+                  {workspaceSetupRoleOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="flex flex-col gap-[7px]">
+                <span className="text-[13px] font-semibold text-newTextColor">Audience</span>
+                <select
+                  value={workspaceSetupAudience}
+                  onChange={(event) => setWorkspaceProfileValues((current) => ({ ...current, audience: event.target.value }))}
+                  className="h-[44px] rounded-[10px] border border-newTableBorder bg-newBgColorInner px-[12px] text-[14px] text-newTextColor outline-none focus:border-[#8b5cf6]"
+                >
+                  <option value="" disabled>
+                    Select audience
+                  </option>
+                  {workspaceSetupAudienceOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="flex flex-col gap-[7px]">
+                <span className="text-[13px] font-semibold text-newTextColor">Goal</span>
+                <select
+                  value={workspaceSetupGoal}
+                  onChange={(event) => setWorkspaceProfileValues((current) => ({ ...current, goal: event.target.value }))}
+                  className="h-[44px] rounded-[10px] border border-newTableBorder bg-newBgColorInner px-[12px] text-[14px] text-newTextColor outline-none focus:border-[#8b5cf6]"
+                >
+                  <option value="" disabled>
+                    Select goal
+                  </option>
+                  {workspaceSetupGoalOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="flex flex-col gap-[7px]">
+                <span className="text-[13px] font-semibold text-newTextColor">Website URL (optional)</span>
+                <input
+                  value={workspaceSetupWebsiteUrl}
+                  onChange={(event) => setWorkspaceProfileValues((current) => ({ ...current, websiteUrl: event.target.value }))}
+                  placeholder="https://example.com"
+                  maxLength={2048}
+                  className={`h-[44px] rounded-[10px] border bg-newBgColorInner px-[12px] text-[14px] text-newTextColor outline-none focus:border-[#8b5cf6] ${
+                    workspaceSetupWebsiteInvalid ? "border-red-500" : "border-newTableBorder"
+                  }`}
+                />
+                {sameTypePrefillWebsiteUrl ? (
+                  <span className="text-[12px] leading-[18px] text-customColor18">
+                    Prefilled from another {workspaceSetupIsCompanyPage ? "company page" : "personal profile"} connected to this workspace.
+                  </span>
+                ) : (
+                  <span className="text-[12px] leading-[18px] text-customColor18">
+                    Add a website only if it should be used for this LinkedIn identity.
+                  </span>
+                )}
+                {workspaceSetupWebsiteInvalid && (
+                  <span className="text-[12px] text-red-500">Enter a valid public website URL, like example.com.</span>
+                )}
+              </label>
+            </div>
 
             {workspaceSetupError && (
               <div className="mx-auto mt-[16px] max-w-[620px] rounded-[12px] border border-[#ef4444]/30 bg-[#ef4444]/10 p-[13px] text-[13px] leading-[19px] text-newTextColor">
@@ -2125,7 +2392,7 @@ export const LinkedinStrategyDashboard = () => {
                     type="button"
                     onClick={() => setupWorkspace()}
                     className="inline-flex h-[42px] items-center justify-center rounded-[9px] bg-[#8b5cf6] px-[16px] text-[14px] font-semibold text-white disabled:opacity-60"
-                    disabled={workspaceSetupRunning}
+                    disabled={!workspaceSetupCanSave}
                   >
                     Retry setup
                   </button>
@@ -2138,7 +2405,14 @@ export const LinkedinStrategyDashboard = () => {
                   </button>
                 </>
               ) : (
-                <div className="text-[13px] font-medium text-customColor18">This usually takes a few seconds.</div>
+                <button
+                  type="button"
+                  onClick={() => setupWorkspace()}
+                  className="inline-flex h-[42px] items-center justify-center rounded-[9px] bg-[#8b5cf6] px-[16px] text-[14px] font-semibold text-white disabled:opacity-60"
+                  disabled={!workspaceSetupCanSave}
+                >
+                  {workspaceSetupRunning ? "Saving..." : "Confirm and set up workspace"}
+                </button>
               )}
             </div>
           </section>
@@ -2158,8 +2432,8 @@ export const LinkedinStrategyDashboard = () => {
             <div className="mx-auto flex h-[54px] w-[54px] items-center justify-center rounded-full bg-[#0a66c2]/10 text-[#0a66c2]">in</div>
             <h1 className="mt-[18px] text-[26px] font-semibold leading-[32px]">Connect LinkedIn to build your dashboard</h1>
             <p className="mx-auto mt-[10px] max-w-[620px] text-[14px] leading-[21px] text-customColor18">
-              Your dashboard strategy, suggested posts, repurposing ideas, and “what’s working” insights are based on a connected personal LinkedIn
-              profile.
+              Your dashboard strategy, suggested posts, repurposing ideas, and “what’s working” insights are based on a connected LinkedIn profile or
+              company page.
             </p>
             {hasAnyConnectedChannel && freeChannelLimitReached && (
               <div className="mx-auto mt-[16px] max-w-[620px] rounded-[12px] border border-[#f59e0b]/30 bg-[#f59e0b]/10 p-[13px] text-[13px] leading-[19px] text-newTextColor">
@@ -2201,6 +2475,39 @@ export const LinkedinStrategyDashboard = () => {
 
   return (
     <div className="flex flex-1 flex-col overflow-auto bg-newBgColorInner p-[18px] text-newTextColor">
+      {showWebsiteReadyPostCta && (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/45 px-[18px]">
+          <div className="w-full max-w-[460px] rounded-[14px] border border-newTableBorder bg-newTableHeader p-[20px] text-center shadow-[0_24px_80px_rgba(0,0,0,0.24)]">
+            <div className="mx-auto flex h-[46px] w-[46px] items-center justify-center rounded-full bg-[#8b5cf6]/10 text-[16px] font-bold text-[#8b5cf6]">
+              in
+            </div>
+            <div className="mt-[14px] text-[18px] font-semibold text-newTextColor">Your website context is ready</div>
+            <p className="mx-auto mt-[8px] max-w-[360px] text-[13px] leading-[20px] text-customColor18">
+              FeedVector saved this website context for {linkedinProfileName}. You can use it now to create LinkedIn drafts with better company and
+              audience context.
+            </p>
+            <div className="mt-[18px] flex flex-col justify-center gap-[10px] sm:flex-row">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowWebsiteReadyPostCta(false)
+                  buildWeeklyCampaign()
+                }}
+                className="inline-flex h-[42px] items-center justify-center rounded-[9px] bg-[#8b5cf6] px-[16px] text-[14px] font-semibold text-white"
+              >
+                Create LinkedIn posts
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowWebsiteReadyPostCta(false)}
+                className="inline-flex h-[42px] items-center justify-center rounded-[9px] border border-newTableBorder bg-newBgColorInner px-[16px] text-[14px] font-semibold text-newTextColor"
+              >
+                Not now
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="mx-auto flex w-full max-w-[1320px] flex-col gap-[16px]">
         <section className="rounded-[12px] border border-newTableBorder bg-newTableHeader p-[18px]">
           <div className="flex flex-col gap-[18px] lg:flex-row lg:items-center lg:justify-between">
@@ -2215,7 +2522,34 @@ export const LinkedinStrategyDashboard = () => {
                 ))}
               </div>
             </div>
-            <div className="w-full rounded-[10px] bg-newBgColorInner p-[12px] lg:w-[340px]">
+            <div className="flex w-full flex-col gap-[10px] rounded-[10px] bg-newBgColorInner p-[12px] lg:w-[340px]">
+              {linkedInIntegrations.length > 1 && (
+                <label className="flex flex-col gap-[6px]">
+                  <span className="text-[12px] font-semibold uppercase tracking-[0.08em] text-customColor18">LinkedIn account</span>
+                  <select
+                    value={linkedinIntegration?.id || ""}
+                    onChange={(event) => setSelectedLinkedInIntegrationId(event.target.value)}
+                    className="h-[40px] rounded-[9px] border border-newTableBorder bg-newTableHeader px-[10px] text-[13px] font-semibold text-newTextColor outline-none"
+                  >
+                    {linkedInIntegrations.map((item: any) => (
+                      <option key={item.id} value={item.id}>
+                        {item.name} ({item.identifier === "linkedin-page" ? "Company page" : "Personal profile"})
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
+              <div className="flex items-center gap-[9px] rounded-[9px] border border-newTableBorder bg-newTableHeader px-[10px] py-[8px]">
+                <img
+                  src={linkedinIntegration.picture || "/icons/platforms/linkedin.png"}
+                  alt=""
+                  className="h-[30px] w-[30px] rounded-full object-cover"
+                />
+                <div className="min-w-0">
+                  <div className="truncate text-[13px] font-semibold">{linkedinProfileName}</div>
+                  <div className="truncate text-[11px] text-customColor18">{linkedinIdentityLabel}</div>
+                </div>
+              </div>
               <button
                 type="button"
                 disabled={buildingCampaign}
@@ -2346,7 +2680,9 @@ export const LinkedinStrategyDashboard = () => {
 
           <div className="flex flex-col gap-[16px]">
             {linkedinIntegration && (
-              <DashboardCard title="Optimize Your LinkedIn profile">
+              <DashboardCard
+                title={linkedinIntegration.identifier === "linkedin-page" ? "Optimize Your LinkedIn company page" : "Optimize Your LinkedIn profile"}
+              >
                 <div className="mt-[12px] rounded-[10px] border border-newTableBorder bg-newBgColorInner p-[12px]">
                   <div className="flex items-center gap-[12px]">
                     <img
@@ -2357,7 +2693,9 @@ export const LinkedinStrategyDashboard = () => {
                     <div className="min-w-0">
                       <div className="truncate text-[15px] font-semibold text-newTextColor">{linkedinProfileName}</div>
                       <div className="mt-[4px] text-[13px] leading-[19px] text-customColor18">
-                        Optimizing profile will lead to higher conversion among users who visit your LinkedIn profile.
+                        {linkedinIntegration.identifier === "linkedin-page"
+                          ? "Improve conversion among users who visit your LinkedIn page."
+                          : "Improve conversion among users who visit your LinkedIn profile."}
                       </div>
                     </div>
                   </div>
@@ -2366,7 +2704,7 @@ export const LinkedinStrategyDashboard = () => {
                     onClick={openLinkedinProfileOptimizer}
                     className="mt-[14px] inline-flex h-[40px] w-full items-center justify-center rounded-[9px] bg-[#0a66c2] px-[14px] text-[13px] font-semibold text-white"
                   >
-                    Optimize LinkedIn profile
+                    {linkedinIntegration.identifier === "linkedin-page" ? "Optimize LinkedIn page" : "Optimize LinkedIn profile"}
                   </button>
                 </div>
               </DashboardCard>
@@ -2386,7 +2724,7 @@ export const LinkedinStrategyDashboard = () => {
                         {item.button}
                       </button>
                     </div>
-                    <div className="mt-[8px] pl-3 text-[9px] leading-[19px] text-black dark:text-white">{item.shortDescription}</div>
+                    <div className="mt-[8px] pl-3 text-[10px] leading-[19px] text-black dark:text-white">{item.shortDescription}</div>
                   </div>
                 ))}
               </div>

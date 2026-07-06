@@ -63,6 +63,7 @@ export class OrganizationRepository {
             subscriptionTier: true,
             totalChannels: true,
             isLifetime: true,
+            createdAt: true,
           },
         },
       },
@@ -106,6 +107,7 @@ export class OrganizationRepository {
                 subscriptionTier: true,
                 totalChannels: true,
                 isLifetime: true,
+                createdAt: true,
               },
             },
           },
@@ -238,6 +240,7 @@ export class OrganizationRepository {
             totalChannels: true,
             subscriptionTier: true,
             deletedAt: true,
+            createdAt: true,
           },
         },
       },
@@ -257,6 +260,7 @@ export class OrganizationRepository {
           select: {
             subscriptionTier: true,
             deletedAt: true,
+            createdAt: true,
           },
         },
         users: {

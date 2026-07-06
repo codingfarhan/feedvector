@@ -5,6 +5,7 @@ export interface PricingInnerInterface {
   channel?: number
   posts_per_month: number
   team_members: boolean
+  team_member_limit?: number
   community_features: boolean
   featured_by_gitroom: boolean
   ai: boolean
@@ -19,12 +20,55 @@ export interface PricingInnerInterface {
 export interface PricingInterface {
   [key: string]: PricingInnerInterface
 }
+
+export const ACTIVE_BILLING_PLANS = ["ESSENTIAL", "GROWTH"] as const
+export type ActiveBillingPlan = (typeof ACTIVE_BILLING_PLANS)[number]
+export const isActiveBillingPlan = (value: string): value is ActiveBillingPlan => ACTIVE_BILLING_PLANS.includes(value as ActiveBillingPlan)
+
 export const pricing: PricingInterface = {
+  ESSENTIAL: {
+    current: "ESSENTIAL",
+    month_price: 179,
+    year_price: 0,
+    channel: 5,
+    posts_per_month: 1000000,
+    team_members: true,
+    team_member_limit: 3,
+    community_features: true,
+    featured_by_gitroom: true,
+    ai: true,
+    import_from_channels: true,
+    image_generator: true,
+    image_generation_count: 100,
+    generate_videos: 35,
+    public_api: true,
+    webhooks: 30,
+    autoPost: true,
+  },
+  GROWTH: {
+    current: "GROWTH",
+    month_price: 379,
+    year_price: 0,
+    channel: 1000000,
+    posts_per_month: 1000000,
+    team_members: true,
+    team_member_limit: 1000000,
+    community_features: true,
+    featured_by_gitroom: true,
+    ai: true,
+    import_from_channels: true,
+    image_generator: true,
+    image_generation_count: 200,
+    generate_videos: 50,
+    public_api: true,
+    webhooks: 10000,
+    autoPost: true,
+  },
   FREE: {
     current: "FREE",
     month_price: 0,
     year_price: 0,
-    channel: 1,
+    channel: 3,
     image_generation_count: 2,
     posts_per_month: 20,
     team_members: true,

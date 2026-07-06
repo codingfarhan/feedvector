@@ -64,6 +64,29 @@ export class OnboardingWorkspaceSetupDto {
   integrationId!: string;
 
   @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  role?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  audience?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(160)
+  goal?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(2048)
+  @Matches(/^(https?:\/\/)?([a-z0-9-]+\.)+[a-z]{2,}(:\d{2,5})?(\/[^\s]*)?$/i, {
+    message: 'Please enter a valid website URL',
+  })
+  websiteUrl?: string;
+
+  @IsOptional()
   @IsBoolean()
   refreshLinkedin?: boolean;
 
@@ -103,6 +126,25 @@ export class OnboardingCompleteDto {
   @ValidateNested({ each: true })
   @Type(() => OnboardingReviewedSuggestionDto)
   reviewedSuggestions!: OnboardingReviewedSuggestionDto[];
+}
+
+export class OnboardingPlanSubscribeDto {
+  @IsIn(['ESSENTIAL', 'GROWTH'])
+  billing!: 'ESSENTIAL' | 'GROWTH';
+}
+
+export class OnboardingPlanVerifyDto extends OnboardingCompleteDto {
+  @IsIn(['ESSENTIAL', 'GROWTH'])
+  billing!: 'ESSENTIAL' | 'GROWTH';
+
+  @IsString()
+  paymentId!: string;
+
+  @IsString()
+  subscriptionId!: string;
+
+  @IsString()
+  signature!: string;
 }
 
 export class RepurposeSelectedPostDto {

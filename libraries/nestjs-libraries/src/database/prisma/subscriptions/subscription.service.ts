@@ -7,6 +7,15 @@ import { Organization } from '@prisma/client';
 import dayjs from 'dayjs';
 import { makeId } from '@gitroom/nestjs-libraries/services/make.is';
 
+type StoredSubscriptionTier =
+  | 'ESSENTIAL'
+  | 'GROWTH'
+  | 'STANDARD'
+  | 'PRO'
+  | 'TEAM'
+  | 'ULTIMATE';
+type EffectiveUsageTier = 'FREE' | StoredSubscriptionTier;
+
 @Injectable()
 export class SubscriptionService {
   constructor(
@@ -80,7 +89,7 @@ export class SubscriptionService {
   async modifySubscription(
     customerId: string,
     totalChannels: number,
-    billing: 'FREE' | 'STANDARD' | 'PRO'
+    billing: 'FREE' | StoredSubscriptionTier
   ) {
     if (!customerId) {
       return false;
@@ -145,7 +154,7 @@ export class SubscriptionService {
     identifier: string,
     customerId: string,
     totalChannels: number,
-    billing: 'STANDARD' | 'PRO',
+    billing: StoredSubscriptionTier,
     period: 'MONTHLY' | 'YEARLY',
     cancelAt: number | null,
     code?: string,
@@ -210,9 +219,9 @@ export class SubscriptionService {
     };
   }
 
-  async getMcpEffectiveTier(organizationId: string): Promise<'FREE' | 'PRO'> {
+  async getMcpEffectiveTier(organizationId: string): Promise<EffectiveUsageTier> {
     const subscription = await this.getSubscription(organizationId);
-    return subscription?.subscriptionTier === 'PRO' ? 'PRO' : 'FREE';
+    return (subscription?.subscriptionTier as EffectiveUsageTier) || 'FREE';
   }
 
   async getCurrentBillingPeriodStart(
@@ -237,7 +246,7 @@ export class SubscriptionService {
   }
 
   async getMonthlyLimitForTier(
-    tier: 'FREE' | 'PRO',
+    tier: EffectiveUsageTier,
     type: 'ai_images' | 'ai_videos'
   ) {
     return type === 'ai_images'

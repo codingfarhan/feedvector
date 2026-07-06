@@ -879,6 +879,8 @@ enum State {
 }
 
 enum SubscriptionTier {
+  ESSENTIAL
+  GROWTH
   STANDARD
   PRO
   TEAM

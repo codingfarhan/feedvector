@@ -142,8 +142,8 @@ export function withContinueProvider<TItem, TSelection>(
           <div className="text-[14px] text-red-400">
             {limitMessage ||
               t(
-                'trial_channel_limit_reached',
-                'Trial accounts can connect up to 2 channels. Upgrade to Pro to add more.'
+                'plan_channel_limit_reached',
+                'Your plan has reached its channel limit. Upgrade your plan to add more.'
               )}
           </div>
         )}

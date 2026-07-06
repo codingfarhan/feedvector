@@ -58,7 +58,7 @@ export const ContinueProvider: FC = () => {
       added={added}
       continueId={continueId}
       integrations={integrations.map((p: any) => p.internalId)}
-      limitReached={user.tier.current == "FREE" && integrations.length > 2}
+      limitReached={integrations.length >= (user.totalChannels || 1)}
       provider={Provider}
     />
   )

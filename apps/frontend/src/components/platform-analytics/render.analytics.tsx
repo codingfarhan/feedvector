@@ -812,7 +812,7 @@ export const RenderAnalytics: FC<{
         }
       })
 
-    if ((integration as any)?.identifier === "linkedin") {
+    if (["linkedin", "linkedin-page"].includes((integration as any)?.identifier)) {
       return [
         {
           label: "Total engagement",
@@ -900,7 +900,7 @@ export const RenderAnalytics: FC<{
 
   return (
     <div className="relative">
-      {!onFreePlan && (integration as any)?.identifier === "linkedin" && dataToRender?.length > 0 ? (
+      {!onFreePlan && ["linkedin", "linkedin-page"].includes((integration as any)?.identifier) && dataToRender?.length > 0 ? (
         <LinkedinAnalyticsView data={dataToRender} />
       ) : (
         <div className={clsx("grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-[16px]", onFreePlan && "blur-sm pointer-events-none select-none")}>
@@ -915,12 +915,12 @@ export const RenderAnalytics: FC<{
       {onFreePlan && (
         <div className="absolute inset-0 flex items-start justify-center pt-[64px]">
           <div className="bg-newBgColorInner border border-newTableBorder rounded-[12px] px-[24px] py-[20px] text-center max-w-[420px] shadow-lg">
-            <div className="text-[20px] font-semibold mb-[6px]">{t("upgrade_to_view_analytics", "Upgrade to Pro to view analytics")}</div>
+            <div className="text-[20px] font-semibold mb-[6px]">{t("upgrade_to_view_analytics", "Upgrade your plan to view analytics")}</div>
             <div className="text-[14px] text-newTableText mb-[16px]">
               {t("trial_analytics_cta", "Unlock full analytics, trends, and performance breakdowns.")}
             </div>
             <div className="flex justify-center">
-              <Button onClick={() => router.push("/billing")}>{t("upgrade_to_pro", "Upgrade to Pro")}</Button>
+              <Button onClick={() => router.push("/billing")}>{t("upgrade_plan", "Upgrade plan")}</Button>
             </div>
           </div>
         </div>

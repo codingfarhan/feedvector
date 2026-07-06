@@ -115,12 +115,25 @@ export class IntegrationService {
     );
   }
 
-  updateContentProfile(org: string, role: string, audience: string, goal: string) {
+  getOnboardingWebsiteContextByUrl(
+    org: string,
+    normalizedWebsiteUrl: string,
+    excludeIntegrationId?: string
+  ) {
+    return this._integrationRepository.getOnboardingWebsiteContextByUrl(
+      org,
+      normalizedWebsiteUrl,
+      excludeIntegrationId
+    );
+  }
+
+  updateContentProfile(org: string, role: string, audience: string, goal: string, integrationId?: string) {
     return this._integrationRepository.updateContentProfile(
       org,
       role,
       audience,
-      goal
+      goal,
+      integrationId
     );
   }
 
@@ -178,7 +191,7 @@ export class IntegrationService {
           {
             msg: `Your plan can connect up to ${channelLimit} ${
               channelLimit === 1 ? 'channel' : 'channels'
-            }. Upgrade to Pro to add more.`,
+            }. Upgrade your plan to add more.`,
           },
           HttpStatus.NOT_ACCEPTABLE
         );

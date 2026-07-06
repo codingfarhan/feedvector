@@ -59,6 +59,10 @@ const LinkedinProfileOptimizationPrompt = z.object({
   about: z.string(),
 })
 
+const LinkedinCompanyDescriptionOptimizationPrompt = z.object({
+  description: z.string(),
+})
+
 export const LINKEDIN_HUMAN_WRITING_GUIDELINES = `
 Write in clear, natural language. Never use em dashes.
 
@@ -525,6 +529,58 @@ If the primary goal is "Recruit / hire talent", emphasize the mission, work, sta
       ).choices[0].message.parsed || {
         headline: "",
         about: "",
+      }
+    )
+  }
+
+  async optimizeLinkedinCompanyDescription(input: {
+    role: string
+    goal: string
+    audience: string
+    desiredPositioning: string
+    companyData: any
+    currentDescription?: string
+  }) {
+    return (
+      (
+        await openai.chat.completions.parse({
+          model: "gpt-4.1",
+          messages: [
+            {
+              role: "system",
+              content: [
+                "You are an expert LinkedIn company page writer.",
+                "Return strict JSON only with one key: description.",
+                "Rewrite the LinkedIn company page description using the supplied company data and positioning inputs as the source of truth.",
+                "Do not write a headline.",
+                "Write in the company's voice using first-person plural when natural.",
+                "Keep it clear, credible, and specific.",
+                "Use short paragraphs.",
+                "Keep the description between 120 and 220 words.",
+                "Do not invent products, customers, metrics, awards, offices, values, claims, or history.",
+                "Do not use hashtags or emojis.",
+                LINKEDIN_HUMAN_WRITING_GUIDELINES,
+              ].join("\n\n"),
+            },
+            {
+              role: "user",
+              content: JSON.stringify({
+                currentRole: input.role,
+                primaryGoal: input.goal,
+                targetAudience: input.audience,
+                desiredPositioning: input.desiredPositioning,
+                currentDescription: input.currentDescription || "",
+                companyData: input.companyData,
+              }),
+            },
+          ],
+          response_format: zodResponseFormat(
+            LinkedinCompanyDescriptionOptimizationPrompt,
+            "linkedinCompanyDescriptionOptimization"
+          ),
+        })
+      ).choices[0].message.parsed || {
+        description: "",
       }
     )
   }

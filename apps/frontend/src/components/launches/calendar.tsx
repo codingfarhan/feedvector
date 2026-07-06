@@ -806,15 +806,15 @@ export const CalendarColumn: FC<{
   const openAddProvider = useCallback(() => {
     const activeIntegrations = (integrations || []).filter((integration: any) => !integration.disabled && !integration.inBetweenSteps);
     const channelLimit = user?.totalChannels || 1;
-    const limitReached = user?.tier?.current === 'FREE' && activeIntegrations.length >= channelLimit;
+    const limitReached = activeIntegrations.length >= channelLimit;
 
     if (limitReached) {
-      toaster.show('Free plan is limited to 1 channel. Upgrade to Pro to add more.', 'warning');
+      toaster.show(`Your plan can connect up to ${channelLimit} ${channelLimit === 1 ? 'channel' : 'channels'}. Upgrade your plan to add more.`, 'warning');
       return;
     }
 
     addProvider();
-  }, [addProvider, integrations, toaster, user?.tier?.current, user?.totalChannels]);
+  }, [addProvider, integrations, toaster, user?.totalChannels]);
 
   return (
     <div

@@ -24,12 +24,13 @@ export class PermissionsService {
     const organization = await this._organizationService.getOrgById(orgId)
     const subscription = await this._subscriptionService.getSubscriptionByOrganizationId(orgId)
 
-    const tier = subscription?.subscriptionTier || (!process.env.RAZORPAY_KEY_ID ? "PRO" : "FREE")
+    const tier = subscription?.subscriptionTier || (!process.env.RAZORPAY_KEY_ID ? "GROWTH" : "FREE")
 
-    const trialEndsAt = organization?.createdAt ? dayjs(organization.createdAt).add(7, "day") : null
+    const trialAnchor = subscription?.createdAt || organization?.createdAt
+    const trialEndsAt = trialAnchor ? dayjs(trialAnchor).add(7, "day") : null
     const isTrialActive = !!organization?.isTrailing && !!trialEndsAt && dayjs().isBefore(trialEndsAt)
 
-    const effectiveTier = isTrialActive ? "PRO" : tier
+    const effectiveTier = isTrialActive && subscription?.subscriptionTier ? subscription.subscriptionTier : tier
     const { channel, ...all } = pricing[effectiveTier]
     return {
       subscription,

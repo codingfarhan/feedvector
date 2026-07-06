@@ -66,11 +66,12 @@ export const LinkedinCommentOpportunities = () => {
   const toaster = useToaster()
   const [refreshing, setRefreshing] = useState(false)
   const [now, setNow] = useState(() => Date.now())
+  const [selectedIntegrationId, setSelectedIntegrationId] = useState("")
 
   const loadIntegrations = useCallback(async () => {
     const response = await (await fetch("/integrations/list")).json()
     return ((response?.integrations || []) as IntegrationItem[])
-      .filter((integration) => integration.identifier === "linkedin" && !integration.inBetweenSteps)
+      .filter((integration) => ["linkedin", "linkedin-page"].includes(integration.identifier) && !integration.inBetweenSteps)
       .sort((a, b) => {
         const readiness = Number(!!b.onboardingProfileReady) - Number(!!a.onboardingProfileReady)
         if (readiness !== 0) {
@@ -84,7 +85,14 @@ export const LinkedinCommentOpportunities = () => {
     revalidateOnFocus: false,
   })
 
-  const selectedIntegration = integrations[0]
+  const selectedIntegration =
+    integrations.find((integration) => integration.id === selectedIntegrationId) || integrations[0]
+
+  useEffect(() => {
+    if (!selectedIntegrationId && integrations[0]?.id) {
+      setSelectedIntegrationId(integrations[0].id)
+    }
+  }, [integrations, selectedIntegrationId])
 
   const loadRecommendations = useCallback(async () => {
     if (!selectedIntegration?.id) {
@@ -138,6 +146,8 @@ export const LinkedinCommentOpportunities = () => {
   const refreshWaitMessage = refreshDisabled
     ? `Free users are allowed to refresh posts every 6 hours. Please wait for ${formatRefreshWait(refreshWaitSeconds)}.`
     : ""
+  const selectedIntegrationType =
+    selectedIntegration?.identifier === "linkedin-page" ? "Company page" : "Personal profile"
 
   const refreshRecommendations = useCallback(async () => {
     if (!selectedIntegration?.id) {
@@ -174,7 +184,7 @@ export const LinkedinCommentOpportunities = () => {
       <div className="w-full rounded-[14px] border border-newTableBorder bg-newTableHeader p-[18px]">
         <div className="text-[22px] font-[700] text-newTextColor">Engage on LinkedIn</div>
         <div className="mt-[8px] max-w-[640px] text-[14px] leading-[22px] text-textItemBlur">
-          Connect your personal LinkedIn account first. This page finds fresh posts worth opening and joining on LinkedIn.
+          Connect your LinkedIn profile or company page first. This page finds fresh posts worth opening and joining on LinkedIn.
         </div>
         <div className="mt-[16px]">
           <Button className="rounded-[10px]" onClick={() => router.push("/launches")}>
@@ -213,9 +223,33 @@ export const LinkedinCommentOpportunities = () => {
                 Last updated: {generatedAt}
               </div>
             )}
+            {integrations.length > 1 && (
+              <div className="mt-[14px] flex flex-wrap gap-[8px]">
+                {integrations.map((integration) => {
+                  const active = integration.id === selectedIntegration?.id
+                  return (
+                    <button
+                      key={integration.id}
+                      type="button"
+                      onClick={() => setSelectedIntegrationId(integration.id)}
+                      className={`rounded-full border px-[12px] py-[7px] text-[12px] font-[600] transition ${
+                        active
+                          ? "border-[#8b5cf6] bg-[#8b5cf6] text-white"
+                          : "border-newTableBorder bg-newBgColor text-textItemBlur hover:text-newTextColor"
+                      }`}
+                    >
+                      {integration.name} · {integration.identifier === "linkedin-page" ? "Page" : "Profile"}
+                    </button>
+                  )
+                })}
+              </div>
+            )}
           </div>
 
           <div className="flex flex-col items-start gap-[8px] lg:items-end">
+            <div className="rounded-full border border-newTableBorder bg-newBgColor px-[10px] py-[5px] text-[12px] font-[600] text-textItemBlur">
+              {selectedIntegrationType}: {selectedIntegration.name}
+            </div>
             <Button secondary={true} className="rounded-[10px]" onClick={refreshRecommendations} loading={refreshing} disabled={refreshDisabled}>
               Refresh posts
             </Button>

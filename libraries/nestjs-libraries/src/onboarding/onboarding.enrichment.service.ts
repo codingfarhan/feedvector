@@ -246,6 +246,47 @@ export class OnboardingEnrichmentService {
     return context;
   }
 
+  async enrichLinkedinCompanyPage(profile?: string | null) {
+    if (!process.env.RAPIDAPI_KEY) {
+      throw new HttpException(
+        'LinkedIn company page enrichment is not configured',
+        500
+      );
+    }
+
+    const linkedinUrl = this.linkedinCompanyUrl(profile);
+    if (!linkedinUrl) {
+      throw new HttpException(
+        'Refresh your LinkedIn page connection before completing onboarding',
+        400
+      );
+    }
+
+    const url = `https://fresh-linkedin-profile-data.p.rapidapi.com/get-company-by-linkedinurl?linkedin_url=${encodeURIComponent(
+      linkedinUrl
+    )}`;
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'x-rapidapi-key': process.env.RAPIDAPI_KEY,
+        'x-rapidapi-host': 'fresh-linkedin-profile-data.p.rapidapi.com',
+        'Content-Type': 'application/json',
+      },
+      signal: AbortSignal.timeout(30000),
+    });
+
+    if (!response.ok) {
+      throw new HttpException(
+        'Could not enrich your LinkedIn company page. Please try again.',
+        400
+      );
+    }
+
+    const result = await response.json();
+    return this.normalizeLinkedinCompanyPage(result?.data || result, linkedinUrl);
+  }
+
   private async fetchWithBrightData(url: string) {
     const response = await fetch('https://api.brightdata.com/request', {
       method: 'POST',
@@ -457,6 +498,94 @@ export class OnboardingEnrichmentService {
     }
 
     return `https://www.linkedin.com/in/${profile.replace(/^@/, '')}/`;
+  }
+
+  private linkedinCompanyUrl(profile?: string | null) {
+    if (!profile) {
+      return '';
+    }
+
+    if (profile.startsWith('http')) {
+      return profile;
+    }
+
+    return `https://www.linkedin.com/company/${profile.replace(/^@/, '')}/`;
+  }
+
+  private normalizeLinkedinCompanyPage(data: any, linkedinUrl: string) {
+    const industries = Array.isArray(data?.industries)
+      ? data.industries.filter(Boolean)
+      : String(data?.industries || '')
+          .split(/[,|]/)
+          .map((item) => item.trim())
+          .filter(Boolean);
+    const specialties = String(data?.specialties || '')
+      .split(/[,|]/)
+      .map((item) => item.trim())
+      .filter(Boolean);
+    const companyName = data?.company_name || data?.name || '';
+    const employeeCount = this.numberOrUndefined(data?.employee_count);
+    const followerCount = this.numberOrUndefined(data?.follower_count);
+    const yearFounded = this.numberOrUndefined(data?.year_founded);
+
+    return {
+      type: 'company-page',
+      fullName: companyName,
+      headline: '',
+      about: data?.description || '',
+      location:
+        data?.hq_full_address ||
+        [data?.hq_city, data?.hq_region, data?.hq_country]
+          .filter(Boolean)
+          .join(', ') ||
+        undefined,
+      linkedinUrl: data?.linkedin_url || linkedinUrl,
+      currentRole: {
+        title: companyName,
+        company: companyName,
+        industry: industries[0] || undefined,
+        description: data?.description || undefined,
+      },
+      company: {
+        companyId: data?.company_id,
+        companyName,
+        description: data?.description || '',
+        industry: industries[0] || undefined,
+        industries,
+        website: data?.website || data?.domain || undefined,
+        domain: data?.domain || undefined,
+        employeeRange: data?.employee_range || undefined,
+        employeeCount,
+        followerCount,
+        yearFounded,
+        type: data?.type || undefined,
+        tagline: data?.tagline || undefined,
+        specialties,
+        logoUrl: data?.logo_url || undefined,
+      },
+      skills: specialties,
+      experiences: [] as any[],
+      educationHighlights: [] as any[],
+      professionalSummary: data?.description || '',
+      expertiseAreas: [...industries, ...specialties].slice(0, 12),
+      credibilityPoints: [
+        followerCount ? `${followerCount.toLocaleString('en-US')} LinkedIn followers` : '',
+        employeeCount ? `${employeeCount.toLocaleString('en-US')} employees` : '',
+        yearFounded ? `Founded in ${yearFounded}` : '',
+        data?.type ? `${data.type}` : '',
+      ].filter(Boolean),
+      contentAngles: [
+        data?.tagline,
+        data?.description,
+        ...industries,
+        ...specialties,
+      ]
+        .filter(Boolean)
+        .slice(0, 12),
+      audienceSignals: [...industries, data?.employee_range, data?.type]
+        .filter(Boolean)
+        .slice(0, 8),
+    };
   }
 
   private async normalizeLinkedinProfile(data: any, linkedinUrl: string) {

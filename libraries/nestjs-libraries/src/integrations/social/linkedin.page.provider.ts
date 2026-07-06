@@ -37,6 +37,24 @@ export class LinkedinPageProvider
 
   override editor = 'normal' as const;
 
+  protected override linkedinProfileUrl(profile?: string | null) {
+    if (!profile) {
+      return '';
+    }
+
+    if (profile.startsWith('http')) {
+      return profile;
+    }
+
+    return `https://www.linkedin.com/company/${profile.replace(/^@/, '')}/`;
+  }
+
+  protected override linkedinPostsEndpoint(linkedinUrl: string) {
+    return `https://fresh-linkedin-profile-data.p.rapidapi.com/get-company-posts?linkedin_url=${encodeURIComponent(
+      linkedinUrl
+    )}&start=0&sort_by=top`;
+  }
+
   override async refreshToken(
     refresh_token: string
   ): Promise<AuthTokenDetails> {
@@ -295,8 +313,11 @@ export class LinkedinPageProvider
   async analytics(
     id: string,
     accessToken: string,
-    date: number
+    date: number,
+    context?: any
   ): Promise<AnalyticsData[]> {
+    return super.analytics(id, accessToken, date, context);
+
     const endDate = dayjs().unix() * 1000;
     const startDate = dayjs().subtract(date, 'days').unix() * 1000;
 

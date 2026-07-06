@@ -145,10 +145,10 @@ const LockedTemplateCard = ({
       <div className="absolute inset-0 flex items-center justify-center">
         <div className="bg-newBgColorInner/90 border border-newTableBorder rounded-[12px] px-[18px] py-[14px] text-center max-w-[360px] shadow-lg">
           <div className="text-[15px] font-[800] text-newTextColor mb-[4px]">{`Locked`}</div>
-          <div className="text-[13px] text-textItemBlur mb-[12px]">{`Upgrade to Pro to unlock this template.`}</div>
+          <div className="text-[13px] text-textItemBlur mb-[12px]">{`Upgrade your plan to unlock this template.`}</div>
           <div className="flex justify-center pointer-events-none">
             <div className="px-[24px] h-[40px] rounded-[10px] bg-btnSimple text-btnText text-[13px] font-[800] flex items-center justify-center">
-              {`Upgrade to Pro`}
+              {`Upgrade plan`}
             </div>
           </div>
         </div>
@@ -174,11 +174,11 @@ const LockedMoreCard = ({
         +{count} more templates
       </div>
       <div className="mt-[6px] text-[13px] text-textItemBlur flex-1">
-        Unlock the full library with Pro.
+        Upgrade your plan to unlock the full library.
       </div>
       <div className="mt-[12px] flex">
         <div className="px-[24px] h-[40px] rounded-[10px] bg-btnSimple text-btnText text-[13px] font-[800] flex items-center justify-center">
-          Upgrade to Pro
+          Upgrade plan
         </div>
       </div>
     </button>
@@ -296,7 +296,7 @@ export const ViralTemplatesPanel = () => {
               <div className="text-[13px] text-textItemBlur">
                 {t(
                   'templates_limited_desc',
-                  'Upgrade to Pro to unlock all templates. Some templates are locked on Free/Trial.'
+                  'Upgrade your plan to unlock all templates. Some templates are locked on Free/Trial.'
                 )}
               </div>
             </div>
@@ -305,7 +305,7 @@ export const ViralTemplatesPanel = () => {
                 className="w-full sm:w-auto"
                 onClick={() => router.push('/billing')}
               >
-                {t('upgrade_to_pro', 'Upgrade to Pro')}
+                {t('upgrade_plan', 'Upgrade plan')}
               </Button>
             </div>
           </div>

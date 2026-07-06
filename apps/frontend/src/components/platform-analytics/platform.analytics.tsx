@@ -75,20 +75,22 @@ export const PlatformAnalytics = () => {
   const currentIntegration = useMemo(() => {
     return sortedIntegrations[current];
   }, [current, sortedIntegrations]);
-  const isPersonalLinkedIn = currentIntegration?.identifier === 'linkedin';
+  const isLinkedInIdentity = ['linkedin', 'linkedin-page'].includes(
+    currentIntegration?.identifier
+  );
 
   useEffect(() => {
-    if (isPersonalLinkedIn) {
+    if (isLinkedInIdentity) {
       setKey(LATEST_LINKEDIN_POSTS_KEY);
     }
-  }, [currentIntegration?.id, isPersonalLinkedIn]);
+  }, [currentIntegration?.id, isLinkedInIdentity]);
 
   const options = useMemo(() => {
     if (!currentIntegration) {
       return [];
     }
     const arr = [];
-    if (isPersonalLinkedIn) {
+    if (isLinkedInIdentity) {
       arr.push({
         key: LATEST_LINKEDIN_POSTS_KEY,
         value: t('latest_50_posts', 'Latest 50 Posts'),
@@ -145,7 +147,7 @@ export const PlatformAnalytics = () => {
       });
     }
     return arr;
-  }, [currentIntegration, isPersonalLinkedIn, t]);
+  }, [currentIntegration, isLinkedInIdentity, t]);
   const keys = useMemo(() => {
     if (!currentIntegration) {
       return 7;

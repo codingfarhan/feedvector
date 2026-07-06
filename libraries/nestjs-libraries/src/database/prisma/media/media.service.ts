@@ -94,10 +94,6 @@ export class MediaService {
       throw new Error(`Video type ${type} not found`);
     }
 
-    if (!video.trial && org.isTrailing) {
-      throw new HttpException('This video is not available in trial mode', 406);
-    }
-
     return true;
   }
 
@@ -124,10 +120,6 @@ export class MediaService {
     const video = this._videoManager.getVideoByName(body.type);
     if (!video) {
       throw new Error(`Video type ${body.type} not found`);
-    }
-
-    if (!video.trial && org.isTrailing) {
-      throw new HttpException('This video is not available in trial mode', 406);
     }
 
     console.log(body.customParams);

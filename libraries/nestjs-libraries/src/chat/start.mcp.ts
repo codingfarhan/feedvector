@@ -53,14 +53,14 @@ export const startMcp = async (app: INestApplication) => {
       return
     }
 
-    // Hard-stop MCP access after 7-day trial unless user is on the paid PRO plan.
+    // Hard-stop MCP access after 7-day trial unless user has a paid plan.
     // We intentionally do not rely on org.isTrailing being flipped elsewhere.
     // @ts-ignore
-    const isPaidPro = req.auth?.subscription?.subscriptionTier === "PRO"
+    const hasPaidPlan = !!req.auth?.subscription?.subscriptionTier
     // @ts-ignore
-    const trialEndsAt = dayjs(req.auth.createdAt).add(7, "day")
-    if (!isPaidPro && dayjs().isAfter(trialEndsAt)) {
-      res.status(403).send("Trial expired. Upgrade to Pro to continue using MCP.")
+    const trialEndsAt = dayjs(req.auth.subscription?.createdAt || req.auth.createdAt).add(7, "day")
+    if (!hasPaidPlan && dayjs().isAfter(trialEndsAt)) {
+      res.status(403).send("Trial expired. Choose a plan to continue using MCP.")
       return
     }
 
@@ -102,13 +102,13 @@ export const startMcp = async (app: INestApplication) => {
       return
     }
 
-    // Hard-stop MCP access after 7-day trial unless user is on the paid PRO plan.
+    // Hard-stop MCP access after 7-day trial unless user has a paid plan.
     // @ts-ignore
-    const isPaidPro = req.auth?.subscription?.subscriptionTier === "PRO"
+    const hasPaidPlan = !!req.auth?.subscription?.subscriptionTier
     // @ts-ignore
-    const trialEndsAt = dayjs(req.auth.createdAt).add(7, "day")
-    if (!isPaidPro && dayjs().isAfter(trialEndsAt)) {
-      res.status(403).send("Trial expired. Upgrade to Pro to continue using MCP.")
+    const trialEndsAt = dayjs(req.auth.subscription?.createdAt || req.auth.createdAt).add(7, "day")
+    if (!hasPaidPlan && dayjs().isAfter(trialEndsAt)) {
+      res.status(403).send("Trial expired. Choose a plan to continue using MCP.")
       return
     }
 
