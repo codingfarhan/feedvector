@@ -1,0 +1,12 @@
+const association = '7b2276657273696f6e223a312c227073704964223a2231454442463046444246354641323036354532393937394332374437434337433935333431423445303635424438443838333136353830323230303941353732222c22637265617465644f6e223a313734393634363735323534317d';
+
+export const dynamic = 'force-static';
+
+export const GET = () => {
+  return new Response(association, {
+    headers: {
+      'Content-Type': 'text/plain; charset=utf-8',
+      'Cache-Control': 'public, max-age=3600',
+    },
+  });
+};
