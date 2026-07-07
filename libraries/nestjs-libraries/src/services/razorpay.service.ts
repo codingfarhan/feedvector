@@ -3,9 +3,14 @@ import Razorpay from "razorpay"
 import crypto from "crypto"
 import { ActiveBillingPlan, isActiveBillingPlan, pricing } from "@gitroom/nestjs-libraries/database/prisma/subscriptions/pricing"
 import { SubscriptionService } from "@gitroom/nestjs-libraries/database/prisma/subscriptions/subscription.service"
+import { NotificationService } from "@gitroom/nestjs-libraries/database/prisma/notifications/notification.service"
+import { ioRedis } from "@gitroom/nestjs-libraries/redis/redis.service"
 
 type RazorpayWebhookEvent = {
+  id?: string
   event?: string
+  created_at?: number
+  account_id?: string
   payload?: {
     subscription?: {
       entity?: {
@@ -15,6 +20,18 @@ type RazorpayWebhookEvent = {
         current_end?: number
         end_at?: number
       }
+    }
+    payment?: {
+      entity?: Record<string, any>
+      downtime?: {
+        entity?: Record<string, any>
+      }
+    }
+    dispute?: {
+      entity?: Record<string, any>
+    }
+    downtime?: {
+      entity?: Record<string, any>
     }
   }
 }
@@ -34,7 +51,7 @@ export class RazorpayService {
   }
   private readonly razorpay: Razorpay
 
-  constructor(private readonly _subscriptionService: SubscriptionService) {
+  constructor(private readonly _subscriptionService: SubscriptionService, private readonly _notificationService: NotificationService) {
     if (!this.keyId || !this.keySecret) {
       throw new Error("Razorpay keys are not configured")
     }
@@ -126,9 +143,10 @@ export class RazorpayService {
 
   async cancelSubscription(orgId: string, subscriptionId: string) {
     const cancelled = await this.razorpay.subscriptions.cancel(subscriptionId, true)
-    const fetchedSubscription = !cancelled?.current_end && !cancelled?.end_at
-      ? ((await this.razorpay.subscriptions.fetch(subscriptionId).catch(() => undefined)) as any)
-      : undefined
+    const fetchedSubscription =
+      !cancelled?.current_end && !cancelled?.end_at
+        ? ((await this.razorpay.subscriptions.fetch(subscriptionId).catch(() => undefined)) as any)
+        : undefined
     const endAtSeconds = cancelled?.current_end || cancelled?.end_at || fetchedSubscription?.current_end || fetchedSubscription?.end_at
     const cancelAt = endAtSeconds ? new Date(endAtSeconds * 1000) : null
     await this._subscriptionService.setCancelAt(orgId, cancelAt)
@@ -137,6 +155,10 @@ export class RazorpayService {
 
   async handleWebhook(event: RazorpayWebhookEvent) {
     const eventType = event?.event || ""
+    await this.sendImportantBillingAlert(event).catch((error) => {
+      console.error("Failed to send Razorpay billing alert", error)
+    })
+
     const subscription = event?.payload?.subscription?.entity
     const subscriptionId = subscription?.id
     const orgId = subscription?.notes?.orgId
@@ -194,5 +216,165 @@ export class RazorpayService {
     }
 
     return { ok: true }
+  }
+
+  private async sendImportantBillingAlert(event: RazorpayWebhookEvent) {
+    const alert = this.buildBillingAlert(event)
+    if (!alert) {
+      return
+    }
+
+    const alertEmail = process.env.BILLING_ALERT_EMAIL
+    if (!alertEmail) {
+      return
+    }
+
+    const dedupeKey = this.billingAlertDedupeKey(event)
+    const redisKey = dedupeKey ? `razorpay-billing-alert:${dedupeKey}` : undefined
+    if (redisKey) {
+      const exists = await ioRedis.get(redisKey)
+      if (exists) {
+        return
+      }
+    }
+
+    await this._notificationService.sendEmail(alertEmail, alert.subject, alert.html)
+
+    if (redisKey) {
+      await ioRedis.set(redisKey, "1", "EX", 7 * 24 * 60 * 60)
+    }
+  }
+
+  private buildBillingAlert(event: RazorpayWebhookEvent): { subject: string; html: string } | undefined {
+    const eventType = event?.event || ""
+    const payment = event.payload?.payment?.entity || {}
+    const dispute = event.payload?.dispute?.entity || {}
+    const downtime = event.payload?.downtime?.entity || event.payload?.payment?.downtime?.entity || {}
+
+    const alertConfig: Record<string, { subject: string; tone: "critical" | "warning" | "info"; entity: Record<string, any> }> = {
+      "payment.failed": {
+        subject: "Razorpay payment failed",
+        tone: "warning",
+        entity: payment,
+      },
+      "payment.dispute.created": {
+        subject: "Razorpay dispute created",
+        tone: "critical",
+        entity: dispute,
+      },
+      "payment.dispute.action_required": {
+        subject: "Action required for Razorpay dispute",
+        tone: "critical",
+        entity: dispute,
+      },
+      "payment.dispute.lost": {
+        subject: "Razorpay dispute lost",
+        tone: "critical",
+        entity: dispute,
+      },
+      "payment.dispute.won": {
+        subject: "Razorpay dispute won",
+        tone: "info",
+        entity: dispute,
+      },
+      "payment.dispute.closed": {
+        subject: "Razorpay dispute closed",
+        tone: "info",
+        entity: dispute,
+      },
+      "payment.downtime.started": {
+        subject: "Razorpay downtime started",
+        tone: "warning",
+        entity: downtime,
+      },
+      "payment.downtime.resolved": {
+        subject: "Razorpay downtime resolved",
+        tone: "info",
+        entity: downtime,
+      },
+    }
+
+    const config = alertConfig[eventType]
+    if (!config) {
+      return undefined
+    }
+
+    const entity = config.entity || {}
+    const rows = [
+      ["Event", eventType],
+      ["Severity", config.tone],
+      ["Event ID", event.id],
+      ["Entity ID", entity.id],
+      ["Payment ID", entity.payment_id || payment.id],
+      ["Dispute ID", dispute.id],
+      ["Order ID", entity.order_id || payment.order_id],
+      ["Subscription ID", entity.subscription_id || payment.subscription_id],
+      ["Amount", this.formatRazorpayAmount(entity.amount ?? payment.amount, entity.currency || payment.currency)],
+      ["Status", entity.status || payment.status],
+      ["Reason", entity.reason || entity.error_reason || payment.error_reason],
+      ["Error", entity.error_description || payment.error_description],
+      ["Method", entity.method || payment.method],
+      ["Email", entity.email || payment.email],
+      ["Contact", entity.contact || payment.contact],
+      ["Created", this.formatRazorpayTimestamp(entity.created_at || event.created_at)],
+    ].filter(([, value]) => value !== undefined && value !== null && value !== "")
+
+    return {
+      subject: `[FeedVector] ${config.subject}`,
+      html: `
+        <div>
+          <h2>${this.escapeHtml(config.subject)}</h2>
+          <p>Razorpay sent an important billing event for FeedVector.</p>
+          <table cellpadding="6" cellspacing="0" border="1" style="border-collapse: collapse;">
+            ${rows
+              .map(
+                ([label, value]) => `<tr><td><strong>${this.escapeHtml(String(label))}</strong></td><td>${this.escapeHtml(String(value))}</td></tr>`,
+              )
+              .join("")}
+          </table>
+        </div>
+      `,
+    }
+  }
+
+  private billingAlertDedupeKey(event: RazorpayWebhookEvent) {
+    const eventType = event?.event || ""
+    const entity: Record<string, any> | undefined =
+      event.payload?.payment?.entity ||
+      event.payload?.dispute?.entity ||
+      event.payload?.downtime?.entity ||
+      event.payload?.payment?.downtime?.entity ||
+      event.payload?.subscription?.entity
+
+    if (event.id) {
+      return event.id
+    }
+
+    if (eventType && entity?.id) {
+      return `${eventType}:${entity.id}:${entity.status || ""}:${event.created_at || entity.created_at || ""}`
+    }
+
+    return undefined
+  }
+
+  private formatRazorpayAmount(amount?: number, currency?: string) {
+    if (typeof amount !== "number") {
+      return undefined
+    }
+
+    const formatted = (amount / 100).toFixed(2)
+    return `${currency || "INR"} ${formatted}`
+  }
+
+  private formatRazorpayTimestamp(value?: number) {
+    if (!value) {
+      return undefined
+    }
+
+    return new Date(value * 1000).toISOString()
+  }
+
+  private escapeHtml(value: string) {
+    return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;")
   }
 }
