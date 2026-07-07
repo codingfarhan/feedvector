@@ -316,6 +316,9 @@ export const MainBillingComponent: FC<{
     }
     return subscription?.subscriptionTier
   }, [subscription, initialChannels])
+  const subscriptionCancelAt = subscription?.cancelAt ? new Date(subscription.cancelAt) : undefined
+  const subscriptionCanceled = !!subscriptionCancelAt
+  const subscriptionEndsOn = subscriptionCancelAt ? newDayjs(subscriptionCancelAt).local().format("D MMM, YYYY") : ""
   const getPlanLimitMessages = useCallback(
     async (billing: ActiveBillingPlan) => {
       const targetPricing = pricing[billing]
@@ -351,34 +354,8 @@ export const MainBillingComponent: FC<{
     [fetch],
   )
   const moveToCheckout = useCallback(
-    (billing: ActiveBillingPlan | "FREE", reactivate = false) =>
+    (billing: ActiveBillingPlan | "FREE") =>
       async () => {
-        if (reactivate) {
-          fireEvents("billing_reactivate_clicked", {
-            from_plan: subscription?.subscriptionTier,
-          })
-          setLoading(true)
-          const { cancel_at } = await (
-            await fetch("/billing/cancel", {
-              method: "POST",
-              body: JSON.stringify({
-                feedback: "",
-              }),
-              headers: {
-                "Content-Type": "application/json",
-              },
-            })
-          ).json()
-          setSubscription((subs) => ({
-            ...subs!,
-            cancelAt: cancel_at,
-          }))
-
-          toast.show("Subscription reactivated successfully")
-          setLoading(false)
-          return
-        }
-
         const messages = []
         if (!pricing[billing].team_members && pricing[subscription?.subscriptionTier!]?.team_members) {
           messages.push(`Your team members will be removed from your organization`)
@@ -403,7 +380,7 @@ export const MainBillingComponent: FC<{
                   title: "Before you cancel",
                   withCloseButton: true,
                   classNames: {
-                    modal: "bg-transparent text-textColor",
+                    modal: "bg-newBgColorInner text-textColor",
                   },
                   children: <Accept resolve={res} />,
                 })
@@ -421,7 +398,7 @@ export const MainBillingComponent: FC<{
                 title: t("we_are_sorry_to_see_you_go", "We are sorry to see you go :("),
                 withCloseButton: true,
                 classNames: {
-                  modal: "bg-transparent text-textColor",
+                  modal: "bg-newBgColorInner text-textColor",
                 },
                 children: <Info proceed={(e) => res(e)} />,
               })
@@ -561,16 +538,12 @@ export const MainBillingComponent: FC<{
               <div className={`text-[14px] text-customColor18`}>/month</div>
             </div>
             <div className="text-[14px] flex gap-[10px]">
-              {currentPackage === name.toUpperCase() && subscription?.cancelAt ? (
-                <div className="gap-[3px] flex flex-col">
-                  <div>
-                    <Button onClick={moveToCheckout("FREE", true)} loading={loading}>
-                      {t("reactivate_subscription", "Reactivate subscription")}
-                    </Button>
-                  </div>
+              {currentPackage === name.toUpperCase() && subscriptionCanceled ? (
+                <div className="inline-flex min-h-[42px] items-center justify-center rounded-[8px] border border-[#f59e0b]/40 bg-[#f59e0b]/10 px-[14px] text-center text-[13px] font-semibold text-[#f59e0b]">
+                  {subscriptionEndsOn ? `Subscription ends on ${subscriptionEndsOn}` : "Canceled Subscription"}
                 </div>
               ) : (
-                <Button loading={loading} disabled={currentPackage === name} onClick={moveToCheckout(name)}>
+                <Button loading={loading} disabled={currentPackage === name && !subscriptionCanceled} onClick={moveToCheckout(name)}>
                   {currentPackage === name ? "Current Plan" : name === "ESSENTIAL" ? "Choose Essential" : "Choose Growth"}
                 </Button>
               )}
@@ -611,17 +584,18 @@ export const MainBillingComponent: FC<{
               contact@feedvector.com
             </a>
           </div>
-          {isGeneral && !subscription?.cancelAt && (
+          {isGeneral && !subscriptionCanceled && (
             <Button className="bg-red-500" loading={loading} onClick={moveToCheckout("FREE")}>
               {t("cancel_subscription_1", "Cancel subscription")}
             </Button>
           )}
         </div>
       )}
-      {subscription?.cancelAt && isGeneral && (
-        <div className="text-center">
-          {t("your_subscription_will_be_canceled_at", "Your subscription will be canceled at")}{" "}
-          {newDayjs(subscription.cancelAt).local().format("D MMM, YYYY")}
+      {subscriptionCanceled && isGeneral && (
+        <div className="text-center text-[14px] text-customColor18">
+          {subscriptionEndsOn
+            ? `Subscription ends on ${subscriptionEndsOn}`
+            : t("canceled_subscription", "Canceled Subscription")}
           <br />
           {t("you_will_never_be_charged_again", "You will never be charged again")}
         </div>

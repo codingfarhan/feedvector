@@ -139,22 +139,30 @@ export class BillingController {
     @GetUserFromRequest() user: User,
     @Body() body: { feedback: string }
   ) {
-    await this._notificationService.sendEmail(
-      process.env.EMAIL_FROM_ADDRESS,
-      'Subscription Cancelled',
-      `Organization ${org.name} has cancelled their subscription because: ${body.feedback}`,
-      user.email
-    );
-
     const subscription =
       await this._subscriptionService.getSubscriptionByOrganizationId(org.id);
     if (!subscription?.identifier) {
       return { cancel_at: undefined };
     }
+    if (subscription.cancelAt) {
+      return { cancel_at: subscription.cancelAt };
+    }
+
     const { cancelAt } = await this._razorpayService.cancelSubscription(
       org.id,
       subscription.identifier
     );
+    this._notificationService
+      .sendEmail(
+        process.env.EMAIL_FROM_ADDRESS,
+        'Subscription Cancelled',
+        `Organization ${org.name} has cancelled their subscription because: ${body.feedback}`,
+        user.email
+      )
+      .catch((error) => {
+        console.error('Failed to send subscription cancellation email', error);
+      });
+
     return {
       cancel_at: cancelAt || undefined,
     };

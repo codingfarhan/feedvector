@@ -12,6 +12,8 @@ type RazorpayWebhookEvent = {
         id?: string
         status?: string
         notes?: Record<string, string>
+        current_end?: number
+        end_at?: number
       }
     }
   }
@@ -124,7 +126,10 @@ export class RazorpayService {
 
   async cancelSubscription(orgId: string, subscriptionId: string) {
     const cancelled = await this.razorpay.subscriptions.cancel(subscriptionId, true)
-    const endAtSeconds = cancelled?.current_end || cancelled?.end_at
+    const fetchedSubscription = !cancelled?.current_end && !cancelled?.end_at
+      ? ((await this.razorpay.subscriptions.fetch(subscriptionId).catch(() => undefined)) as any)
+      : undefined
+    const endAtSeconds = cancelled?.current_end || cancelled?.end_at || fetchedSubscription?.current_end || fetchedSubscription?.end_at
     const cancelAt = endAtSeconds ? new Date(endAtSeconds * 1000) : null
     await this._subscriptionService.setCancelAt(orgId, cancelAt)
     return { cancelAt }
@@ -149,6 +154,14 @@ export class RazorpayService {
       return { ok: true }
     }
 
+    if (eventType === "subscription.updated" && subscription?.status === "cancelled") {
+      const endAtSeconds = subscription?.current_end || subscription?.end_at
+      if (endAtSeconds && endAtSeconds * 1000 > Date.now()) {
+        await this._subscriptionService.setCancelAt(orgIdResolved, new Date(endAtSeconds * 1000))
+      }
+      return { ok: true }
+    }
+
     if (eventType === "subscription.activated" || eventType === "subscription.updated") {
       await this.activateSubscription(orgIdResolved, subscriptionId, subscription?.notes?.billing, subscription?.notes?.trial === "true")
       return { ok: true }
@@ -159,7 +172,23 @@ export class RazorpayService {
       return { ok: true }
     }
 
-    if (eventType === "subscription.cancelled" || eventType === "subscription.completed" || eventType === "subscription.halted") {
+    if (eventType === "subscription.cancelled") {
+      const endAtSeconds = subscription?.current_end || subscription?.end_at
+      if (endAtSeconds && endAtSeconds * 1000 > Date.now()) {
+        await this._subscriptionService.setCancelAt(orgIdResolved, new Date(endAtSeconds * 1000))
+        return { ok: true }
+      }
+
+      const existingSubscription = await this._subscriptionService.getSubscriptionByOrganizationId(orgIdResolved)
+      if (existingSubscription?.cancelAt && existingSubscription.cancelAt.getTime() > Date.now()) {
+        return { ok: true }
+      }
+
+      await this._subscriptionService.deleteSubscriptionByOrganizationId(orgIdResolved)
+      return { ok: true }
+    }
+
+    if (eventType === "subscription.completed" || eventType === "subscription.halted") {
       await this._subscriptionService.deleteSubscriptionByOrganizationId(orgIdResolved)
       return { ok: true }
     }
