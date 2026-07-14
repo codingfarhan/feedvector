@@ -42,8 +42,6 @@ export const openRazorpayCheckout = async (params: OpenRazorpayParams) => {
   const {
     keyId,
     subscriptionId,
-    amount,
-    currency,
     name,
     description,
     prefill,
@@ -60,8 +58,6 @@ export const openRazorpayCheckout = async (params: OpenRazorpayParams) => {
     subscription_id: subscriptionId,
     name: name || "FeedVector",
     description: description || "Pro Plan",
-    currency,
-    amount,
     prefill,
     handler: async (response: RazorpaySuccessPayload) => {
       await onSuccess({

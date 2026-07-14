@@ -40,6 +40,17 @@ type CreateMonthlySubscriptionOptions = {
   trialDays?: number
 }
 
+type RazorpaySubscriptionEntity = {
+  id?: string
+  status?: string
+  notes?: Record<string, string>
+  current_end?: number
+  end_at?: number
+  ended_at?: number
+  paid_count?: number
+  start_at?: number
+}
+
 @Injectable()
 export class RazorpayService {
   private readonly keyId = process.env.RAZORPAY_KEY_ID!
@@ -142,15 +153,34 @@ export class RazorpayService {
   }
 
   async cancelSubscription(orgId: string, subscriptionId: string) {
-    const cancelled = await this.razorpay.subscriptions.cancel(subscriptionId, true)
+    const currentSubscription = (await this.razorpay.subscriptions.fetch(subscriptionId)) as RazorpaySubscriptionEntity
+    const cancelAtCycleEnd = this.shouldCancelAtCycleEnd(currentSubscription)
+    const cancelled = (await this.razorpay.subscriptions.cancel(subscriptionId, cancelAtCycleEnd)) as RazorpaySubscriptionEntity
     const fetchedSubscription =
-      !cancelled?.current_end && !cancelled?.end_at
-        ? ((await this.razorpay.subscriptions.fetch(subscriptionId).catch(() => undefined)) as any)
+      !this.getSubscriptionEndAt(cancelled)
+        ? ((await this.razorpay.subscriptions.fetch(subscriptionId).catch(() => undefined)) as RazorpaySubscriptionEntity | undefined)
         : undefined
-    const endAtSeconds = cancelled?.current_end || cancelled?.end_at || fetchedSubscription?.current_end || fetchedSubscription?.end_at
+    const endAtSeconds = this.getSubscriptionEndAt(cancelled) || this.getSubscriptionEndAt(fetchedSubscription)
     const cancelAt = endAtSeconds ? new Date(endAtSeconds * 1000) : null
-    await this._subscriptionService.setCancelAt(orgId, cancelAt)
+    if (cancelAt && cancelAt.getTime() > Date.now()) {
+      await this._subscriptionService.setCancelAt(orgId, cancelAt)
+    } else {
+      await this._subscriptionService.deleteSubscriptionByOrganizationId(orgId)
+    }
     return { cancelAt }
+  }
+
+  private shouldCancelAtCycleEnd(subscription?: RazorpaySubscriptionEntity) {
+    const nowSeconds = Math.floor(Date.now() / 1000)
+    const paidCount = Number(subscription?.paid_count || 0)
+    const isWaitingForFirstPaidCycle = subscription?.status === "created" || subscription?.status === "authenticated"
+    const hasCurrentBillingCycle = !!subscription?.current_end && subscription.current_end > nowSeconds && !isWaitingForFirstPaidCycle
+
+    return paidCount > 0 || hasCurrentBillingCycle
+  }
+
+  private getSubscriptionEndAt(subscription?: RazorpaySubscriptionEntity) {
+    return subscription?.current_end || subscription?.end_at || subscription?.ended_at
   }
 
   async handleWebhook(event: RazorpayWebhookEvent) {

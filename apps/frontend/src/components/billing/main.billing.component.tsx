@@ -416,11 +416,26 @@ export const MainBillingComponent: FC<{
                 },
               })
             ).json()
-            setSubscription((subs) => ({
-              ...subs!,
-              cancelAt: cancel_at,
-            }))
-            if (cancel_at) toast.show("Subscription set to canceled successfully")
+            if (cancel_at) {
+              setSubscription((subs) => ({
+                ...subs!,
+                cancelAt: cancel_at,
+              }))
+              toast.show("Subscription set to canceled successfully")
+            } else {
+              setSubscription(undefined)
+              mutate(
+                "/user/self",
+                {
+                  ...user,
+                  tier: pricing.FREE,
+                },
+                {
+                  revalidate: false,
+                },
+              )
+              toast.show("Subscription canceled successfully")
+            }
             setLoading(false)
           }
           return
